@@ -2,4 +2,40 @@
 % Boundaries
 % What is reversable languages?
 \section{Introduction}
+Reversible programming languages allow the programmer to write programs, that can be run
+both forward and backwards. Getting this ability into a language impacts the basic structure
+such that assignments, conditional operations, and loops must be handled in another way
+than traditional languages do. The reversibility of the programs does however have the benefits
+of:
 
+\begin{itemize}
+    \item Lowering side-channel attack, as it does not constantly delete memory to make room for
+    new information [FIND CITATION], thereby creating programs that generates a more constant
+    stream of heat.
+
+    \item Removing the theoretical lower limit of heat generation [FIND CITATION], making way
+    for lowering the energy usage of computers (This does however require computers build
+    for reversibility).
+
+    \item Models the world of physics more precise, as physics in itself is reversible
+    [FIND CITATION].
+
+    \item Only needing to write one program, when functionality such as zip/unzip, that has
+    a natural inversion that you want. This allows the programmer to write one program, prove
+    correctness of one program, and then ship "two" programs.
+\end{itemize}
+\noindent
+This project focuses on the last item for two reasons: 1) that the majority of computers today are
+not reversible, and 2) that translating from a reversible language to an irreversible
+generates certain overhead, as i.e. \texttt{if}-statements need both an entering condition and an
+exiting assertion for reversibility; meaning the program needs to check an extra assertion each
+time an \texttt{if}-statement is run.
+
+
+\subsection{Boundaries}
+The focus of this project is on finding whether a theorem prover is available for making static
+program analyse in compile time, checking whether these extra assertions can be removed. Hence
+there will be no other focus on optimization in the code generation
+\\
+\\
+Also as this is a bachelor thesis the focus will be on freely available theorem provers.

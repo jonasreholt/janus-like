@@ -1,2 +1,154 @@
-\section{Janus-like language definition}
 % Definition of chosen language design and theory behind reversability
+\section{Janus-like language definition}
+This project alters and extents the syntax for \texttt{Janus} to make it better match modern
+programming languages. This "new" language will be an imperative reversible language like
+\texttt{Janus}, and henceforth will be noted as \texttt{JL} (short for Janus-like) in this report.
+But before altering the syntax and functionality of \texttt{Janus}, a more formal characterizations
+of reversibility must be made.
+Reversible computation refers to the use of logically reversible transformations \cite{ARTICLE:2},
+and require two things: Local reversibility and global reversibility.
+
+\begin{myDefinition}{Local reversibility}{def:localReversibility}
+For a local process to be reversible information from step to step must be preserved, meaning no
+information is destroyed \cite{ARTICLE:1}.
+\end{myDefinition}
+
+\begin{myDefinition}{Global reversibility}{def:globalReversibility}
+A global process can only be reversible if the mapping from a start state to a final state is
+bijective \cite{ARTICLE:1}. 
+\end{myDefinition}
+\noindent
+This means that every construct of \texttt{JL} must preserve information over time, so the program
+knows where to start of when running in either direction, and that there must be a "one-to-one"
+transformation from every state. e.g. consider the assignment operator \texttt{var = 10}. This
+statement has no way of undoing itself, as we do not know what \texttt{var} was before this
+assignment, meaning it goes against definition \ref{def:def:localReversibility}. It also removes
+the bijective property of the program, as all previous states of \texttt{var} leads to the same
+final state where \texttt{var == 10}.
+\\
+\\
+The definition for logical reversibility stated above does allow for all programs to be reversible,
+as one could simply save a copy of the initial state and final state, as this would make
+the program bijective, as the final program becomes a tuple $(state_{initial}, state_{final})$,
+making the program transformation $\{state_{initial}\} \to \{state_{initial}, state_{final}\}$.
+These program will however not live up to Landauer's Principle, if every individual step is not
+reversible. It is therefore imminent that all construct of \texttt{LR} are reversible in them self.
+
+\subsection{Data types}
+
+\subsection{Declaration of variables}
+There are essentially two types of variables: Global and local. Because a global variable is
+always in scope, it preserves the information at all time (assuming all operations done on it
+are reversible). Hence global variable declaration can simply be done by:
+
+\begin{table*}[h]
+    \centering
+    \begin{tabular}{lcl}
+        \texttt{<id>} & $\underleftrightarrow{\text{Inverse of}}$ & no inverse \\
+        \texttt{<id>[]}
+    \end{tabular}
+\end{table*}
+\noindent
+Local variables are mote tricky, as they will leave the scope, meaning we cannot know the value
+of the variable when running the program backwards, if the variable have left scope. Hence there
+needs to be some operation stating what the value of the variable is when it is last used, so
+the program step of leaving the scope of a local variable also becomes reversible. This can be
+done in the following way:
+
+\begin{table*}[h]
+    \centering
+    \begin{tabular}{lcl}
+        \texttt{<id>} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{delocal <id> == <expr}
+    \end{tabular}
+\end{table*}
+
+\subsection{Modification arithmetics}
+To modify a variable there needs to be a inverse function of the operator, such that the
+modification can be reversed. As the only datatype for \texttt{JL} is integers, the only operators
+with an inverse (the function is bijective) is addition, subtraction, and exclusive or.
+Multiplication and division cannot be used, as they are not each others inverse when operating on
+natural numbers. Hence the operation becomes:
+
+\begin{table*}[h]
+    \centering
+    \begin{tabular}{lcl}
+        \texttt{<id> += <expr1>} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{<id> -= <expr1} \\
+        \texttt{<id> \textasciicircum= <expr2>} & & \texttt{<id> \textasciicircum= <expr2>}
+    \end{tabular}
+\end{table*}
+\noindent
+Where \textasciicircum ~indicates exclusive or.
+
+\subsection{Arithmetics}
+Performing arithmetics on expressions of the language does not require, that the arithmetic function
+is bijective, as it is only the state transformations that need be bijective, e.g. in
+\texttt{a += 5 $\*$ 6}, the expression \texttt{5 $\*$ 6} is not the "altering" function, and
+inverse of the whole statement would simply be subtracting \texttt{5 $\*$ 6} from \texttt{a}.
+\\
+\\
+The only thing one needs to remember is, that a variable name cannot occur at both side if the
+statement is to be reversible. Having this constraint ensures forward and backward determinism
+[FIND CITATION].
+
+\subsection{Loops}
+\texttt{JL} will support two different kind of loops: a \texttt{for}- and a \texttt{from}-loop.
+The \texttt{from}-loop is identical to the one from \texttt{Janus}:
+\newpage
+\begin{table*}[!h]
+    \centering
+    \begin{tabular}{lcl}
+        \texttt{from <expr1> \{} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{from <expr2> \{ }\\
+        \texttt{ <stmts>} && \texttt{ <stmts>$^{-1}$} \\
+        \texttt{\} until (<expr2>)} && \texttt{\} until (<expr1>)} 
+    \end{tabular}
+\end{table*}
+\noindent
+The \texttt{for}-loop is closer to \texttt{C++} syntax:
+
+\begin{table*}[!h]
+    \centering
+    \begin{tabular}{lcl}
+        \texttt{for <id> = <expr1> \{} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{for <id> = <expr2>; <inc>$^{-1}$ \{ }\\
+        \texttt{ <stmts>} && \texttt{ <stmts>$^{-1}$} \\
+        \texttt{\} <incr>; until (<id> == <expr2>)} && \texttt{\} until (<id> == <expr1>)} 
+    \end{tabular}
+\end{table*}
+\noindent
+Where \texttt{inc} is a modification operation typically on <id>, $a^{-1}$ indicated that
+$a$ is reversed, and having \texttt{<inc>} above the body executes it before the body and
+if it is after the body, it is executed after.
+\\
+\\
+Moving the \texttt{<inc>} operation when reversing the loop is a necessity to make sure that
+\texttt{<id>} always have to correct value when going into an iteration. If the operation was not
+moved, the loop would be unaligned with its reversion. E.g. if the loop iterated over a list,
+it might stop when \texttt{<id>} is equal to the length of the list. If we reversed without moving
+the \texttt{<inc>} operation, the first iteration of the loop would access the index of the list
+length, which would be out of bounds.
+
+\subsection{If statements}
+The \texttt{if}-statements are similar to those of \texttt{Janus}:
+
+\begin{table*}[h!]
+    \centering
+    \begin{tabular}{lcl}
+        \texttt{if (<expr1>) \{} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{if (<expr2>) \{} \\
+        \texttt{ <stmts>} && \text{<stmts>$^{-1}$} \\
+        \texttt{\} fi <expr2>} && \texttt{\} fi <expr1>} \\
+        \texttt{else \{} && \texttt{else \{} \\
+        \texttt{ <stmts>} && \text{ <stmts>$^{-1}$} \\
+        \texttt{\}} && \texttt{\}}
+    \end{tabular}
+\end{table*}
+\noindent
+Where the \texttt{else} part can be omitted.
+
+\subsection{Procedures}
+
+
+% Getting constant into function calls
+
+%
+
+Now where all building blocks for procedures are reversible, it is straight forward to reverse
+a procedure itself:

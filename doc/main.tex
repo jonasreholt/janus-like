@@ -10,6 +10,9 @@
 \usepackage{minted}
 \usepackage{enumitem}
 \usepackage{fancyhdr}
+\usepackage[nottoc,numbib]{tocbibind}       % Including bibtex references in table of content
+\usepackage{cleveref}
+\usepackage[most]{tcolorbox}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -18,6 +21,33 @@
 
 \renewcommand{\*}{\cdot}                    % a pretty multiplication sign
 \renewcommand{\implies}{\rightarrow}        % implies now is simple right arrow: -->
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   Defining definition boxes     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtcbtheorem[number within=section]{Definition}{}
+{
+        enhanced,
+        sharp corners,
+        attach boxed title to top left={
+            xshift=-1mm,
+            yshift=-5mm,
+            yshifttext=-1mm
+        },
+        top=1.5em,
+        colback=white,
+        colframe=black,
+        fonttitle=\bfseries,
+        boxed title style={
+            sharp corners,
+            size=small,
+            colback=black,
+            colframe=black,
+        } 
+}{def}
+
+\newenvironment{myDefinition}[2]{ \begin{Definition}[adjusted title=#1]{}{#2} 
+    \textbf{Definition \thetcbcounter.} }{\end{Definition}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,8 +113,6 @@
 \input{web-interface.tex}
 \input{reflection.tex}
 \input{conclusion.tex}
-
-Random citation \cite{DUMMY:1} embedded in text.
 
 \newpage
 \bibliography{references}
