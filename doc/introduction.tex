@@ -1,3 +1,5 @@
+% Motivation, problem, mini-example, boundaries
+
 % Problem definition
 % Boundaries
 % What is reversable languages?
@@ -29,8 +31,34 @@ This project focuses on the last item for two reasons: 1) that the majority of c
 not reversible, and 2) that translating from a reversible language to an irreversible
 generates certain overhead, as i.e. \texttt{if}-statements need both an entering condition and an
 exiting assertion for reversibility; meaning the program needs to check an extra assertion each
-time an \texttt{if}-statement is run.
+time an \texttt{if}-statement is run. This assertion is ends up taking approximately 7 instruction,
+containing a conditional jump removing linearity from the code, when translating to
+\texttt{x86-64} assembly code. E.g. the simple dummy function:
 
+\begin{lstlisting}[language=c++]
+    void f(int a)
+    {
+        assert(a == 0);
+    }
+\end{lstlisting}
+\noindent
+Gets the assertion translated, using gcc version 11.2, into:
+
+\begin{lstlisting}[language={[x86masm]Assembler}]
+    ...
+    cmp     DWORD PTR [rbp-4], 0
+    je      .L3
+    mov     ecx, OFFSET FLAT:.LC0
+    mov     edx, 5
+    mov     esi, OFFSET FLAT:.LC1
+    mov     edi, OFFSET FLAT:.LC2
+    call    __assert_fail
+.L3:
+    ...
+\end{lstlisting}
+\noindent
+Meaning 7 instructions could be optimized away, herein including a conditional jump,
+that requires jump prediction to run efficiently.
 
 \subsection{Boundaries}
 The focus of this project is on finding whether a theorem prover is available for making static

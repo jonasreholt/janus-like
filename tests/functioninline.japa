@@ -1,0 +1,11 @@
+procedure f(int a)
+{
+    a += 5
+}
+
+procedure g()
+{
+    local int b = 5
+    f(b)
+    delocal int b = 10
+}

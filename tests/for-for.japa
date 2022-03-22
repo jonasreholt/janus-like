@@ -1,0 +1,10 @@
+procedure f(int a[], int b)
+{
+    for int i = 0
+    {
+        for int j = 0
+        {
+            b += a[i + j]
+        } j += 1, untill (j == 100)
+    } i += 1, untill (i == 100)
+}

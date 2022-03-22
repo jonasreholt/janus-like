@@ -1,7 +1,18 @@
 \begin{thebibliography}{1}
 
-\bibitem{DUMMY:1}
-J.~Doe, {\em The Book without Title}.
-\newblock Dummy Publisher, 2100.
+\bibitem{ARTICLE:2}
+L.~Muehlhauser, ``Mike frank on reversible computing,'' {\em Machine
+  Intelligence Research institite}, 2014.
+
+\bibitem{ARTICLE:1}
+E.~Rose, ``Arrow: A modern reversible programming language,'' 2015.
+
+\bibitem{Z3:BINDINGS}
+I.~Abal and D.~Castro, ``z3: Bindings for the z3 theorem prover.''
+  \url{https://hackage.haskell.org/package/z3}.
+\newblock Accessed: 18/02-2022.
+
+\bibitem{Z3:TRANSLATION}
+T.~Jelvis, ``Analyzing programs with z3,'' 2016.
 
 \end{thebibliography}

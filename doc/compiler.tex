@@ -1,4 +1,4 @@
-\section{Compiler structure}
+\section{Compiler Structure}
 % Overview of compiler structure with image
 % Information and analysis of choice of programming language
 
@@ -9,8 +9,214 @@
 % Theory behind parser and the implementation
 
 \subsection{Optimization}
-% Discussion over using theorem provers or partial evaluation?
-% Theory behind the optimization and implementation
+% Strategy for optimization
+% Integration with theorem prover
+Because the compiler translates directly from the source language into an abstract syntax tree,
+and then into \texttt{C++}, the optimization must be done on the abstract syntax tree, as it is
+the easiest data structure to work on of the three. Doing the optimization directly on the source
+language itself, saves the computation of translating to some intermediate language, but does
+make this optimizer local to the source language.
+\\
+\\
+This optimization involves four steps:
+\begin{enumerate}
+    \item Discovering language constructs, that introduce assertions on translation.
+    \item Locating and gathering information for the prove.
+    \item Translating subpart of abstract syntax tree into \texttt{z3}.
+    \item Deciding on whether to optimize the assertion or not, based on the answer
+          from \texttt{z3}.
+\end{enumerate}
+
+\subsubsection{Language Constructs Introducing Asseritons}
+The first point can be discovered by consulting the language specification introduced
+in section \ref{sec:language-def}. Here it is imminent, that the following construct introduce
+assertions for the translated code:
+\begin{itemize} % TODO: Give example showing where assertions are created
+    \item Local declaration as they require deallocation at some point for reversibility.
+    \item If statement as the program needs to know whether the if-path was chosen or not when
+          reversing computation.
+    \item from statement as the first boolean expression following \texttt{from} can only be true
+          before the loop runs, and the expression after \texttt{until} can only be true after
+          all iterations are complete.
+\end{itemize}
+\noindent
+Which means that when running through the abstract syntax tree, the compiler must pause translation
+when the above constructs are found, and then the optimizer module must be called to tell
+the translator, whether to include assertions or not.
+
+\subsubsection{Gathering Information for \texttt{Z3}}
+Point two has two main obstacles: 1) to know how much information \texttt{z3} needs for the proof,
+and 2) granting the optimizer access to this appropriate subtree.
+
+For 1) a simply approach could be to give the tree representing the current procedure to the
+optimizer. This could give too much information in the sense that only part of this subtree is
+actually needed to perform the validation check. e.g. in the small program below the only thing
+needed for the validation is the two last lines. However, this would require backtracking the
+tree while keeping a list of "unassigned" variables, until this list is empty, so the first
+method is used in this optimizer. For future work, it would be a good idea to check whether the
+other approach would be faster. The below piece of code also reveal two other problem in regards
+to information: Global variables and function calls.
+
+Getting the value of a global variable
+requires that the language be interpreted on the go, making the question a matter of a table
+lookup; there is however no interpretation going on in this compiler, limiting the optimizer
+into using unspecified variables for globals.
+
+Function calls hide information that might be needed when performing validation for a procedure.
+To mitigate this, aggressive inlining is used. This does however pose the question of recursive
+procedures. I will leave this question for now, and return to it below, when addressing loops.
+
+\begin{lstlisting}[language=C++]
+    int c
+
+    procedure g()
+    {
+        c += 5
+    }
+
+    procedure f(int a)
+    {
+        call g()
+        a += c
+        local b = 1
+        delocal b == 1
+    }
+\end{lstlisting}
+
+\subsubsection{Translating to \texttt{Z3}} % and deciding on optimizing or not!
+As the compiler is implemented in \texttt{Haskell} these bindings for \texttt{z3} in
+\texttt{Haskell} is used \cite{Z3:BINDINGS}. The optimizer module is therefore a translator from
+the abstract syntax tree into these bindings, and can be seen in the \nameref{sec:appendices}.
+\\
+\\
+Validating whether an assertion can be removed with \texttt{z3}, can be done by creating a model
+of the code, that ends up inverting the boolean expression being asserted, and then checking
+for satisfiability. If this is not satisfiable, then the assertion can never be false, and
+can safely be removed.
+
+Because of constraints in \texttt{z3} the following language constructs of \texttt{JAPA} is
+problematic:
+\begin{itemize}
+    \item Moderating statements.
+    \item Conditional statements.
+    \item Loops.
+    \item Function calls.
+    \item Reversibility.
+\end{itemize}
+\noindent
+For solving the difficulties of these language constructs, I have used the approach outlined
+in the talk \cite{Z3:TRANSLATION} at Compose 2016.
+
+\subsubsection*{Moderating Statements}
+The problem with this construct is that all variables in \texttt{z3} are immutable. This can
+be addressed by creating new fresh variables, and asserting these fresh variables to the moderated
+value e.g.
+\begin{verbatim}
+    x += 5  =>  (declare-const x1 Int)
+                (assert (= x1 (+ x 5)))
+\end{verbatim}
+
+\subsubsection*{Conditional statements}
+If the assertion being validated is not associated to a specific conditional, the program will
+not know which path is going to be taken at run time. Therefore both paths must be constructed,
+and then the \texttt{ite} function from \texttt{z3} can be used to determine the path. e.g.
+\begin{verbatim}
+    local int x = 5         (define-fun x () Int 5)
+    if (x < 5)              (declare-const x1 Int)
+    {                   =>  (assert (= x1 (- x 5)))
+        x -= 5              (declare-const x2 Int)
+    } fi (x == 0)           (assert (= x2 (ite (< x 5) x x1)))
+    delocal int x == 5      (assert not (= x2 5))
+\end{verbatim}
+
+\subsubsection*{Loops}
+Because \texttt{z3} does not have a construction for loops, loops can only be validated by unrolling
+them. The question of how far to unroll loops is however rather complex. e.g. what should be done
+with non-terminating loops, and how to detect these? Also how far should loops be unrolled? One
+important factor is, that the optimizer must be conservative, so to not change the runtime behavior.
+Which means if it's not possible to analyze how many times to unroll, the optimization is blocked
+by loops.
+
+When it comes to \texttt{for}-loops the analysis is relatively simple, as the constructs both
+tell a starting value, what happens to this variable at each iteration, and when to stop.
+So as long as the local variable being declared in the beginning, is the same as the one being
+deallocated after the loop, and the same being moderated at each iteration, it is straight forward.
+However if one of these are not the case, the analysis becomes harder.
+
+The unrolling of a simple \texttt{for}-loop can be done by transforming it into a series of
+\texttt{if}-statements that can be represented in \texttt{z3}:
+\begin{verbatim}
+    local Int bit = 1                   local int bit = 1
+    for int i = 0                       local int i = 0
+    {                                   if (!(i == 10))
+        local int z = bit           =>  {
+        bit += z                            local int z = bit   
+        delocal int z = bit / 2             bit += z
+    } i += 1; untill (int i = 10)           delocal int z = bit / 2
+                                            i += 1
+                                            if (!(i == 10))
+                                            {
+                                                ...
+                                            } fi (i == 10)
+                                        } fi (i == 10)
+                                        delocal int i = 10
+                                        delocal int bit = 2048
+\end{verbatim}
+
+% analyzing more complex end conditions, and show example with from loop!
+% Maybe use https://web.njit.edu/~mili/ccb.pdf for removing end assertion from until
+% Probably just end at unrolling n amount of time, and then hoping n is large enough.
+
+% \begin{verbatim}
+%     from (bit == 1) loop            if (bit == 1 && !(bit * bit > num))
+%     {                               {
+%         local int z = bit               local int z = bit
+%         bit += z                =>      bit += z
+%         delocal int z = bit / 2         delocal int z = bit / 2
+%     } until ((bit * bit) > num)         if (!(bit * bit > num))
+%                                         {                                    
+%                                             local int z = bit
+%                                             bit += z
+%                                             delocal int z = bit / 2
+%                                             if (!(bit * bit > num))
+%                                             {
+%                                                 ...
+%                                             } fi (bit * bit > num)
+%                                         } fi (bit * bit > num)
+%                                     } fi (bit * bit > num)
+% \end{verbatim}
+
+\subsubsection*{Function Calls}
+% TODO: Talk about recursion!!!
+To model the functions correctly in \texttt{z3} inlining must be done, as all changes done
+by a function is through side effects. After inlining the function, it can be modeled using the
+other strategies outlined above.
+
+\subsubsection*{Reversibility}
+Because the translation is from a reversible language to a irreversible language, every procedure
+will be translated into two: One going forward, and one backwards. It is necessary to perform
+the validation check individually for these two outcome procedures, as one way being valid, does
+not imply the other is. E.g. in the following code, the assertion can be removed in the
+forward run, but not the backwards, as giving an uneven number to \texttt{double} backwards will
+result in information loss due to integer division.
+
+\begin{lstlisting}[language=C]
+    procedure double(int bit)
+    {
+        local int z = bit
+        bit += z
+        delocal int z = bit / 2
+    }
+\end{lstlisting}
+
+% Problem with language constructs
+% \begin{itemize}
+%     \item if-else statements. %do the ite thing if we don't know we take it otherwise assert if
+%     \item loops. % unroll
+%     \item function calls. %Inline? unroll recursion?
+%     \item Reversibility % do the prove forward and backward, one way is not enough bc e.g.janus playground example with square
+% \end{itemize}
+
 
 \subsection{Translation to \texttt{C++}}
 % Theory behind the optimization and implementation

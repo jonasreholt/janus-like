@@ -3,36 +3,38 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: ieeetr.bst
 Database file #1: references.bib
-You've used 1 entry,
+Warning--empty journal in ARTICLE:1
+Warning--empty booktitle in Z3:TRANSLATION
+You've used 4 entries,
             1876 wiz_defined-function locations,
-            483 strings with 3531 characters,
-and the built_in function-call counts, 168 in all, are:
-= -- 14
-> -- 4
+            500 strings with 3881 characters,
+and the built_in function-call counts, 579 in all, are:
+= -- 45
+> -- 20
 < -- 0
-+ -- 2
-- -- 1
-* -- 7
-:= -- 32
-add.period$ -- 2
-call.type$ -- 1
-change.case$ -- 0
++ -- 9
+- -- 5
+* -- 29
+:= -- 97
+add.period$ -- 5
+call.type$ -- 4
+change.case$ -- 4
 chr.to.int$ -- 0
-cite$ -- 1
-duplicate$ -- 9
-empty$ -- 21
-format.name$ -- 1
-if$ -- 39
+cite$ -- 6
+duplicate$ -- 34
+empty$ -- 75
+format.name$ -- 5
+if$ -- 135
 int.to.chr$ -- 0
-int.to.str$ -- 1
-missing$ -- 2
-newline$ -- 7
-num.names$ -- 1
-pop$ -- 6
+int.to.str$ -- 4
+missing$ -- 3
+newline$ -- 16
+num.names$ -- 4
+pop$ -- 26
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 1
+skip$ -- 7
 stack$ -- 0
 substring$ -- 0
 swap$ -- 1
@@ -40,7 +42,8 @@ text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
-warning$ -- 0
-while$ -- 1
-width$ -- 2
-write$ -- 11
+warning$ -- 2
+while$ -- 4
+width$ -- 5
+write$ -- 33
+(There were 2 warnings)

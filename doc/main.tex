@@ -7,7 +7,7 @@
 \usepackage{pdfpages}
 \usepackage{float}
 \usepackage{listings, color}
-\usepackage{minted}
+%\usepackage{minted}
 \usepackage{enumitem}
 \usepackage{fancyhdr}
 \usepackage[nottoc,numbib]{tocbibind}       % Including bibtex references in table of content
@@ -15,10 +15,12 @@
 \usepackage[most]{tcolorbox}
 
 
+% matthis.kruse@cispa.de
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    Commands for ease of use     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\newcommand{\versionnr}{3}
 \renewcommand{\*}{\cdot}                    % a pretty multiplication sign
 \renewcommand{\implies}{\rightarrow}        % implies now is simple right arrow: -->
 
@@ -88,7 +90,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \pagestyle{fancy}
 \lhead{\footnotesize Static Assertion Checking Optimization in a Janus-like
-    programming language}
+    programming language - version \versionnr}
 \rhead{\today}
 
 
@@ -100,11 +102,12 @@
 \includepdf[pages=1]{../../bachelor_project_description}
 \newpage
 
+\input{abstract.tex}
+\newpage
 \tableofcontents
 \newpage
 
 \input{introduction.tex}
-\input{abstract.tex}
 \input{language.tex}
 \input{theorem-prover.tex}
 \input{compiler.tex}
@@ -117,5 +120,8 @@
 \newpage
 \bibliography{references}
 \bibliographystyle{ieeetr}
+
+\newpage
+\input{appendice.tex}
 
 \end{document}

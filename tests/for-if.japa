@@ -1,0 +1,10 @@
+procedure f(int a)
+{
+    for int i = 0
+    {
+        if (i % 2 == 0)
+        {
+            a += 2
+        } fi (i % 2 == 0)
+    } i += 1, untill (i == 5)
+}

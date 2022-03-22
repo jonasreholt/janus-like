@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.999991 (TeX Live 2019/Debian) (preloaded format=xelatex 2021.8.30)  6 FEB 2022 16:38
+This is XeTeX, Version 3.14159265-2.6-0.999991 (TeX Live 2019/Debian) (preloaded format=xelatex 2021.8.30)  13 MAR 2022 13:32
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -330,297 +330,361 @@ File: lstmisc.sty 2019/09/10 1.8c (Carsten Heinz)
 File: listings.cfg 2019/09/10 1.8c listings configuration
 ))
 Package: listings 2019/09/10 1.8c (Carsten Heinz)
- (/usr/share/texlive/texmf-dist/tex/latex/minted/minted.sty
-Package: minted 2017/07/19 v2.5 Yet another Pygments shim for LaTeX
- (/usr/share/texlive/texmf-dist/tex/latex/fvextra/fvextra.sty
-Package: fvextra 2019/02/04 v1.4 fvextra - extensions and patches for fancyvrb
- (/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty
-Package: etoolbox 2019/09/21 v2.5h e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count282
-) (/usr/share/texlive/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
-Package: fancyvrb 2020/01/13 v3.5 verbatim text (tvz,hv)
-\FV@CodeLineNo=\count283
-\FV@InFile=\read2
-\FV@TabBox=\box54
-\c@FancyVerbLine=\count284
-\FV@StepNumber=\count285
-\FV@OutFile=\write3
-) (/usr/share/texlive/texmf-dist/tex/latex/upquote/upquote.sty
-Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verbatim
- (/usr/share/texlive/texmf-dist/tex/latex/base/textcomp.sty
-Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
-)) (/usr/share/texlive/texmf-dist/tex/latex/lineno/lineno.sty
-Package: lineno 2005/11/02 line numbers on paragraphs v4.41
-Invalid UTF-8 byte or sequence at line 296 replaced by U+FFFD.
-\linenopenalty=\count286
-\output=\toks28
-\linenoprevgraf=\count287
-\linenumbersep=\dimen173
-\linenumberwidth=\dimen174
-\c@linenumber=\count288
-\c@pagewiselinenumber=\count289
-\c@LN@truepage=\count290
-\c@internallinenumber=\count291
-\c@internallinenumbers=\count292
-\quotelinenumbersep=\dimen175
-\bframerule=\dimen176
-\bframesep=\dimen177
-\bframebox=\box55
-LaTeX Info: Redefining \\ on input line 3056.
-)
-\c@FV@TrueTabGroupLevel=\count293
-\c@FV@TrueTabCounter=\count294
-\FV@TabBox@Group=\box56
-\FV@TmpLength=\skip56
-\c@FV@HighlightLinesStart=\count295
-\c@FV@HighlightLinesStop=\count296
-\FV@LoopCount=\count297
-\FV@NCharsBox=\box57
-\FV@BreakIndent=\dimen178
-\FV@BreakIndentNChars=\count298
-\FV@BreakSymbolSepLeft=\dimen179
-\FV@BreakSymbolSepLeftNChars=\count299
-\FV@BreakSymbolSepRight=\dimen180
-\FV@BreakSymbolSepRightNChars=\count300
-\FV@BreakSymbolIndentLeft=\dimen181
-\FV@BreakSymbolIndentLeftNChars=\count301
-\FV@BreakSymbolIndentRight=\dimen182
-\FV@BreakSymbolIndentRightNChars=\count302
-\c@FancyVerbLineBreakLast=\count303
-\FV@LineBox=\box58
-\FV@LineIndentBox=\box59
-\FV@LineWidth=\dimen183
-) (/usr/share/texlive/texmf-dist/tex/latex/tools/shellesc.sty
-Package: shellesc 2019/11/08 v1.0c unified shell escape interface for LaTeX
-Package shellesc Info: Unrestricted shell escape enabled on input line 75.
-) (/usr/share/texlive/texmf-dist/tex/latex/ifplatform/ifplatform.sty
-Package: ifplatform 2017/10/13 v0.4a Testing for the operating system
- (/usr/share/texlive/texmf-dist/tex/generic/catchfile/catchfile.sty
-Package: catchfile 2019/12/09 v1.8 Catch the contents of a file (HO)
-) (/usr/share/texlive/texmf-dist/tex/generic/iftex/ifluatex.sty
-Package: ifluatex 2019/10/25 v1.5 ifluatex legacy package. Use iftex instead.
-)
-runsystem(uname -s > "main.w18")...executed.
-
- (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.w18)
-runsystem(rm -- "main.w18")...executed.
-
-) (/usr/share/texlive/texmf-dist/tex/generic/xstring/xstring.sty (/usr/share/texlive/texmf-dist/tex/generic/xstring/xstring.tex
-\integerpart=\count304
-Invalid UTF-8 byte or sequence at line 35 replaced by U+FFFD.
-\decimalpart=\count305
-Invalid UTF-8 byte or sequence at line 79 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 79 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 83 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 86 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 102 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 114 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 120 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 125 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 147 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 147 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 147 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 182 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 182 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 182 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 183 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 184 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 185 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 185 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 185 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 189 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 189 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 190 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 190 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 193 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 208 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 208 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 208 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 208 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 208 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 208 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 221 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 221 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 241 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 241 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 241 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 241 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 266 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 284 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 295 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 300 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 300 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 301 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 301 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 301 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 302 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 303 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 332 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 332 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 332 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 332 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 333 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 334 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 334 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 334 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 406 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 406 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 409 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 410 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 428 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 434 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 457 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 457 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 464 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 464 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 466 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 466 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 541 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 541 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 541 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 586 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 586 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 588 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 588 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 595 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 597 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 599 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 602 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 605 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 605 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 610 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 615 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 632 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 632 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 633 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 635 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 637 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 647 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 653 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 678 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 700 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 705 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 715 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 715 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 715 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 719 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 732 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 732 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 741 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 741 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 742 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 742 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 762 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 773 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 773 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 774 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 774 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 774 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 797 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 797 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 810 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 824 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 824 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 831 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 838 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 838 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 846 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 846 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 861 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 862 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 864 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 864 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 908 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 909 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 909 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 934 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 934 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 936 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 936 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 940 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 940 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 962 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 962 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 964 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 965 replaced by U+FFFD.
-Invalid UTF-8 byte or sequence at line 1006 replaced by U+FFFD.
-)
-Package: xstring 2019/02/06 v1.83 String manipulations (CT)
-) (/usr/share/texlive/texmf-dist/tex/latex/framed/framed.sty
-Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
-\OuterFrameSep=\skip57
-\fb@frw=\dimen184
-\fb@frh=\dimen185
-\FrameRule=\dimen186
-\FrameSep=\dimen187
-)
-\minted@appexistsfile=\read3
-\minted@bgbox=\box60
-\minted@code=\write4
-\c@minted@FancyVerbLineTemp=\count306
-\c@minted@pygmentizecounter=\count307
-\@float@every@listing=\toks29
-\c@listing=\count308
-)
-runsystem(mkdir -p _minted-main)...executed.
-
  (/usr/share/texlive/texmf-dist/tex/latex/enumitem/enumitem.sty
 Package: enumitem 2019/06/20 v3.9 Customized lists
-\labelindent=\skip58
-\enit@outerparindent=\dimen188
-\enit@toks=\toks30
-\enit@inbox=\box61
-\enit@count@id=\count309
-\enitdp@description=\count310
+\labelindent=\skip56
+\enit@outerparindent=\dimen173
+\enit@toks=\toks28
+\enit@inbox=\box54
+\enit@count@id=\count282
+\enitdp@description=\count283
 ) (/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 Package: fancyhdr 2019/01/31 v3.10 Extensive control of page headers and footers
-\f@nch@headwidth=\skip59
-\f@nch@O@elh=\skip60
-\f@nch@O@erh=\skip61
-\f@nch@O@olh=\skip62
-\f@nch@O@orh=\skip63
-\f@nch@O@elf=\skip64
-\f@nch@O@erf=\skip65
-\f@nch@O@olf=\skip66
-\f@nch@O@orf=\skip67
+\f@nch@headwidth=\skip57
+\f@nch@O@elh=\skip58
+\f@nch@O@erh=\skip59
+\f@nch@O@olh=\skip60
+\f@nch@O@orh=\skip61
+\f@nch@O@elf=\skip62
+\f@nch@O@erf=\skip63
+\f@nch@O@olf=\skip64
+\f@nch@O@orf=\skip65
+) (/usr/share/texlive/texmf-dist/tex/latex/tocbibind/tocbibind.sty
+Package: tocbibind 2010/10/13 v1.5k extra ToC listings
+Package tocbibind Info: The document has section divisions on input line 50.
+
+
+Package tocbibind Note: Using section or other style headings.
+
+) (/usr/share/texlive/texmf-dist/tex/latex/cleveref/cleveref.sty
+Package: cleveref 2018/03/27 v0.21.4 Intelligent cross-referencing
+Package cleveref Info: `hyperref' support loaded on input line 2370.
+LaTeX Info: Redefining \cref on input line 2370.
+LaTeX Info: Redefining \Cref on input line 2370.
+LaTeX Info: Redefining \crefrange on input line 2370.
+LaTeX Info: Redefining \Crefrange on input line 2370.
+LaTeX Info: Redefining \cpageref on input line 2370.
+LaTeX Info: Redefining \Cpageref on input line 2370.
+LaTeX Info: Redefining \cpagerefrange on input line 2370.
+LaTeX Info: Redefining \Cpagerefrange on input line 2370.
+LaTeX Info: Redefining \labelcref on input line 2370.
+LaTeX Info: Redefining \labelcpageref on input line 2370.
+Package cleveref Info: `listings' support loaded on input line 3131.
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
+Package: tcolorbox 2019/11/15 version 4.22 text color boxes
+ (/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex
+\pgfutil@everybye=\toks29
+\pgfutil@tempdima=\dimen174
+\pgfutil@tempdimb=\dimen175
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common-lists.tex)) (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-latex.def
+\pgfutil@abb=\box55
+ (/usr/share/texlive/texmf-dist/tex/latex/ms/everyshi.sty
+Package: everyshi 2001/05/15 v3.00 EveryShipout Package (MS)
+)) (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfrcs.code.tex (/usr/share/texlive/texmf-dist/tex/generic/pgf/pgf.revision.tex)
+Package: pgfrcs 2020/01/08 v3.1.5b (3.1.5b)
+))
+Package: pgf 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgfcore.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/systemlayer/pgfsys.sty (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys.code.tex
+Package: pgfsys 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex
+\pgfkeys@pathtoks=\toks30
+\pgfkeys@temptoks=\toks31
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeysfiltered.code.tex
+\pgfkeys@tmptoks=\toks32
+))
+\pgf@x=\dimen176
+\pgf@y=\dimen177
+\pgf@xa=\dimen178
+\pgf@ya=\dimen179
+\pgf@xb=\dimen180
+\pgf@yb=\dimen181
+\pgf@xc=\dimen182
+\pgf@yc=\dimen183
+\pgf@xd=\dimen184
+\pgf@yd=\dimen185
+\w@pgf@writea=\write3
+\r@pgf@reada=\read2
+\c@pgf@counta=\count284
+\c@pgf@countb=\count285
+\c@pgf@countc=\count286
+\c@pgf@countd=\count287
+\t@pgf@toka=\toks33
+\t@pgf@tokb=\toks34
+\t@pgf@tokc=\toks35
+\pgf@sys@id@count=\count288
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgf.cfg
+File: pgf.cfg 2020/01/08 v3.1.5b (3.1.5b)
 )
-runsystem(which pygmentize && touch main.aex)...executed.
-
-runsystem(rm main.aex)...executed.
-
+Driver file for pgf: pgfsys-xetex.def
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-xetex.def
+File: pgfsys-xetex.def 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-dvipdfmx.def
+File: pgfsys-dvipdfmx.def 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-common-pdf.def
+File: pgfsys-common-pdf.def 2020/01/08 v3.1.5b (3.1.5b)
+)
+\pgfsys@objnum=\count289
+))) (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.tex
+File: pgfsyssoftpath.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgfsyssoftpath@smallbuffer@items=\count290
+\pgfsyssoftpath@bigbuffer@items=\count291
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsysprotocol.code.tex
+File: pgfsysprotocol.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+)) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcore.code.tex
+Package: pgfcore 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathcalc.code.tex (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathutil.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathparser.code.tex
+\pgfmath@dimen=\dimen186
+\pgfmath@count=\count292
+\pgfmath@box=\box56
+\pgfmath@toks=\toks36
+\pgfmath@stack@operand=\toks37
+\pgfmath@stack@operation=\toks38
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.code.tex (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.basic.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.trigonometric.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.random.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.comparison.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.base.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.round.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.misc.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.integerarithmetics.code.tex))) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfloat.code.tex
+\c@pgfmathroundto@lastzeros=\count293
+)) (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfint.code.tex) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepoints.code.tex
+File: pgfcorepoints.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgf@picminx=\dimen187
+\pgf@picmaxx=\dimen188
+\pgf@picminy=\dimen189
+\pgf@picmaxy=\dimen190
+\pgf@pathminx=\dimen191
+\pgf@pathmaxx=\dimen192
+\pgf@pathminy=\dimen193
+\pgf@pathmaxy=\dimen194
+\pgf@xx=\dimen195
+\pgf@xy=\dimen196
+\pgf@yx=\dimen197
+\pgf@yy=\dimen198
+\pgf@zx=\dimen199
+\pgf@zy=\dimen256
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathconstruct.code.tex
+File: pgfcorepathconstruct.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgf@path@lastx=\dimen257
+\pgf@path@lasty=\dimen258
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathusage.code.tex
+File: pgfcorepathusage.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgf@shorten@end@additional=\dimen259
+\pgf@shorten@start@additional=\dimen260
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorescopes.code.tex
+File: pgfcorescopes.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgfpic=\box57
+\pgf@hbox=\box58
+\pgf@layerbox@main=\box59
+\pgf@picture@serial@count=\count294
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoregraphicstate.code.tex
+File: pgfcoregraphicstate.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgflinewidth=\dimen261
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransformations.code.tex
+File: pgfcoretransformations.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgf@pt@x=\dimen262
+\pgf@pt@y=\dimen263
+\pgf@pt@temp=\dimen264
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.code.tex
+File: pgfcorequick.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreobjects.code.tex
+File: pgfcoreobjects.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathprocessing.code.tex
+File: pgfcorepathprocessing.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorearrows.code.tex
+File: pgfcorearrows.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgfarrowsep=\dimen265
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreshade.code.tex
+File: pgfcoreshade.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgf@max=\dimen266
+\pgf@sys@shading@range@num=\count295
+\pgf@shadingcount=\count296
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreimage.code.tex
+File: pgfcoreimage.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreexternal.code.tex
+File: pgfcoreexternal.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgfexternal@startupbox=\box60
+)) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorelayers.code.tex
+File: pgfcorelayers.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransparency.code.tex
+File: pgfcoretransparency.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepatterns.code.tex
+File: pgfcorepatterns.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorerdf.code.tex
+File: pgfcorerdf.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+))) (/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmoduleshapes.code.tex
+File: pgfmoduleshapes.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgfnodeparttextbox=\box61
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmoduleplot.code.tex
+File: pgfmoduleplot.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+) (/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-0-65.sty
+Package: pgfcomp-version-0-65 2020/01/08 v3.1.5b (3.1.5b)
+\pgf@nodesepstart=\dimen267
+\pgf@nodesepend=\dimen268
+) (/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-1-18.sty
+Package: pgfcomp-version-1-18 2020/01/08 v3.1.5b (3.1.5b)
+)) (/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty
+Package: verbatim 2019/11/10 v1.5r LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks39
+\verbatim@line=\toks40
+\verbatim@in@stream=\read3
+) (/usr/share/texlive/texmf-dist/tex/latex/environ/environ.sty
+Package: environ 2014/05/04 v0.3 A new way to define environments
+ (/usr/share/texlive/texmf-dist/tex/latex/trimspaces/trimspaces.sty
+Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
+)) (/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+Package: etoolbox 2019/09/21 v2.5h e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count297
+)
+\tcb@titlebox=\box62
+\tcb@upperbox=\box63
+\tcb@lowerbox=\box64
+\tcb@phantombox=\box65
+\c@tcbbreakpart=\count298
+\c@tcblayer=\count299
+\tcolorbox@number=\count300
+\tcb@temp=\box66
+\tcb@temp=\box67
+\tcb@temp=\box68
+\tcb@temp=\box69
+\tcb@out=\write4
+\tcb@record@out=\write5
+ (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbraster.code.tex
+Library (tcolorbox): 'tcbraster.code.tex' version '4.22'
+\c@tcbrastercolumn=\count301
+\c@tcbrasterrow=\count302
+\c@tcbraster=\count303
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskins.code.tex
+Library (tcolorbox): 'tcbskins.code.tex' version '4.22'
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgffor.sty (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex)) (/usr/share/texlive/texmf-dist/tex/latex/pgf/math/pgfmath.sty (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex)) (/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgffor.code.tex
+Package: pgffor 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex)
+\pgffor@iter=\dimen269
+\pgffor@skip=\dimen270
+\pgffor@stack=\toks41
+\pgffor@toks=\toks42
+)) (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/tikz.code.tex
+Package: tikz 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryplothandlers.code.tex
+File: pgflibraryplothandlers.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgf@plot@mark@count=\count304
+\pgfplotmarksize=\dimen271
+)
+\tikz@lastx=\dimen272
+\tikz@lasty=\dimen273
+\tikz@lastxsaved=\dimen274
+\tikz@lastysaved=\dimen275
+\tikz@lastmovetox=\dimen276
+\tikz@lastmovetoy=\dimen277
+\tikzleveldistance=\dimen278
+\tikzsiblingdistance=\dimen279
+\tikz@figbox=\box70
+\tikz@figbox@bg=\box71
+\tikz@tempbox=\box72
+\tikz@tempbox@bg=\box73
+\tikztreelevel=\count305
+\tikznumberofchildren=\count306
+\tikznumberofcurrentchild=\count307
+\tikz@fig@count=\count308
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmodulematrix.code.tex
+File: pgfmodulematrix.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+\pgfmatrixcurrentrow=\count309
+\pgfmatrixcurrentcolumn=\count310
+\pgf@matrix@numberofcolumns=\count311
+)
+\tikz@expandcount=\count312
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+)))
+\tcb@waterbox=\box74
+ (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskinsjigsaw.code.tex
+Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '4.22'
+)) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbbreakable.code.tex
+Library (tcolorbox): 'tcbbreakable.code.tex' version '4.22'
+\tcb@testbox=\box75
+\tcb@totalupperbox=\box76
+\tcb@totallowerbox=\box77
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbhooks.code.tex
+Library (tcolorbox): 'tcbhooks.code.tex' version '4.22'
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbtheorems.code.tex
+Library (tcolorbox): 'tcbtheorems.code.tex' version '4.22'
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbfitting.code.tex
+Library (tcolorbox): 'tcbfitting.code.tex' version '4.22'
+\tcbfitdim=\dimen280
+\tcb@lowerfitdim=\dimen281
+\tcb@upperfitdim=\dimen282
+\tcb@cur@hbadness=\count313
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbxparse.code.tex
+Library (tcolorbox): 'tcbxparse.code.tex' version '4.22'
+(/usr/share/texlive/texmf-dist/tex/latex/l3packages/xparse/xparse.sty (/usr/share/texlive/texmf-dist/tex/latex/l3kernel/expl3.sty
+Package: expl3 2020-02-14 L3 programming layer (loader) 
  (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-xdvipdfmx.def
 File: l3backend-xdvipdfmx.def 2020-02-03 L3 backend support: xdvipdfmx
-\g__graphics_track_int=\count311
-\l__pdf_internal_box=\box62
-\g__pdf_backend_object_int=\count312
-\g__pdf_backend_annotation_int=\count313
-) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.aux)
+\g__graphics_track_int=\count314
+\l__pdf_internal_box=\box78
+\g__pdf_backend_object_int=\count315
+\g__pdf_backend_annotation_int=\count316
+))
+Package: xparse 2020-02-14 L3 Experimental document command parser
+\l__xparse_current_arg_int=\count317
+\g__xparse_grabber_int=\count318
+\l__xparse_m_args_int=\count319
+\l__xparse_v_nesting_int=\count320
+)) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistingsutf8.code.tex
+Library (tcolorbox): 'tcblistingsutf8.code.tex' version '4.22'
+(/usr/share/texlive/texmf-dist/tex/latex/listingsutf8/listingsutf8.sty
+Package: listingsutf8 2019-12-10 v1.5 Allow UTF-8 in listings input (HO)
+
+
+Package listingsutf8 Warning: Package loading is aborted because of missing \pdf@unescapehex.
+(listingsutf8)                It is provided by pdfTeX >= 1.30.
+
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistings.code.tex
+Library (tcolorbox): 'tcblistings.code.tex' version '4.22'
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistingscore.code.tex
+Library (tcolorbox): 'tcblistingscore.code.tex' version '4.22'
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbprocessing.code.tex
+Library (tcolorbox): 'tcbprocessing.code.tex' version '4.22'
+(/usr/share/texlive/texmf-dist/tex/latex/tools/shellesc.sty
+Package: shellesc 2019/11/08 v1.0c unified shell escape interface for LaTeX
+Package shellesc Info: Unrestricted shell escape enabled on input line 75.
+))
+\c@tcblisting=\count321
+))) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbexternal.code.tex
+Library (tcolorbox): 'tcbexternal.code.tex' version '4.22'
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbmagazine.code.tex
+Library (tcolorbox): 'tcbmagazine.code.tex' version '4.22'
+) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbvignette.code.tex
+Library (tcolorbox): 'tcbvignette.code.tex' version '4.22'
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryfadings.code.tex
+File: tikzlibraryfadings.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryfadings.code.tex
+File: pgflibraryfadings.code.tex 2020/01/08 v3.1.5b (3.1.5b)
+))) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbposter.code.tex
+Library (tcolorbox): 'tcbposter.code.tex' version '4.22'
+))
+\c@tcb@cnt@Definition=\count322
+ (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 65.
-LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 65.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 97.
+LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 97.
  (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2019/12/16 v2.5j Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 65.
-LaTeX Font Info:    ... okay on input line 65.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 97.
+LaTeX Font Info:    ... okay on input line 97.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
@@ -656,8 +720,8 @@ LaTeX Font Info:    ... okay on input line 65.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-\AtBeginShipoutBox=\box63
-Package hyperref Info: Link coloring OFF on input line 65.
+\AtBeginShipoutBox=\box79
+Package hyperref Info: Link coloring OFF on input line 97.
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
  (/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
@@ -665,14 +729,14 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 ) (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count314
+\c@section@level=\count323
 )
-LaTeX Info: Redefining \ref on input line 65.
-LaTeX Info: Redefining \pageref on input line 65.
-LaTeX Info: Redefining \nameref on input line 65.
+LaTeX Info: Redefining \ref on input line 97.
+LaTeX Info: Redefining \pageref on input line 97.
+LaTeX Info: Redefining \nameref on input line 97.
  (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.out) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.out)
-\@outlinefile=\write5
-\openout5 = `main.out'.
+\@outlinefile=\write6
+\openout6 = `main.out'.
 
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
@@ -685,7 +749,8 @@ Package: lscape 2000/10/22 v3.01 Landscape Pages (DPC)
 )
 Package pdflscape Info: Auto-detected driver: dvipdfm (xetex) on input line 98.
 )
-\c@lstlisting=\count315
+\c@lstlisting=\count324
+ ABD: EveryShipout initializing macros
 File: ../../bachelor_project_description.pdf Graphic file (type pdf)
 <use ../../bachelor_project_description.pdf>
 File: ../../bachelor_project_description.pdf Graphic file (type pdf)
@@ -705,41 +770,104 @@ File: ../../bachelor_project_description.pdf Graphic file (type pdf)
 <use ../../bachelor_project_description.pdf, page 1>
  [1
 
-] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.toc
-LaTeX Font Info:    Trying to load font information for U+msa on input line 6.
+] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/abstract.tex) [2] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.toc
+LaTeX Font Info:    Trying to load font information for U+msa on input line 2.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 6.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 2.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for U+stmry on input line 6.
+LaTeX Font Info:    Trying to load font information for U+stmry on input line 2.
  (/usr/share/texlive/texmf-dist/tex/latex/stmaryrd/Ustmry.fd))
-\tf@toc=\write6
-\openout6 = `main.toc'.
+\tf@toc=\write7
+\openout7 = `main.toc'.
 
- [2] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/introduction.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/abstract.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/language.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/theorem-prover.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/compiler.tex
+ [3] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/introduction.tex (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2019/09/10 1.8c listings language file
+) (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2019/09/10 1.8c listings language file
+) (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2019/09/10 1.8c (Carsten Heinz)
+) (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2019/09/10 1.8c listings language file
+) (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang2.sty
+File: lstlang2.sty 2019/09/10 1.8c listings language file
+) (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang3.sty
+File: lstlang3.sty 2019/09/10 1.8c listings language file
+)) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/language.tex
+Underfull \hbox (badness 10000) in paragraph at lines 64--3
+
+ []
+
+[4]
+Underfull \hbox (badness 10000) in paragraph at lines 22--38
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 41--49
+
+ []
+
+[5]
+Underfull \hbox (badness 10000) in paragraph at lines 101--110
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 150--162
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 164--179
+
+ []
+
+[6]
+Underfull \hbox (badness 10000) in paragraph at lines 185--193
+
+ []
+
+
+Overfull \hbox (8.61pt too wide) in paragraph at lines 218--218
+[]    \TU/lmtt/m/n/10 <a-args'> := <id> "," <a-args'> | <constant> "," <a-args'> | <id> "[" <expr> "]" "," <a-args'>[] 
+ []
+
+[7]) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/theorem-prover.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/compiler.tex
+Underfull \hbox (badness 10000) in paragraph at lines 14--23
+
+ []
+
+LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 47.
+[8]
+Underfull \hbox (badness 10000) in paragraph at lines 87--96
+
+ []
+
+[9] [10]
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <12> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 15.
-) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/test.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/benchmark.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/web-interface.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/reflection.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/conclusion.tex) [3] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 93.
- [4]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 93.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 221.
+) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/test.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/benchmark.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/web-interface.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/reflection.tex) (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/conclusion.tex) [11] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.bbl) [12] (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/appendice.tex) [13]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 127.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 127.
  (/home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 93.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 93.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 127.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 127.
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 2887716FB5B31ED0CE66CCB2AF42890B;981.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 93.
+(rerunfilecheck)             Checksum: A408F6F2842B77EED5C1E10381FF6333;2110.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 127.
  ) 
 Here is how much of TeX's memory you used:
- 16926 strings out of 479819
- 266739 string characters out of 5895846
- 576565 words of memory out of 5000000
- 33759 multiletter control sequences out of 15000+600000
- 535089 words of font info for 46 fonts, out of 8000000 for 9000
+ 31601 strings out of 479819
+ 612339 string characters out of 5895846
+ 1090832 words of memory out of 5000000
+ 48157 multiletter control sequences out of 15000+600000
+ 535121 words of font info for 50 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 41i,18n,47p,1024b,486s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 64i,23n,103p,991b,1516s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on /home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.xdv (4 pages, 26408 bytes).
+Output written on /home/arbejderen/Desktop/Datalogi/semester6/bachelor/janus-like/doc/main.xdv (13 pages, 290272 bytes).

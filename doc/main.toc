@@ -1,16 +1,31 @@
-\contentsline {section}{\numberline {1}Introduction}{3}{section.1}%
-\contentsline {section}{\numberline {2}Abstract}{3}{section.2}%
-\contentsline {section}{\numberline {3}Janus-like language definition}{3}{section.3}%
-\contentsline {section}{\numberline {4}Theorem prover}{3}{section.4}%
-\contentsline {section}{\numberline {5}Compiler structure}{3}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Lexer}{3}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Parser}{3}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Optimization}{3}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Translation to \texttt {C++}}{3}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Testing of compiler}{3}{section.6}%
-\contentsline {section}{\numberline {7}Benchmark of compiled code}{3}{section.7}%
-\contentsline {section}{\numberline {8}Packing compiler}{3}{section.8}%
-\contentsline {subsection}{\numberline {8.1}Compiler package and usage}{3}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Web interface for compiler}{3}{subsection.8.2}%
-\contentsline {section}{\numberline {9}Reflection over project}{3}{section.9}%
-\contentsline {section}{\numberline {10}Conclusion}{3}{section.10}%
+\contentsline {section}{\numberline {1}Introduction}{4}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Boundaries}{4}{subsection.1.1}%
+\contentsline {section}{\numberline {2}Janus-like Language Definition}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Data Types}{5}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Declaration of Variables}{5}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Modification Arithmetics}{6}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Arithmetics}{6}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}If Statements}{6}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Loops}{6}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}Procedures}{7}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}Formal Definition of Syntax}{7}{subsection.2.8}%
+\contentsline {section}{\numberline {3}Theorem Prover}{8}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Theorem Prover Versus Other Alternatives}{8}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Choosing Theorem Prover}{8}{subsection.3.2}%
+\contentsline {section}{\numberline {4}Compiler Structure}{8}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Lexer}{8}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Parser}{8}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Optimization}{8}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Language Constructs Introducing Asseritons}{8}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}Gathering Information for \texttt {Z3}}{9}{subsubsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.3}Translating to \texttt {Z3}}{9}{subsubsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.4}Translation to \texttt {C++}}{11}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Testing of Compiler}{11}{section.5}%
+\contentsline {section}{\numberline {6}Benchmark of Compiled Code}{11}{section.6}%
+\contentsline {section}{\numberline {7}Packing Compiler}{11}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Compiler Package and Usage}{11}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Web Interface for Compiler}{11}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Reflection Over Project}{11}{section.8}%
+\contentsline {section}{\numberline {9}Conclusion}{11}{section.9}%
+\contentsline {section}{\numberline {10}References}{12}{section.10}%
+\contentsline {section}{\numberline {11}Appendices}{13}{section.11}%
