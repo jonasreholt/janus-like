@@ -1,7 +1,7 @@
 procedure f()
 {
     local int a = 2
-    delocal int a = 2
+    dealloc int a = 2
 }
 
 // [ProcDecl (Ident "f" (Pos 0 0)) [] [Local (IntegerT (Pos 11 3)) (Ident "a" (Pos 15 3)) (ConstE (IntegerV 2 (Pos 19 3)) (Pos 19 3)) (Pos 5 3), Mark (DLocal (IntegerT (Pos 13 4)) (Ident "a" (Pos 17 4)) (ConstE (IntegerV 2 (Pos 21 4)) (Pos 21 4)) (Pos 5 4))]]

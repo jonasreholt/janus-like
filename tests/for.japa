@@ -1,0 +1,7 @@
+procedure f(int a)
+{
+    for local int i = 2
+    {
+        a += 1
+    } i += 1, until (dealloc int i = 2)
+}

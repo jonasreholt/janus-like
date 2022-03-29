@@ -1,10 +1,10 @@
-procedure f(int a[], int b)
+procedure f(int a[10000], int b)
 {
-    for int i = 0
+    for local int i = 0
     {
-        for int j = 0
+        for local int j = 0
         {
             b += a[i + j]
-        } j += 1, untill (j == 100)
-    } i += 1, untill (i == 100)
+        } j += 1, until (dealloc int j = 100)
+    } i += 1, until (dealloc int i = 100)
 }

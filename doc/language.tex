@@ -212,8 +212,9 @@ The language \texttt{JAPA} can be formally written in Bacus-Naur form as:
     <p-decl>  := "procedure" <id> "(" <f-args> ")" "{" <stmts> "}"
 
     <f-args>  := <f-args'> | ""
-    <f-args'> := <type> <id> "," <f-args'> | <type> <id> "[" "]" "," <f-args'>
-              | <type> <id> | <type> <id> "[" "]"
+    <f-args'> := <type> <id> "," <f-args'> | <type> <id> "[" <const> "]" "," <f-args'>
+              | "const" <type> <id> "," <f-args'>
+              | <type> <id> | <type> <id> "[" <const> "]" | "const" <type> <id>
     <a-args>  := <a-args'> | ""
     <a-args'> := <id> "," <a-args'> | <constant> "," <a-args'> | <id> "[" <expr> "]" "," <a-args'>
               | <id> | <id> "[" <expr> "]" | <constant> 
@@ -228,10 +229,10 @@ The language \texttt{JAPA} can be formally written in Bacus-Naur form as:
               | <id> "<=>" <id>
               | "if" "(" <expr> ")" "{" <stmts> "}" "fi" "(" <expr> ")" "else" "{" <stmts> "}"
               | "if" "(" <expr> ")" "{" <stmts> "}" "fi"
-              | "for" <id> "=" <expr> "{" <stmts> "}"
-                <id> <mod-op> "=" <expr> "," "untill" "(" <id> "=" <expr> ")"
-              | "for" <id> "=" <expr> "," <id> <mod-op> "=" <expr> "{" <stmts> "}"
-                "untill" "(" <id> "=" <expr> ")"
+              | "for" "local" <type> <id> "=" <expr> "{" <stmts> "}"
+                <id> <mod-op> "=" <expr> "," "until" "(" "dealloc" <type> <id> "=" <expr> ")"
+              | "for" "local" <type> <id> "=" <expr> "," <id> <mod-op> "=" <expr> "{" <stmts> "}"
+                "until" "(" "dealloc" <type> <id> "=" <expr> ")"
               | "call" <id> "(" <a-args> ")"
               | "uncall" <id> "(" <a-args> ")"
 

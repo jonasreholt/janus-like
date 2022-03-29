@@ -6,6 +6,6 @@ procedure f(int a)
 procedure g()
 {
     local int b = 5
-    f(b)
-    delocal int b = 10
+    call f(b)
+    dealloc int b = 10
 }

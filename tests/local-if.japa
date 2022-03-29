@@ -1,5 +1,7 @@
 procedure f()
 {
+    local int b = 2
+    dealloc int b = 2
     local int a = 2
     if (a < 10)
     {
@@ -9,5 +11,5 @@ procedure f()
     {
         a -= 1
     }
-    delocal int a = 44
+    dealloc int a = 44
 }

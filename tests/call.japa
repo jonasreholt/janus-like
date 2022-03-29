@@ -1,13 +1,13 @@
-procedure f() {
+procedure main() {
   local int a = 0
-  g(a)
-  delocal int a = 2
+  call g(a)
+  dealloc int a = 2
 }
 
 procedure g(int a) {
   a += 2
 }
-
+/*
 // [ProcDecl (Ident "f" (Pos 0 0)) [] [Local (Var (IntegerT) (Ident "a" (Pos 0 0)) (Pos 0 0)) (ConstE (IntegerV 0) (Pos 0 0)) (Pos 0 0), Call (Ident "g" (Pos 0 0)) [VarAA (Var IntegerT (Ident "a" (Pos 0 0)) (Pos 0 0)) (Pos 0 0)] (Pos 0 0), Mark (DLocal (Var (IntegerT) (Ident "a" (Pos 0 0)) (Pos 0 0)) (ConstE (IntegerV 2) (Pos 0 0)) (Pos 0 0))] (Pos 0 0), ProcDecl (Ident "g" (Pos 0 0)) [VarFA (IntegerT) (Ident "a" (Pos 0 0)) (Pos 0 0)] [Mod (Moderator (Var (IntegerT) (Ident "a" (Pos 0 0)) (Pos 0 0)) (PlusEq) (ConstE (IntegerV 2) (Pos 0 0))) (SkipE) (Pos 0 0)] (Pos 0 0)]
 
 
@@ -42,3 +42,4 @@ procedure f''() {
 }
 
 //[ProcDecl (Ident "f" (Pos 0 0)) [] [Local (Var (IntegerT) (Ident "a" (Pos 0 0)) (Pos 0 0)) (ConstE (IntegerV 0) (Pos 0 0)) (Pos 0 0), Call (Ident "g" (Pos 0 0)) [VarAA (Var IntegerT (Ident "a" (Pos 0 0)) (Pos 0 0)) (Pos 0 0), ConstAA (IntegerV 2) (Pos 1 1)] (Pos 0 0), Mark (DLocal (Var (IntegerT) (Ident "a" (Pos 0 0)) (Pos 0 0)) (ConstE (IntegerV 2) (Pos 0 0)) (Pos 0 0))] (Pos 0 0), ProcDecl (Ident "g" (Pos 0 0)) [VarFA (IntegerT) (Ident "b" (Pos 0 0)) (Pos 0 0), ConstFA (IntegerT) (Ident "c" (Pos 0 0)) (Pos 0 0)] [Mod (Moderator (Var (IntegerT) (Ident "b" (Pos 0 0)) (Pos 0 0)) (PlusEq) (VarE (LVar (Ident "c" (Pos 1 1))) (Pos 1 1))) (SkipE) (Pos 0 0)] (Pos 0 0)]
+*/

@@ -1,8 +1,8 @@
 procedure f() {
     local int a = 0
     local int b = 2
-    delocal int b = 2
-    deloval int a = 2
+    dealloc int b = 2
+    dealloc int a = 2
 }
 
 // AST for mark on delocal a

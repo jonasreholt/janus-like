@@ -1,26 +1,19 @@
-int x[6]
-
-procedure perm_to_code(int x[])
+procedure perm_to_code(int x[6])
 {
-    for int k = size(x), k -= 1
+    for local int k = size(x), k -= 1
     {
-        for int j = 0
+        for local int j = 0
         {
             if (x[j] > x[k])
             {
                 x[j] -= 1
             } fi (x[j] >= x[k])
-        } j += 1, untill (j == k)
-    } untill (k == 0)
+        } j += 1, until (dealloc int j = k)
+    } until (dealloc int k = 0)
 }
 
 procedure main()
 {
-    x[0] += 2
-    x[1] += 0
-    x[2] += 3
-    x[3] += 1
-    x[4] += 5
-    x[5] += 6
+    int x[6] = { 2, 0, 4, 1, 5, 6 }
     call perm_to_code(x)
 }
