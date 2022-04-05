@@ -4,7 +4,7 @@ module Optimizer where
 import Z3.Monad (AST, Z3, (+?))
 import qualified Z3.Monad as Z3
 
-import Control.Monad (foldM, (=<<), (<=<))
+import Control.Monad
 
 import Data.Map (Map, (!))
 import qualified Data.Map as Map

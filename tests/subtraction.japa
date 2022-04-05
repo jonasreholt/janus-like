@@ -1,0 +1,8 @@
+procedure main() {
+    int l = 2
+    int c = 2
+    
+    local int a = 0
+    a += 2 - c + l
+    dealloc int a = 2
+}

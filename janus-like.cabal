@@ -30,6 +30,7 @@ executable janus-like
     other-modules:    Syntax,
                       Parser,
                       AssertionRemoval
+                      AstReversing
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

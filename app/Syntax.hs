@@ -1,6 +1,8 @@
 module Syntax where
 
 import Text.Parsec.Pos
+import Control.Monad
+import Data.Maybe
 
 -- data constructions symbolising AST of japa
 type Pos = SourcePos
@@ -31,7 +33,7 @@ data BinOp
 data Ident = Ident String Pos
 instance Show Ident where show (Ident name _) = name
 instance Ord Ident  where Ident n1 _ <= Ident n2 _ = n1 <= n2
-instance Eq Ident   where Ident n1 _ == Ident n2 _ = n1 == n2
+instance Eq Ident   where Ident n1 _ == Ident n2 _ = n1 == n2 
 
 
 data Var
@@ -72,10 +74,12 @@ data FArg
   | ConstFA Type Ident Pos
   deriving (Show)
 
+-- <Var> <ModOp>= <Expr>
 data Moderator = Moderator Var ModOp Expr
   deriving (Show)
 
 data Stmt
+  -- int <(Var )>
   = Global Var Pos
   | Local  Var Pos
   | DLocal Var Pos
@@ -101,3 +105,34 @@ data Program = Program [ProcDecl]
 getStmtVar :: Stmt -> Var
 getStmtVar (Local var pos) = var
 getStmtVar (DLocal var pos) = var
+
+
+
+prettyPrintStmts :: String -> [Stmt] -> IO ()
+prettyPrintStmts acc stmts = mapM_ (f acc) stmts
+  where f :: String -> Stmt -> IO ()
+        f acc stmt = --putStrLn $ acc ++ show stmt
+          case stmt of
+            Ite cond body1 ficond body2 pos -> do
+              putStrLn $ acc ++ "if (" ++ show cond ++ ") {"
+              prettyPrintStmts (acc ++ "    ") body1
+              putStrLn $ acc ++ "} fi (" ++ show ficond ++ ")"
+              putStrLn $ acc ++ "else {"
+              prettyPrintStmts (acc ++ "    ") body2
+              putStrLn $ acc ++ "} " ++ show pos 
+
+            _ -> putStrLn $ acc ++ show stmt
+
+argsToString :: [FArg] -> String
+argsToString args = foldl f "" args
+  where f :: String -> FArg -> String
+        f acc arg = acc ++ ", " ++ show arg
+
+prettyPrintProc :: ProcDecl -> IO ()
+prettyPrintProc (ProcDecl name args body pos) =
+  putStrLn (show name ++ "(" ++ argsToString args ++ ") {")
+    >> prettyPrintStmts "    " body >> putStrLn "}"
+
+prettyPrintPrgm :: Program -> IO ()
+prettyPrintPrgm (Program decls) = mapM_ prettyPrintProc decls
+-- mapM_ :: Monad m => (ProcDecl -> IO ()) -> [ProcDecl] -> IO ()

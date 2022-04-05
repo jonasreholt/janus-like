@@ -9,6 +9,8 @@ import qualified Text.Parsec.Token as Token
 import Data.Functor.Classes (liftEq2)
 import Data.Functor.Identity
 
+import Data.Maybe
+
 import Syntax
 
 
@@ -437,6 +439,24 @@ parseStatements = parseString $ many1 statement
 parseProcedure :: String -> ProcDecl
 parseProcedure = parseString procedure
 
-parseProgram :: String -> Program
-parseProgram = parseString program
+-- parseProgram :: String -> Program
+-- parseProgram = parseString program
 
+parseProgram :: String -> Program
+parseProgram str =
+  let ast = parseString program str in
+    case ast of
+      Program procs ->      
+        case foldl f (Nothing, []) procs of
+          (Nothing, _) -> error "No main function in program"
+          (Just p, ps) -> Program $ p : ps
+  where f :: (Maybe ProcDecl, [ProcDecl]) -> ProcDecl -> (Maybe ProcDecl, [ProcDecl])
+        f acc elm =
+          case elm of
+            ProcDecl (Ident "main" _) _ _ _ ->
+              if (isJust $ fst acc) then
+                error "Cannot define multiple main functions in one program"
+              else
+                (Just elm, snd acc)
+            _ ->
+                (fst acc, elm : snd acc)

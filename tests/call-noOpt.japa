@@ -1,5 +1,5 @@
 procedure g(int a, int k[1], const int c) {
-  a += 2 - c + l
+  a += 2 - c + l + 2
 }
 
 procedure main() {

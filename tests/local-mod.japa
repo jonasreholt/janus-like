@@ -1,0 +1,7 @@
+procedure f()
+{
+    local int a = 2
+    a += 4
+    a -= 4
+    dealloc int a = 2
+}

@@ -7,6 +7,6 @@ procedure main() {
   int b[1]
 
   local int a = 0
-  call g(a, b, 2)
+  uncall g(a, b, 2)
   dealloc int a = 2
 }

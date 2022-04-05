@@ -3,6 +3,7 @@ module Main where
 import System.Environment
 import Z3.Monad (evalZ3)
 
+import Syntax (prettyPrintPrgm)
 import Parser (parseProgram)
 import AssertionRemoval (processProgram)
 
@@ -32,10 +33,10 @@ main = do
     if (fst args') then do
         -- Optimize AST
         oAST <- evalZ3 $ processProgram ast
-        putStrLn $ show oAST
+        prettyPrintPrgm oAST--putStrLn $ show oAST
     else
         -- Do not optimize AST
-        putStrLn $ show ast
+        prettyPrintPrgm ast--putStrLn $ show ast
         
 
 

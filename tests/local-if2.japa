@@ -1,0 +1,30 @@
+procedure f()
+{
+    local int b = 2
+    b += 42
+    dealloc int b = 44
+
+
+    local int a = 2
+    if (a < 10)
+    {
+        local int b = 2
+        b += 42
+        dealloc int b = 44
+
+        a += 42
+    } fi (a > 10)
+    else
+    {
+        local int b = 2
+        b += 42
+        dealloc int b = 44
+
+        a += 42
+    }
+    dealloc int a = 44
+
+    local int b = 2
+    b += 42
+    dealloc int b = 44
+}

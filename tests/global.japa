@@ -1,0 +1,10 @@
+procedure f() {
+    local int a = b
+    a += 2
+    dealloc int a = b + 2
+}
+
+procedure main() {
+    int b
+    call f()
+}
