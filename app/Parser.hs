@@ -318,6 +318,7 @@ statement =
                             Var t n (Just e) p -> e
                             _ -> error $ "for-loop until did not contain expression " ++ show posuntil
                         )
+                        False
                         pos
                 Nothing -> do
                     body <- braces $ many statement
@@ -336,7 +337,9 @@ statement =
                             Var t n (Just e) p -> e
                             _ -> error $ "for-loop until did not contain expression " ++ show posuntil
                         )
+                        False
                         pos
+
         function :: String -> Parser Stmt
         function kind = do
             pos <- getPosition

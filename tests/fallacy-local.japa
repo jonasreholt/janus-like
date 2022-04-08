@@ -1,0 +1,6 @@
+procedure main()
+{
+    assert(1 > 2)
+    local int a = 2
+    dealloc int a = 1
+}

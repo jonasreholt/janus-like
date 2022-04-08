@@ -18,6 +18,10 @@ checkArgs doOpt args =
         [last]  -> (doOpt, readFile last)
         (hd:tl) -> if (hd == "-noOpt") then checkArgs False tl else error usage
 
+printWarnings :: [String] -> IO ()
+printWarnings []      = return ()
+printWarnings (hd:tl) = putStrLn ("Warning: " ++ hd) >> printWarnings tl
+
 -- The steps in compilation:
 --      1. Parse src into AST
 --      2. Reverse AST -> R(AST)
@@ -32,12 +36,14 @@ main = do
     let ast = parseProgram prgm
     if (fst args') then do
         -- Optimize AST
-        oAST <- evalZ3 $ processProgram ast
+        (oAST, warnings) <- evalZ3 $ processProgram ast
+        printWarnings warnings
+        putStrLn ""
         prettyPrintPrgm oAST--putStrLn $ show oAST
     else
         -- Do not optimize AST
         prettyPrintPrgm ast--putStrLn $ show ast
-        
+    
 
 
 

@@ -1,0 +1,34 @@
+procedure fib(int x1, int x2, const int n)
+{
+    x1 += 1
+    x2 += 1
+    for local int i = 2 {
+        local int tmp = x2
+        x2 += x1 + x2
+        x2 <=> x1
+        dealloc int tmp = x2
+    } i += 1, until (dealloc int i = n-1)
+
+    // Doing random stuff that should be invalidated
+
+    // Should be invalidated as x1 modified in loop by switch
+    local int haps = x1
+    dealloc int haps = x1
+
+    
+    local int fabs = n
+    // Should be invalidated now as x2 modified in loop
+    fabs += x2
+    dealloc int fabs = x2 + n
+}
+
+procedure main()
+{
+    int x1
+    int x2
+    
+    local int a = 0
+    dealloc int a = 0
+
+    call fib(x1, x2, 4)
+}

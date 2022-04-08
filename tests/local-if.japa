@@ -1,4 +1,4 @@
-procedure f()
+procedure main()
 {
     local int a = 2
     if (a < 10)

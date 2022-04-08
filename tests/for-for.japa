@@ -1,4 +1,4 @@
-procedure f(int a[10000], int b)
+procedure main(int a[10000], int b)
 {
     for local int i = 0
     {

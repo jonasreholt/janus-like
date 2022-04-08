@@ -1,4 +1,4 @@
-procedure f()
+procedure main()
 {
     local int b = 2
     b += 42

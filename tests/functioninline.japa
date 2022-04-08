@@ -3,7 +3,7 @@ procedure f(int a)
     a += 5
 }
 
-procedure g()
+procedure main()
 {
     local int b = 5
     call f(b)

@@ -1,7 +1,21 @@
-procedure f(int a)
+procedure main(int a)
 {
-    for local int i = 2
+    for local int i = 1
     {
         a += 1
-    } i += 1, until (dealloc int i = 2)
+    } i += 1, until (dealloc int i = 3)
 }
+
+/*
+int main(int a) {
+    int i = 2;
+    while (i != 3) {
+        a += 1;
+        i += 1;
+        assert(i != 2);
+    }
+}
+
+
+
+*/

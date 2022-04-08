@@ -86,8 +86,10 @@ data Stmt
   | Mod    Moderator (Maybe [Expr]) Pos -- Expr is only used if Var is Arr type
   | Switch Var Var Pos
   | Ite    Expr [Stmt] Expr [Stmt] Pos
-  | For1   Var [Stmt] Moderator Expr Pos
-  | For2   Var Moderator [Stmt] Expr Pos
+  -- For1 loop: "for" "local" <type> <id> "=" <expr> "{" <Stmts> "}"
+  --             <id> <modop>"=" <expr>"," "unitl" "(" "dealloc" <type> <id> "=" <expr> ")"
+  | For1   Var [Stmt] Moderator Expr Bool Pos
+  | For2   Var Moderator [Stmt] Expr Bool Pos
   | Call   Ident [AArg] Pos
   | Uncall Ident [AArg] Pos 
   | Assert Expr Pos
@@ -121,7 +123,18 @@ prettyPrintStmts acc stmts = mapM_ (f acc) stmts
               prettyPrintStmts (acc ++ "    ") body2
               putStrLn $ acc ++ "} " ++ show pos 
 
+            For1 var body mod cond b _ -> do
+              putStrLn $ acc ++ "for1 (" ++ show b ++ ") " ++ show var ++ " {"
+              prettyPrintStmts (acc ++ "    ") body
+              putStrLn $ acc ++ "} " ++ show mod ++ ", until (" ++ show cond ++ ")"
+
+            For2 var mod body cond b _ -> do
+              putStrLn $ acc ++ "for2 (" ++ show b ++ ") " ++ show var ++ ", " ++ show mod ++ " {"
+              prettyPrintStmts (acc ++ "    ") body
+              putStrLn $ acc ++ "} until (" ++ show cond ++ ")"
+
             _ -> putStrLn $ acc ++ show stmt
+
 
 argsToString :: [FArg] -> String
 argsToString args = foldl f "" args
