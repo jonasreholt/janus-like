@@ -1,0 +1,44 @@
+procedure foo(int x1, int x2, const int n)
+{
+    assert(x1 == x2)
+    for local int i = 0, invariant (x1 >= x2) {
+        x1 += i
+    } i += 1, until (dealloc int i = n)
+
+    // Doing random stuff that should be invalidated
+
+    // Should not be invalidated as x1 is in invariant
+    local int haps = x1
+    dealloc int haps = x1
+
+    
+    local int fabs = n
+    // Should not be invalidated as x2 not modified in loop
+    fabs += x2
+    dealloc int fabs = x2 + n
+}
+
+procedure main()
+{
+    int x1
+    int x2
+
+    local int a = 0
+    dealloc int a = 0
+
+    call foo(x1, x2, 4)
+}
+
+/*
+_ foo(int x1, int n) {
+    int i = 0;
+    assert (i == 0)
+    invariant (i != 0);
+    while (i != n) {
+        x1 += i
+        i += 1
+        assert (i != 0)
+    }
+    assert (i == n)
+}
+*/

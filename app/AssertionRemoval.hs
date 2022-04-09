@@ -8,7 +8,7 @@ import Control.Monad (foldM, (=<<), (<=<), (>>=))
 
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
-import Data.List (find, nub)
+import Data.List (find, nub, (\\))
 import Data.Maybe
 
 import Syntax
@@ -77,6 +77,22 @@ modifiedVars = \case
   (Switch (Arr _ name1 _ _ _) (Arr _ name2 _ _ _) _:tl) -> name1 : name2 : modifiedVars tl
 
   (_:tl) -> modifiedVars tl
+
+
+exprVars :: Expr -> [Ident]
+exprVars = f []
+  where
+    f :: [Ident] -> Expr -> [Ident]
+    f acc = \case
+      Arith _ e1 e2 -> let acc' = f acc e1 in f acc' e2
+      Not e         -> f acc e
+
+      VarE (LVar name)     -> name:acc
+      VarE (Lookup name _) -> name:acc
+      _ -> acc
+      
+
+
 
 
 operate :: BinOp -> AST -> AST -> Z3 AST
@@ -408,13 +424,13 @@ processStatement doOpt ast scope stmt state warnings =
           * Increment,
           * End condition.
     -}
-    For1 var body m cond b pos -> do
-      (scope', b', body', warnings') <- processForLoop True var body m cond pos warnings
-      return (scope', For1 var body' m cond b' pos, warnings')
+    For1 inv var body m cond b pos -> do
+      (scope', b', body', warnings') <- processForLoop True inv var body m cond pos warnings
+      return (scope', For1 inv var body' m cond b' pos, warnings')
 
-    For2 var m body cond b pos -> do
-      (scope', b', body', warnings') <- processForLoop False var body m cond pos warnings
-      return (scope', For2 var m body' cond b' pos, warnings')
+    For2 inv var m body cond b pos -> do
+      (scope', b', body', warnings') <- processForLoop False inv var body m cond pos warnings
+      return (scope', For2 inv var m body' cond b' pos, warnings')
 
     Skip -> return (scope, Skip, warnings)
     _ -> error $ "Optimization statement: Stmt not implemented yet - " ++ show stmt
@@ -442,52 +458,62 @@ processStatement doOpt ast scope stmt state warnings =
     
     mod _ _ _ = error "Please only use this function for processing modification!"
 
-    -- returns (new scope, outer loop optimizable?, optimized body)
-    processForLoop :: Bool -> Var -> [Stmt] -> Moderator -> Expr -> Pos -> [String] -> Z3 (Vars, Bool, [Stmt], [String])
-    processForLoop forward var@(Var t name (Just val) p1) body m@(Moderator v op incr) cond pos warnings =
-      if (varFreeExprs [val, cond, incr] && modificationFreeIncr name body) then
-        -- Safe to calculate unroll number and unroll
-        case fromJust t of
-          IntegerT -> do
-            let start = evalConstantIntExpr val
-            let end   = evalConstantIntExpr cond
-            let incr'  = evalConstantIntExpr incr
-            case op of
-              XorEq  -> error "xor for loops not implemented yet"
+    -- If loop is not unrollable variables modified within loop body, and not asserted in
+    -- loop invariant, will be invalidated, as we can no longer use any assertions on these.
+    -- Returns (new scope, outer loop optimizable?, optimized body).
+    processForLoop :: Bool -> Maybe Invariant -> Var -> [Stmt] -> Moderator -> Expr -> Pos -> [String] -> Z3 (Vars, Bool, [Stmt], [String])
+    processForLoop forward inv var@(Var t name (Just val) p1) body m@(Moderator v op incr) cond pos warnings =
+      case fromJust t of
+        IntegerT ->
+          case op of
+            XorEq -> error "Xor for-loops not implemented yet"
+            _ -> do
+              -- creating initial loop variable
+              z3var <- makeVar IntegerT name
+              processExpr scope val >>= \case
+                Right z3expr -> do
+                  eq <- Z3.mkEq z3var z3expr
+                  Z3.assert eq
+                  let scope' = Map.insert name z3var scope
 
-              _ ->
-                if start > end then error "Loops utilizing overflow/underflow is not allowed yet"
-                else do
-                  let bound = (end - start) `div` incr'
+                  Z3.push
+                  (body', scope'', state', warnings') <-
+                    processStatements body doOpt ast scope' state warnings
+                  Z3.pop 1
 
-                  -- creating the initial variable
-                  z3var  <- makeVar (fromJust t) name
-                  processExpr scope val >>= \case
-                    Right z3expr -> do
-                      eq     <- Z3.mkEq z3var z3expr
-                      Z3.assert eq
+                  -- TODO: This is not safe to do yet!!
+                  let start = evalConstantIntExpr val
+                  let end   = evalConstantIntExpr cond
+                  let incr'  = evalConstantIntExpr incr
 
-                      Z3.push
-                      -- (scope', body', state') <- processStatements True ast (Map.insert name z3var scope) body state
-                      (body', scope', state', warnings') <- processStatements body doOpt ast (Map.insert name z3var scope) state warnings
-                      Z3.pop 1
+                  -- determine loop optimizer method
+                  let unrollable = varFreeExprs [val, cond, incr] && modificationFreeIncr name body
+                  case (inv, unrollable) of
+                    (Just (Invariant inv' _), True) -> error "optimizing using invariant+unrolling not implemented yet"
+                    (Just (Invariant inv' _), False) ->
+                      invariant inv' body' z3var scope' warnings'
 
-                      (scope'', validated, warnings'') <- unroll bound forward body' pos var z3expr m scope' state' warnings'
-                      if (validated) then
-                        return (scope'', True, body', warnings'')
-                      else
-                        return (scope'', False, body', warnings'')
-                    Left errvar ->
-                      return (scope, False, body, (show name ++ " used invalid variable") : warnings)
+                    (Nothing, True) -> do
+                      -- optimize using unrolling only
+                      if start > end then
+                        error "Loops utilizing overflow/underflow is not allowed yet"
+                      else do
+                        let bound = (end - start) `div` incr'
+                        (scope'', validated, warnings'') <- unroll bound forward body' pos var z3expr m scope' state warnings'
 
-          BooleanT -> error "Boolean for-loops not implemented yet"
-      else --error "Loop not being unrollable not implemented yet"
-      {-
-        Must invalidate every every variable modified within the loop.
-        This is done by removing them from scope.
-      -}
-        invalidateVars (modifiedVars body) scope
-         >>= (\scope' -> return (scope', False, body, ("Loop could not be unrolled: " ++ show pos) : warnings))
+                        if (validated) then
+                          return (scope'', True, body', warnings'')
+                        else
+                          return (scope'', False, body', warnings'')
+
+                    _ ->
+                      -- cannot optimize at all :(
+                      invalidateVars (modifiedVars body) scope
+                        >>= (\scope' -> return (scope', False, body', ("Loop could not be unrolled at " ++ show pos) : warnings))
+                Left errvar ->
+                  invalidateVars (modifiedVars body) scope
+                    >>= (\scope' -> return (scope', False, body, (show name ++ " used invalid variable") : warnings))
+        BooleanT -> error "Boolean for-loops not implemented yet"
       where
         varFreeExprs :: [Expr] -> Bool
         varFreeExprs = \case
@@ -506,6 +532,156 @@ processStatement doOpt ast scope stmt state warnings =
             if (name1 == name2) then False else modificationFreeIncr name1 tl
           (_:tl) -> modificationFreeIncr name1 tl 
 
+        invariant :: Expr -> [Stmt] -> AST -> Vars -> [String] -> Z3 (Vars, Bool, [Stmt], [String])
+        invariant inv body z3var loopScope warnings'  =
+          {-
+            Must prove invariant at:
+              1. Initialization of loop.
+              2. Maintenance - if true before an iteration also true after.
+              3. Termination of loop! Otherwise the whole analysis does not matter.
+          -}
+          processExpr loopScope inv >>= \case
+            Right z3inv -> do
+              validated <- validate stmt z3inv
+              case validated of
+                Right True -> do
+                  -- invariant true at initialization
+                  Z3.push
+                  Z3.assert z3inv
+
+                  -- end ite on return () to make both branches have same return type
+                  (scope) <-
+                    if (forward) then do
+                      (_, scope'', _, _) <-
+                        processStatements body False ast loopScope state warnings
+                      (scope''', _, _) <- mod (Mod m Nothing pos) scope'' warnings
+                      return scope'''
+                    else do
+                      (scope'', _, _) <- mod (Mod m Nothing pos) loopScope warnings
+                      (_, scope''', _, _) <-
+                        processStatements body False ast scope'' state warnings
+                      return scope'''
+
+                  validated <- validate stmt z3inv
+                  case validated of
+                    Right True -> do
+                      {-
+                        invariant true at initialization+maintenance.
+                        This ALWAYS assumes that the decreasing/increasing variable is the loop variable
+                      
+                        Based on whether <id> starts higher or lower than its end value,
+                        I can determine whether it's increasing or decreasing.
+                        Now all that is needed is:
+                          iteration start
+                          (get value of <id>)
+                          loop body
+                          (assert <id> being either larger or less than start)
+                      -}
+                      case tryGetVar name scope of
+                        Just z3var' -> do
+                          z3ast <-
+                            case op of -- TODO: using the operator might not be good enough e.g. i += -1
+                              PlusEq -> Z3.mkBvugt z3var' z3var
+                              _      -> Z3.mkBvult z3var' z3var
+                          
+                          validate stmt z3ast >>= \case
+                            Right True ->
+                              -- also true at termination. So create scope, invalidate changed variables not part of
+                              -- invariant.
+                              -- Optimizing the assertion away is not possible only with invariant.
+                              Z3.pop 1
+                              >> invalidateVars (modifiedVars body \\ exprVars inv) scope
+                              >>= (\scope' -> return (scope', False, body, warnings'))
+                            _ ->
+                              Z3.pop 1
+                              >> invalidateVars (modifiedVars body) scope
+                              >>= (\scope' -> return (scope', False, body,
+                                    ("Loop invariant not true at termination " ++ show pos) : warnings'))
+                        _ ->
+                          Z3.pop 1 >>
+                          return (scope, False, body,
+                            ("Loop variable " ++ show name ++ " has been invalidated") : warnings')
+                    _ ->
+                      Z3.pop 1
+                      >> invalidateVars (modifiedVars body) scope
+                      >>= (\scope' -> return (scope', False, body,
+                            ("Loop invariant not true at maintenance " ++ show pos) : warnings'))
+                Right False ->
+                  invalidateVars (modifiedVars body) scope
+                  >>= (\scope' -> return (scope', False, body,
+                        ("Loop invariant not true at initialization " ++ show pos) : warnings'))
+                Left errmsg ->
+                  invalidateVars (modifiedVars body) scope
+                  >>= (\scope' -> return (scope', False, body, errmsg : warnings'))
+            Left errvar ->
+              invalidateVars (modifiedVars body) scope
+                >>= (\scope' -> return (scope', False, body,
+                        ("Loop invariant used invalidated variables at " ++ show pos) : warnings'))
+
+
+    -- processForLoop :: Bool -> Var -> [Stmt] -> Moderator -> Expr -> Pos -> [String] -> Z3 (Vars, Bool, [Stmt], [String])
+    -- processForLoop forward var@(Var t name (Just val) p1) body m@(Moderator v op incr) cond pos warnings =
+    --   if (varFreeExprs [val, cond, incr] && modificationFreeIncr name body) then
+    --     -- Safe to calculate unroll number and unroll
+    --     case fromJust t of
+    --       IntegerT -> do
+    --         let start = evalConstantIntExpr val
+    --         let end   = evalConstantIntExpr cond
+    --         let incr'  = evalConstantIntExpr incr
+    --         case op of
+    --           XorEq  -> error "xor for loops not implemented yet"
+
+    --           _ ->
+    --             if start > end then error "Loops utilizing overflow/underflow is not allowed yet"
+    --             else do
+    --               let bound = (end - start) `div` incr'
+
+    --               -- creating the initial variable
+    --               z3var  <- makeVar (fromJust t) name
+    --               processExpr scope val >>= \case
+    --                 Right z3expr -> do
+    --                   eq     <- Z3.mkEq z3var z3expr
+    --                   Z3.assert eq
+
+    --                   Z3.push
+    --                   -- (scope', body', state') <- processStatements True ast (Map.insert name z3var scope) body state
+    --                   (body', scope', state', warnings') <- processStatements body doOpt ast (Map.insert name z3var scope) state warnings
+    --                   Z3.pop 1
+
+    --                   (scope'', validated, warnings'') <- unroll bound forward body' pos var z3expr m scope' state' warnings'
+    --                   if (validated) then
+    --                     return (scope'', True, body', warnings'')
+    --                   else
+    --                     return (scope'', False, body', warnings'')
+    --                 Left errvar ->
+    --                   return (scope, False, body, (show name ++ " used invalid variable") : warnings)
+
+    --       BooleanT -> error "Boolean for-loops not implemented yet"
+    --   else --error "Loop not being unrollable not implemented yet"
+    --   {-
+    --     Must invalidate every every variable modified within the loop.
+    --     This is done by removing them from scope.
+    --   -}
+    --     invalidateVars (modifiedVars body) scope
+    --      >>= (\scope' -> return (scope', False, body, ("Loop could not be unrolled: " ++ show pos) : warnings))
+    --   where
+    --     varFreeExprs :: [Expr] -> Bool
+    --     varFreeExprs = \case
+    --       []            -> True
+    --       (ConstE _:tl)      -> True && varFreeExprs tl
+    --       (VarE _:tl)        -> False && varFreeExprs tl
+    --       (Arith _ e1 e2:tl) -> varFreeExprs [e1, e2] && varFreeExprs tl
+    --       (Not e:tl)         -> varFreeExprs [e] && varFreeExprs tl
+    --       (Size n:tl)        -> False && varFreeExprs tl -- TODO: Should be True, if it worked properly
+    --       (SkipE:tl)         -> True && varFreeExprs tl
+        
+    --     modificationFreeIncr :: Ident -> [Stmt] -> Bool
+    --     modificationFreeIncr name1 = \case
+    --       [] -> True
+    --       (Mod (Moderator (Var _ name2 _ _) _ _) _ _:tl) ->
+    --         if (name1 == name2) then False else modificationFreeIncr name1 tl
+    --       (_:tl) -> modificationFreeIncr name1 tl 
+
         unroll :: Int -> Bool -> [Stmt] -> Pos -> Var -> AST -> Moderator -> Vars -> Int -> [String] -> Z3 (Vars, Bool, [String])
         unroll bound forward body pos var@(Var t name _ _) val m scope state warnings =
           case bound of
@@ -513,13 +689,11 @@ processStatement doOpt ast scope stmt state warnings =
             _ -> do
               (scope'', state', warnings') <-
                 if (forward) then do
-                  -- (scope', _, state') <- processStatements False ast scope body state
                   (_, scope', state', _) <- processStatements body False ast scope state []
                   (scope'', _, warnings') <- mod (Mod m Nothing pos) scope' warnings
                   return (scope'', state', warnings')
                 else do
                   (scope', _, warnings') <- mod (Mod m Nothing pos) scope warnings
-                  -- (scope'', _, state') <- processStatements False ast scope' body state
                   (_, scope'', state', _) <- processStatements body False ast scope' state []
                   return (scope'', state', warnings')
 
@@ -705,7 +879,7 @@ processStatement doOpt ast scope stmt state warnings =
                             , ProcDecl namep args (Ite condif' stmtsif condfi' stmtselse pos : body) posp
                             , state2)
 
-          For1 (Var t name val pv) body (Moderator (Var t2 _ val2 pv2) op expr) cond b pos -> do
+          For1 inv (Var t name val pv) body (Moderator (Var t2 _ val2 pv2) op expr) cond b pos -> do
             (vtable', name') <- insert name state vtable
             let val'          = renameExpr vtable (fromJust val)
             tmp2             <- foldM renameStmt (vtable', ProcDecl namep [] [] posp, state + 1) body
@@ -714,12 +888,12 @@ processStatement doOpt ast scope stmt state warnings =
                 let expr' = renameExpr vtable expr
                 let cond' = renameExpr vtable' cond
                 let mod'  = Moderator (Var t2 name' val2 pv2) op expr'
-                let for1' = For1 (Var t name' (Just val') pv) stmts mod' cond' b pos
+                let for1' = For1 inv (Var t name' (Just val') pv) stmts mod' cond' b pos
                 return ( vtable
                         , ProcDecl namep args (for1':body) posp
                         , state1)
 
-          For2 (Var t name val pv) (Moderator (Var t2 _ val2 pv2) op expr) body cond b pos -> do
+          For2 inv (Var t name val pv) (Moderator (Var t2 _ val2 pv2) op expr) body cond b pos -> do
             (vtable', name') <- insert name state vtable
             let val'          = renameExpr vtable (fromJust val)
             tmp2             <- foldM renameStmt (vtable', ProcDecl namep [] [] posp, state + 1) body
@@ -728,7 +902,7 @@ processStatement doOpt ast scope stmt state warnings =
                 let expr' = renameExpr vtable expr
                 let cond' = renameExpr vtable' cond
                 let mod'  = Moderator (Var t2 name' val2 pv2) op expr'
-                let for1' = For2 (Var t name' (Just val') pv) mod' stmts cond' b pos
+                let for1' = For2 inv (Var t name' (Just val') pv) mod' stmts cond' b pos
                 return ( vtable
                         , ProcDecl namep args (for1':body) posp
                         , state1)

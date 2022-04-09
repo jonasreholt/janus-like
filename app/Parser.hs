@@ -34,7 +34,8 @@ japaDefinition =
                                                     "bool", "true", "false",
                                                     "local",
                                                     "dealloc",
-                                                    "assert"
+                                                    "assert",
+                                                    "invariant"
                                                   ],
                         Token.reservedOpNames   = [],
                         Token.caseSensitive     = True
@@ -299,6 +300,7 @@ statement =
             pos <- getPosition
             reserved "for"
             loopvar <- local
+            inv <- optionMaybe $ try invariant
             for2   <- optionMaybe comma
             case for2 of
                 Just _ -> do
@@ -308,7 +310,7 @@ statement =
                     reserved "until"
                     posuntil <- getPosition
                     dvar <- parens dlocal
-                    return $ For2 (getStmtVar loopvar)
+                    return $ For2 inv (getStmtVar loopvar)
                         (case incr of
                             Mod modr idx pos -> modr
                             _ -> error $ "for-loop incrementer is bad " ++ show posincr  
@@ -328,7 +330,7 @@ statement =
                     reserved "until"
                     posuntil <- getPosition
                     dvar <- parens dlocal
-                    return $ For1 (getStmtVar loopvar) body
+                    return $ For1 inv (getStmtVar loopvar) body
                         (case incr of
                             Mod modr idx pos -> modr
                             _ -> error $ "for-loop incrementer is bad " ++ show posincr  
@@ -339,6 +341,15 @@ statement =
                         )
                         False
                         pos
+            where
+                invariant :: Parser Invariant
+                invariant = do
+                    comma
+                    pos <- getPosition
+                    reserved "invariant"
+                    inv <- parens expression
+                    return $ Invariant inv pos
+
 
         function :: String -> Parser Stmt
         function kind = do

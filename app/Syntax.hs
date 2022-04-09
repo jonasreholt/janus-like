@@ -78,6 +78,9 @@ data FArg
 data Moderator = Moderator Var ModOp Expr
   deriving (Show)
 
+data Invariant = Invariant Expr Pos
+  deriving (Show)
+
 data Stmt
   -- int <(Var )>
   = Global Var Pos
@@ -88,8 +91,8 @@ data Stmt
   | Ite    Expr [Stmt] Expr [Stmt] Pos
   -- For1 loop: "for" "local" <type> <id> "=" <expr> "{" <Stmts> "}"
   --             <id> <modop>"=" <expr>"," "unitl" "(" "dealloc" <type> <id> "=" <expr> ")"
-  | For1   Var [Stmt] Moderator Expr Bool Pos
-  | For2   Var Moderator [Stmt] Expr Bool Pos
+  | For1   (Maybe Invariant) Var [Stmt] Moderator Expr Bool Pos
+  | For2   (Maybe Invariant) Var Moderator [Stmt] Expr Bool Pos
   | Call   Ident [AArg] Pos
   | Uncall Ident [AArg] Pos 
   | Assert Expr Pos
@@ -123,13 +126,13 @@ prettyPrintStmts acc stmts = mapM_ (f acc) stmts
               prettyPrintStmts (acc ++ "    ") body2
               putStrLn $ acc ++ "} " ++ show pos 
 
-            For1 var body mod cond b _ -> do
-              putStrLn $ acc ++ "for1 (" ++ show b ++ ") " ++ show var ++ " {"
+            For1 inv var body mod cond b _ -> do
+              putStrLn $ acc ++ "for1 (" ++ show b ++ ") " ++ "invariant (" ++ show inv ++ ") " ++ show var ++ " {"
               prettyPrintStmts (acc ++ "    ") body
               putStrLn $ acc ++ "} " ++ show mod ++ ", until (" ++ show cond ++ ")"
 
-            For2 var mod body cond b _ -> do
-              putStrLn $ acc ++ "for2 (" ++ show b ++ ") " ++ show var ++ ", " ++ show mod ++ " {"
+            For2 inv var mod body cond b _ -> do
+              putStrLn $ acc ++ "for2 (" ++ show b ++ ") " ++ "invariant (" ++ show inv ++ ") " ++ show var ++ ", " ++ show mod ++ " {"
               prettyPrintStmts (acc ++ "    ") body
               putStrLn $ acc ++ "} until (" ++ show cond ++ ")"
 
