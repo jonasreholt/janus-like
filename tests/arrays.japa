@@ -1,0 +1,9 @@
+procedure main() {
+    int arr[2]
+
+    int arr2[2] = {1, 1}
+
+    int arr3[2][2]
+
+    int arr3[2][2] = {{1, 1}, {2, 2}}
+}

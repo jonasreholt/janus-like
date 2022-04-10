@@ -5,14 +5,14 @@ https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
 - [ ] Actually implement array initialization both for globals and locals
   - [ ] 1D
   - [ ] nD
-- [ ] Import and rewrite optimizer to work in new and fancy way
+- [x] Import and rewrite optimizer to work in new and fancy way
   - [x] Make a global store used for every procedure
   - [x] Implement call/uncall
     - [x] Renaming to unique names
     - [x] Implementing a AST reverser for uncall, and other stuff
-  - [ ] Implement for loops
-      - [ ] Invariants (INVARIANTS CANNOT BE USED TO REMOVE THE ADDED ASSERTION SEE EXAMPLE BELOW)
-        - [ ] Make unrollable invariant loops invalidate variables modified within that is not part of invariant
+  - [x] Implement for loops
+      - [x] Invariants (INVARIANTS CANNOT BE USED TO REMOVE THE ADDED ASSERTION SEE EXAMPLE BELOW)
+        - [x] Make unrollable invariant loops invalidate variables modified within that is not part of invariant
       - [x] Constants
         - [x] Make unrollable for loops invalidate variables modified within!
 - [ ] Write translator from AST to C++

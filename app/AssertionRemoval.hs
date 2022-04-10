@@ -489,7 +489,20 @@ processStatement doOpt ast scope stmt state warnings =
                   -- determine loop optimizer method
                   let unrollable = varFreeExprs [val, cond, incr] && modificationFreeIncr name body
                   case (inv, unrollable) of
-                    (Just (Invariant inv' _), True) -> error "optimizing using invariant+unrolling not implemented yet"
+                    (Just (Invariant inv' _), True) -> do
+                      (_, _, _, warnings'') <- invariant inv' body' z3var scope' warnings'
+
+                      if (start > end) then
+                        error "Loops utilizing overflow/underflow is not allowed yet"
+                      else do
+                        let bound = (end - start) `div` incr'
+                        (scope'', validated, warnings''') <- unroll bound forward body' pos var z3expr m scope' state warnings''
+
+                        if (validated) then
+                          return (scope'', True, body', warnings''')
+                        else
+                          return (scope'', False, body', warnings''')
+
                     (Just (Invariant inv' _), False) ->
                       invariant inv' body' z3var scope' warnings'
 
@@ -590,8 +603,10 @@ processStatement doOpt ast scope stmt state warnings =
                               -- invariant.
                               -- Optimizing the assertion away is not possible only with invariant.
                               Z3.pop 1
+                              >> Z3.assert z3inv -- invariant is true so carry the information onwards.
                               >> invalidateVars (modifiedVars body \\ exprVars inv) scope
                               >>= (\scope' -> return (scope', False, body, warnings'))
+
                             _ ->
                               Z3.pop 1
                               >> invalidateVars (modifiedVars body) scope
