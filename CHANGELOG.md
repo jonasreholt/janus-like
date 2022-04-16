@@ -2,9 +2,9 @@
 https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
 
 # Todo
-- [ ] Actually implement array initialization both for globals and locals
-  - [ ] 1D
-  - [ ] nD
+- [x] Actually implement array initialization both for globals and locals
+  - [x] 1D
+  - [x] nD
 - [x] Import and rewrite optimizer to work in new and fancy way
   - [x] Make a global store used for every procedure
   - [x] Implement call/uncall

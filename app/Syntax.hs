@@ -33,15 +33,15 @@ data BinOp
 data Ident = Ident String Pos
 instance Show Ident where show (Ident name _) = name
 instance Ord Ident  where Ident n1 _ <= Ident n2 _ = n1 <= n2
-instance Eq Ident   where Ident n1 _ == Ident n2 _ = n1 == n2 
+instance Eq Ident   where Ident n1 _ == Ident n2 _ = n1 == n2
 
 
 data Var
   = Var (Maybe Type) Ident (Maybe Expr) Pos
   -- Arr type name size value pos
-  | Arr (Maybe Type) Ident (Maybe Integer) (Maybe [Expr]) Pos
-instance Show Var where show (Var _ name e _)            = show(name) ++ " " ++ show(e)
-                        show (Arr _ name _ _ _)          = show(name)
+  | Arr (Maybe Type) Ident (Maybe [Integer]) (Maybe [Expr]) Pos
+instance Show Var where show (Var _ name e _)            = show(name) ++ " " ++ show e
+                        show (Arr _ name _ es _)          = show(name) ++ " " ++ show es
 instance Ord Var  where Var _ n1 _ _ <= Var _ n2 _ _     = n1 <= n2
                         Arr _ n1 _ _ _ <= Arr _ n2 _ _ _ = n1 <= n2
 instance Eq Var   where Var _ n1 _ _ == Var _ n2 _ _     = n1 == n2
