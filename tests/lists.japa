@@ -1,4 +1,4 @@
-procedure foo() {
+procedure foo(int arr3[2][2]) {
     local int arr0[2] = {1, 1}
     dealloc int arr0[2] = {1, 1}
 
@@ -21,4 +21,6 @@ procedure main() {
     int arr4[2][2] = {{1, 1}, {2, 2}}
 
     int arr5[2][3] = {{1, 1, 1}, {1, 1, 1}}
+
+    call foo(arr3)
 }

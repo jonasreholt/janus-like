@@ -11,6 +11,8 @@ import qualified Data.Map as Map
 import Data.List (find, nub, (\\))
 import Data.Maybe
 
+import Debug.Trace
+
 import Syntax
 import AstReversing
 import EvalExpr
@@ -46,7 +48,7 @@ setArray scope vals idx arr =
   case vals of
     [] -> return $ Right arr
     (hd:tl) -> do
-      idx' <- Z3.mkFreshBvVar "arrIdx" intSz
+      idx' <- Z3.mkInt idx =<< Z3.mkBvSort intSz
       hd'  <- processExpr scope hd
       case hd' of
         Right x ->
@@ -62,7 +64,7 @@ tryGetVar name scope =
   Map.lookup name scope
 
 
-invalidateVars :: [Ident] -> Vars -> Z3 Vars 
+invalidateVars :: [Ident] -> Vars -> Z3 Vars
 invalidateVars stmts scope =
   foldM (\s key -> return $ Map.delete key s) scope stmts
 
@@ -86,13 +88,9 @@ exprVars = f []
     f acc = \case
       Arith _ e1 e2 -> let acc' = f acc e1 in f acc' e2
       Not e         -> f acc e
-
       VarE (LVar name)     -> name:acc
       VarE (Lookup name _) -> name:acc
       _ -> acc
-      
-
-
 
 
 operate :: BinOp -> AST -> AST -> Z3 AST
@@ -150,9 +148,9 @@ processExpr scope e =
     Not e -> do
       e' <- processExpr scope e
       case e' of
-        Right x -> 
+        Right x ->
           Z3.mkNot x >>= (\val -> return $ Right val)
-        
+
         Left n -> return (Left n)
     _ -> error $ "Optimization expression: Expr not implemented yet " ++ show e
 
@@ -170,6 +168,46 @@ createITE cond orig scope1 scope2 = foldM f orig $ Map.keys orig
           return $ Map.insert var newVar scope
 
 
+validateArray :: Stmt -> AST -> [Expr] -> Vars -> Z3 (Either String Bool)
+validateArray stmt arr vals scope = do
+  Z3.push
+  -- Checking whether the constraint is satisfiable
+  foldM (f arr scope) 0 vals
+  val <- Z3.solverCheck
+  Z3.pop 1
+  case val of
+    Z3.Sat -> do
+      Z3.push
+      foldM (g arr scope) 0 vals
+      val' <- Z3.solverCheck
+      Z3.pop 1
+      case val' of
+        Z3.Sat -> return $ Right False
+        Z3.Unsat -> return $ Right True
+    Z3.Unsat -> return (Left $ "Z3 expression is a fallact: " ++ show stmt)
+  where
+    f :: AST -> Vars -> Int -> Expr -> Z3 Int
+    f arr scope idx expr = do
+      idx' <- Z3.mkInt idx =<< Z3.mkBvSort intSz
+      processExpr scope expr >>= \case
+        Right newVal -> do
+          sel <- Z3.mkSelect arr idx'
+          eq  <- Z3.mkEq newVal sel
+          Z3.assert eq
+          return $ idx + 1
+        Left errvar -> error "ahh array val could not be processe during validation"
+
+    g :: AST -> Vars -> Int -> Expr -> Z3 Int
+    g arr scope idx expr = do
+      idx' <- Z3.mkInt idx =<< Z3.mkBvSort intSz
+      processExpr scope expr >>= \case
+        Right newVal -> do
+          sel <- Z3.mkSelect arr idx'
+          eq  <- Z3.mkEq newVal sel
+          Z3.assert =<< Z3.mkNot eq
+          return $ idx + 1
+        Left errvar -> error "ahh array val could not be processed during validation"
+
 validate :: Stmt -> AST -> Z3 (Either String Bool) --(Bool, String)
 validate stmt expr = do
   Z3.push
@@ -185,7 +223,7 @@ validate stmt expr = do
       case val' of
         Z3.Sat -> return $ Right False
         Z3.Unsat -> return $ Right True
-    
+
     Z3.Unsat -> Z3.pop 1 >> return (Left $ "Z3 expression is a fallacy: " ++ show stmt)
 
 
@@ -228,6 +266,16 @@ processStatement doOpt ast scope stmt state warnings =
         Left errvar ->
           return (scope, stmt, (show name ++ " used with invalid variable " ++ show errvar) : warnings)
 
+    Local (Arr t name sz vals _) _ -> do
+      newVar <- makeArr (fromJust t) name
+      setArray scope (fromJust vals) 0 newVar >>= \case
+        Right newVar' ->
+          return (Map.insert name newVar' scope, stmt, warnings)
+
+        Left errvar ->
+          let errmsg = show name ++ " used with invalid variable " ++ show errvar in
+            return (scope, stmt, errmsg:warnings)
+
     DLocal (Var t name val _) _ ->
       if (doOpt) then
         -- val     <- processExpr scope (fromJust val)
@@ -245,13 +293,39 @@ processStatement doOpt ast scope stmt state warnings =
                   Right False -> Z3.assert eq >> return (scope, stmt, warnings)
 
               Nothing ->
-                -- The deallocated variable is invalidated so the information cannot be used further on
+                -- The deallocated variable is invalidated so the information cannot
+                -- be used further on
                 return (scope, stmt, (show name ++ " has been invalidated") : warnings)
 
           Left errvar ->
-            return (scope, stmt, (show name ++ " used with invalid variable " ++ show errvar) : warnings)
-      
-        
+            let errmsg = show name ++ " used with invalid variable " ++ show errvar in
+              return (scope, stmt, errmsg:warnings)
+
+      else
+        return (scope, stmt, warnings)
+
+    DLocal (Arr t name sz vals _) _ ->
+      if (doOpt) then
+        case tryGetVar name scope of
+          Just var -> do
+            newVar <- makeArr (fromJust t) name
+            setArray scope (fromJust vals) 0 newVar >>= \case
+              Right newVar' -> do
+                validated <- validateArray stmt var (fromJust vals) scope
+                case validated of
+                  Left err ->
+                    -- Continue without the assertion having any effect on analysis.
+                    return (scope, stmt, err:warnings)
+                  Right True  -> return (scope, Skip, warnings)
+                  Right False ->  return (scope, stmt, ":(":warnings)
+              Left errvar ->
+                let errmsg = show name ++ " used with invalid variable " ++ show errvar in
+                  return (scope, stmt, errmsg:warnings)
+          Nothing ->
+            -- The deallocated variable is invalidated so the information cannot be used
+            -- further on
+            let errmsg = show name ++ " has been invalidated" in
+              return (scope, stmt, errmsg:warnings)
       else
         return (scope, stmt, warnings)
 
@@ -264,7 +338,7 @@ processStatement doOpt ast scope stmt state warnings =
         Just arr ->
           processExpr scope val >>= \case
             Right incrVal ->
-              -- TODO: Only works for 1D arrays
+              -- TODO: Only works for 1D arrays: Need size of array for this!!
               processExpr scope (head (fromJust idx)) >>= \case
                 Right idx' -> do
                   oldVal  <- Z3.mkSelect arr idx'
@@ -276,9 +350,11 @@ processStatement doOpt ast scope stmt state warnings =
                   Z3.mkStore arr idx' newVal
                   return (scope, stmt, warnings)
                 Left errvar ->
-                  return (Map.delete name scope, stmt, (show name ++ " just got invalidated because of " ++ show errvar) : warnings)
+                  let errmsg = show name ++ " just got invalidated because of " ++ show errvar in
+                    return (Map.delete name scope, stmt, errmsg:warnings)
             Left errvar ->
-              return (Map.delete name scope, stmt, (show name ++ " just got invalidated because of " ++ show errvar) : warnings)
+              let errmsg = show name ++ " just got invalidated because of " ++ show errvar in
+              return (Map.delete name scope, stmt, errmsg:warnings)
         Nothing ->
           return (scope, stmt, (show name ++ " has been invalidated") : warnings)
 
@@ -343,8 +419,6 @@ processStatement doOpt ast scope stmt state warnings =
 
                 -- Need to create the scope of body1 and body2 again, because pop erased them
                 -- TODO: Making change whole push pop above, to make sure we don't need this
-                -- body1'  <- processStatements doOpt ast scope body1 0
-                -- body2'  <- processStatements doOpt ast scope body2 0
                 (body1', scope1, state1, warnings') <- processStatements body1 doOpt ast scope 0 warnings
                 (body2', scope2, state2, warnings'') <- processStatements body2 doOpt ast scope 0 warnings'
 
@@ -365,8 +439,6 @@ processStatement doOpt ast scope stmt state warnings =
                 scope' <- invalidateVars (nub $ modifiedVars body1 ++ modifiedVars body2) scope
                 return (scope', stmt, (show errvar ++ " invalidated if-else statement") : warnings)
           else do
-            -- body1'  <- processStatements doOpt ast scope body1 0
-            -- body2'  <- processStatements doOpt ast scope body2 0
             (body1', scope1, state1, warnings') <- processStatements body1 doOpt ast scope 0 warnings
             (body2', scope2, state2, warnings'') <- processStatements body2 doOpt ast scope 0 warnings'
             ite <- createITE ifcond' scope scope1 scope2
@@ -393,9 +465,6 @@ processStatement doOpt ast scope stmt state warnings =
 
         Left errvar ->
           return (scope, stmt, (show stmt ++ " used invalidated var") : warnings)
-
-
-      
 
     {-
       1. Rename formal parameters and local variables in called procedure.
@@ -451,11 +520,12 @@ processStatement doOpt ast scope stmt state warnings =
               return (Map.insert name newVar scope, stmt, warnings)
 
             Left errvar ->
-              return (Map.delete name scope, stmt, (show name ++ " just got invalidated because of " ++ show errvar) : warnings)
+              let errmsg = show name ++ " invalidated because of " ++ show errvar in
+                return (Map.delete name scope, stmt, errmsg:warnings)
 
         _ ->
           return (scope, stmt, (show name ++ " used invalidated var") : warnings)
-    
+
     mod _ _ _ = error "Please only use this function for processing modification!"
 
     -- If loop is not unrollable variables modified within loop body, and not asserted in

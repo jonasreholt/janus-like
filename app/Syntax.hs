@@ -70,7 +70,7 @@ data AArg
 -- Formal parameters
 data FArg
   = VarFA   Type Ident Pos
-  | ArrFA   Type Ident Integer Pos
+  | ArrFA   Type Ident [Integer] Pos
   | ConstFA Type Ident Pos
   deriving (Show)
 
@@ -94,7 +94,7 @@ data Stmt
   | For1   (Maybe Invariant) Var [Stmt] Moderator Expr Bool Pos
   | For2   (Maybe Invariant) Var Moderator [Stmt] Expr Bool Pos
   | Call   Ident [AArg] Pos
-  | Uncall Ident [AArg] Pos 
+  | Uncall Ident [AArg] Pos
   | Assert Expr Pos
   -- | Mark   Stmt
   | Skip

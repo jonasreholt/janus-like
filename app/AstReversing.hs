@@ -25,7 +25,7 @@ reverseStatement acc = \case
 
     For1 inv var body mod cond b pos ->
       For2 inv var mod (foldl reverseStatement [] body) cond b pos : acc
-    
+
     For2 inv var mod body cond b pos ->
       For1 inv var (foldl reverseStatement [] body) mod cond b pos : acc
 
@@ -34,7 +34,7 @@ reverseStatement acc = \case
     Uncall name args pos -> Call name args pos : acc
 
     otherwise -> otherwise : acc
-        
+
 
 reverseProcedure :: ProcDecl -> [ProcDecl] -> [ProcDecl]
 reverseProcedure (ProcDecl name args body pos) acc =
@@ -44,4 +44,6 @@ reverseProcedure (ProcDecl name args body pos) acc =
 
 reverseProgram :: Program -> Program
 reverseProgram (Program ps) =
-  Program $ foldr reverseProcedure [] ps
+  let m = head ps in
+    let rest = foldr reverseProcedure [] (tail ps) in
+      Program $ m:rest

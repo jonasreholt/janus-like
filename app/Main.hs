@@ -6,6 +6,9 @@ import Z3.Monad (evalZ3)
 import Syntax (prettyPrintPrgm)
 import Parser (parseProgram)
 import AssertionRemoval (processProgram)
+import AstReversing (reverseProgram)
+import RenameProcedures (rename)
+import JapaToCpp
 
 
 usage :: String
@@ -33,18 +36,26 @@ main = do
     args  <- getArgs
     let args' = checkArgs True args
     prgm  <- snd args'
-    let ast = parseProgram prgm
+    let astForward = parseProgram prgm
+    let astBackward = reverseProgram astForward
     if (fst args') then do
         -- Optimize AST
-        (oAST, warnings) <- evalZ3 $ processProgram ast
-        printWarnings warnings
-        putStrLn ""
-        prettyPrintPrgm oAST--putStrLn $ show oAST
-    else
-        -- Do not optimize AST
-        prettyPrintPrgm ast--putStrLn $ show ast
-    
+        (oASTF, warningsF) <- evalZ3 $ processProgram astForward
+        (oASTR, warningsR) <- evalZ3 $ processProgram astBackward
 
+        let oASTF' = rename oASTF "_forward"
+        let oASTR' = rename oASTR "_reverse"
+
+        printWarnings warningsF
+        putStrLn ""
+        putStrLn $ show $ formatProgram oASTF' oASTR'
+
+    else do
+        -- Do not optimize AST
+        let astForward' = rename astForward "_forward"
+        let astBackward' = rename astBackward "_reverse"
+
+        putStrLn $ show $ formatProgram astForward' astBackward'
 
 
 

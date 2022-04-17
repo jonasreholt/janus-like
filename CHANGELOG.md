@@ -2,6 +2,9 @@
 https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
 
 # Todo
+- [ ] Look into whether non optimizing should add assertions for DLocal
+- [ ] Fix that array modification only works for 1D arrays
+- [ ] Communicate onwards whether invariant is provable correct
 - [x] Actually implement array initialization both for globals and locals
   - [x] 1D
   - [x] nD
@@ -15,8 +18,10 @@ https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
         - [x] Make unrollable invariant loops invalidate variables modified within that is not part of invariant
       - [x] Constants
         - [x] Make unrollable for loops invalidate variables modified within!
-- [ ] Write translator from AST to C++
+- [x] Write translator from AST to C++
 - [ ] Write playground website to use
+- [ ] Write benchmark tests
+- [ ] Write report
 - [ ] profit
 
 ## Example why invariant cannot be used to prove the assertion away

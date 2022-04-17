@@ -113,7 +113,7 @@ fArg = variable
       pos  <- getPosition
       t    <- jType
       idnt <- identifier
-      idx  <- optionMaybe $ brackets natural
+      idx  <- optionMaybe $ many1 (brackets natural)
       case idx of
         Just exprs -> return $ ArrFA t idnt exprs pos
         Nothing    -> return $ VarFA t idnt pos
@@ -476,17 +476,7 @@ arr = try $ do
       return $ hd ++ (concat tl)
     g :: Parser [Expr]
     g = try lists <|> numbers <?> "Array initialization"
-{-
-        f :: Parser [Expr]
-        f = do
-          hd <- optionMaybe expression
-          case hd of
-            Nothing ->
-              return []
-            Just a -> do
-              tl <- many (comma >> expression)
-              return $ a:tl
--}
+
 
 procedure :: Parser ProcDecl
 procedure = do
