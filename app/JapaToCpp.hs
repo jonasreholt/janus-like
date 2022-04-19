@@ -5,6 +5,8 @@ import Prelude hiding ((<>))
 import Text.PrettyPrint
 import Data.Maybe
 
+import Debug.Trace
+
 import Syntax
 
 
@@ -32,11 +34,11 @@ formatOperator = \case
   BOr    -> char '|'
   And    -> text "&&"
   Or     -> text "||"
-  Great  -> char '<'
-  GreatEq-> text "<="
-  Less   -> char '>'
-  LessEq -> text ">="
-  NotEq  -> char '!'
+  Great  -> char '>'
+  GreatEq-> text ">="
+  Less   -> char '<'
+  LessEq -> text "<="
+  NotEq  -> text "!="
   Eq     -> text "=="
 
 
@@ -212,67 +214,64 @@ formatStmt spc acc stmt =
           $+$
           rbrace
 
-    For1 inv var body mod cond b _ ->
-      loop True var inv body mod cond b
+    For1 inv var body mod cond inf _ ->
+      loop False var inv body mod cond inf
 
-    For2 inv var mod body cond b _ ->
-      loop False var inv body mod cond b
+    For2 inv var mod body cond inf _ ->
+      loop True var inv body mod cond inf
 
     Call (Ident n _) args _ ->
-      text n <> parens (formatAArgs args) <> semi
+      text n <> text "_forward" <> parens (formatAArgs args) <> semi
 
     Uncall (Ident n _) args _ ->
-      text n <> parens (formatAArgs args) <> semi
+      text n <> text "_reverse" <> parens (formatAArgs args) <> semi
 
-    Assert e _ -> assert $ formatExpr e
+    Assert e _ -> assert (formatExpr e) <> semi
 
     Skip -> empty
   where
-    loop :: Bool -> Var -> Maybe Invariant -> [Stmt] -> Moderator -> Expr -> Bool -> Doc
-    loop forward (Var t (Ident n _) e _) inv body (Moderator _ op e1) cond b =
-      -- TODO: Decide whether invariants are solely for analysis or not
-      (case inv of
-         Just (Invariant e _) -> assert (formatExpr e)
-         _ -> empty)
+    loop :: Bool -> Var -> Maybe Invariant -> [Stmt] -> Moderator -> Expr -> LoopInfo -> Doc
+    loop forward (Var t (Ident n _) e _) inv body (Moderator _ op e1) cond inf =
+      case isInvariantOn (getLoopInfoInv inf) Initialization of
+        True  -> formatInvariant empty inv
+        False -> empty
       $+$
-      text "for"
-      <+> formatType (fromJust t) <+> text n <+> equals <+> formatExpr (fromJust e)
-      <>
-      (if (not forward) then
-        comma <+> text n <+> formatOperatorM op <+> formatExpr e1
-      else
-        empty)
+      formatType (fromJust t) <+> text n <+> equals <+> formatExpr (fromJust e) <> semi
+      $+$
+      text "while" <> parens (text n <+> formatOperator (NotEq) <+> formatExpr cond)
       $+$
       lbrace
       $+$
-      (case inv of
-         Just (Invariant e _) -> spc <> assert (formatExpr e)
-         _ -> empty)
+      case isInvariantOn (getLoopInfoInv inf) Maintenance of
+        True  -> formatInvariant spc inv
+        False -> empty
+      $+$
+      case forward of
+         True  -> spc <> text n <+> formatOperatorM op <+> formatExpr e1 <> semi
+         False -> empty
       $+$
       formatStmts spc body
       $+$
-      spc <>
-      (if (b) then
-         empty
-      else
-         assert (char '!' <> parens (text n <+> equals <> equals <+> formatExpr (fromJust e))))
+      case forward of
+        True  -> empty
+        False -> spc <> text n <+> formatOperatorM op <+> formatExpr e1 <> semi
       $+$
-      (case inv of
-         Just (Invariant e _) -> spc <> assert (formatExpr e)
-         _ -> empty)
+      spc <>
+      case getLoopInfoBool inf of
+        True  -> empty
+        False ->
+          assert (char '!' <> parens (text n <+>equals<>equals<+> formatExpr (fromJust e))) <> semi
       $+$
       rbrace
-      <+>
-      (if (forward) then
-         text n <+> formatOperatorM op <+> formatExpr e1 <> comma
-        else empty)
-      <+> text "until"
-      <+>
-      parens (text "dealloc" <+> formatType (fromJust t) <+> text n <+> equals <+> formatExpr cond)
       $+$
-      (case inv of
-         Just (Invariant e _) -> assert (formatExpr e)
-         _ -> empty)
+      case isInvariantOn (getLoopInfoInv inf) Termination of
+        True  -> formatInvariant empty inv
+        False -> empty
+
+    formatInvariant :: Doc -> Maybe Invariant -> Doc
+    formatInvariant spc = \case
+      Just (Invariant inv _) -> spc <> assert (formatExpr inv) <> semi
+      Nothing                -> empty
 
 
 formatStmts :: Doc -> [Stmt] -> Doc
@@ -302,7 +301,10 @@ formatFArgs args = formatFArg (head args) <> foldl formatFArg' empty (tail args)
 
 formatProcedure :: ProcDecl -> Doc
 formatProcedure (ProcDecl (Ident name _) args body _) =
-  text "void" <+>
+  case name of
+    "main" -> text "int"
+    _      -> text "void"
+  <+>
   text name <>
   parens (formatFArgs args)
   $+$
@@ -330,11 +332,17 @@ formatProcedureDefinition acc ((ProcDecl (Ident n _) a _ _), ProcDecl (Ident nr 
   $+$
   text "void" <+> text nr <> parens (formatFArgs ar) <> semi
 
+formatIncludes :: Doc
+formatIncludes =
+  text "#include <assert.h>"
+
 
 formatProgram :: Program -> Program -> Doc
 formatProgram (Program ps) (Program psR) =
   case zip ps psR of
     (main:tl) ->
+      formatIncludes
+      $+$ space $+$
       foldl formatProcedureDefinition empty tl
       $+$ space $+$
       foldl formatProcedure' empty tl

@@ -1,8 +1,10 @@
+{-# LANGUAGE LambdaCase #-}
 module Syntax where
 
 import Text.Parsec.Pos
 import Control.Monad
 import Data.Maybe
+import Data.Bits
 
 -- data constructions symbolising AST of japa
 type Pos = SourcePos
@@ -81,6 +83,21 @@ data Moderator = Moderator Var ModOp Expr
 data Invariant = Invariant Expr Pos
   deriving (Show)
 
+data InvariantInfo =
+    Initialization
+  | Maintenance
+  | Termination
+  deriving (Show)
+
+data LoopInfo = LoopInfo Bool Int
+  deriving (Show)
+
+getLoopInfoInv :: LoopInfo -> Int
+getLoopInfoInv (LoopInfo _ i) = i
+
+getLoopInfoBool :: LoopInfo -> Bool
+getLoopInfoBool (LoopInfo b _) = b
+
 data Stmt
   -- int <(Var )>
   = Global Var Pos
@@ -91,8 +108,8 @@ data Stmt
   | Ite    Expr [Stmt] Expr [Stmt] Pos
   -- For1 loop: "for" "local" <type> <id> "=" <expr> "{" <Stmts> "}"
   --             <id> <modop>"=" <expr>"," "unitl" "(" "dealloc" <type> <id> "=" <expr> ")"
-  | For1   (Maybe Invariant) Var [Stmt] Moderator Expr Bool Pos
-  | For2   (Maybe Invariant) Var Moderator [Stmt] Expr Bool Pos
+  | For1   (Maybe Invariant) Var [Stmt] Moderator Expr LoopInfo Pos
+  | For2   (Maybe Invariant) Var Moderator [Stmt] Expr LoopInfo Pos
   | Call   Ident [AArg] Pos
   | Uncall Ident [AArg] Pos
   | Assert Expr Pos
@@ -105,6 +122,23 @@ data ProcDecl = ProcDecl Ident [FArg] [Stmt] Pos
 
 data Program = Program [ProcDecl]
   deriving (Show)
+
+
+invariantStart :: Int
+invariantStart = 7
+
+invariantFlip :: Int -> InvariantInfo -> Int
+invariantFlip prev = \case
+  Initialization -> prev `xor` 1
+  Maintenance    -> prev `xor` (shift 1 1)
+  Termination    -> prev `xor` (shift 1 2)
+
+
+isInvariantOn :: Int -> InvariantInfo -> Bool
+isInvariantOn inv = \case
+  Initialization -> inv .&. 1 == 1
+  Maintenance    -> inv .&. (shift 1 1) == 2
+  Termination    -> inv .&. (shift 1 2) == 4
 
 
 getStmtVar :: Stmt -> Var
@@ -124,7 +158,7 @@ prettyPrintStmts acc stmts = mapM_ (f acc) stmts
               putStrLn $ acc ++ "} fi (" ++ show ficond ++ ")"
               putStrLn $ acc ++ "else {"
               prettyPrintStmts (acc ++ "    ") body2
-              putStrLn $ acc ++ "} " ++ show pos 
+              putStrLn $ acc ++ "} " ++ show pos
 
             For1 inv var body mod cond b _ -> do
               putStrLn $ acc ++ "for1 (" ++ show b ++ ") " ++ "invariant (" ++ show inv ++ ") " ++ show var ++ " {"

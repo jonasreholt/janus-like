@@ -334,7 +334,7 @@ statement =
                Var t n (Just e) p -> e
                _ -> error $ "for-loop until did not contain expression " ++ show posuntil
             )
-            False
+            (LoopInfo False invariantStart)
             pos
         Nothing -> do
           body <- braces $ many statement
@@ -353,7 +353,7 @@ statement =
                Var t n (Just e) p -> e
                _ -> error $ "for-loop until did not contain expression " ++ show posuntil
             )
-            False
+            (LoopInfo False invariantStart)
             pos
       where
         invariant :: Parser Invariant

@@ -1,7 +1,11 @@
+{-# LANGUAGE LambdaCase #-}
 module Main where
 
 import System.Environment
 import Z3.Monad (evalZ3)
+import Data.Bits
+import System.Timeout (timeout)
+import System.Exit
 
 import Syntax (prettyPrintPrgm)
 import Parser (parseProgram)
@@ -14,16 +18,29 @@ import JapaToCpp
 usage :: String
 usage = "Usage: Main [-noOpt] <program-name>"
 
-checkArgs :: Bool -> [String] -> (Bool, IO String)
-checkArgs doOpt args =
-    case args of
-        []      -> error usage
-        [last]  -> (doOpt, readFile last)
-        (hd:tl) -> if (hd == "-noOpt") then checkArgs False tl else error usage
+
+checkArgs :: (Int, Maybe String) -> [String] -> (Int, IO String)
+checkArgs (options, file) = \case
+  [] ->
+    case file of
+      Just file' -> (options, readFile file')
+      Nothing ->
+        case (options .&. (shift 1 1)) == 2 of
+          True  -> (options, getContents)
+          False -> error usage
+  (hd:tl) ->
+    case hd of
+      "-noOpt" -> checkArgs (options .|. 1, file) tl
+      "-stdin" -> checkArgs (options .|. (shift 1 1), file) tl
+      _        -> checkArgs (options, Just hd) tl
+
 
 printWarnings :: [String] -> IO ()
 printWarnings []      = return ()
 printWarnings (hd:tl) = putStrLn ("Warning: " ++ hd) >> printWarnings tl
+
+timeOut :: IO a -> IO (Maybe a)
+timeOut = timeout (60 * 1000000)
 
 -- The steps in compilation:
 --      1. Parse src into AST
@@ -34,48 +51,34 @@ printWarnings (hd:tl) = putStrLn ("Warning: " ++ hd) >> printWarnings tl
 main :: IO ()
 main = do
     args  <- getArgs
-    let args' = checkArgs True args
+    let args' = checkArgs (0, Nothing) args
     prgm  <- snd args'
     let astForward = parseProgram prgm
     let astBackward = reverseProgram astForward
-    if (fst args') then do
+
+    case ((fst args') .&. 1) == 0 of
+      True -> do
         -- Optimize AST
-        (oASTF, warningsF) <- evalZ3 $ processProgram astForward
-        (oASTR, warningsR) <- evalZ3 $ processProgram astBackward
+        res1 <- timeOut $ evalZ3 $ processProgram astForward
+        case res1 of
+          Just (oASTF, warningsF) -> do
+            res2 <- timeOut $ evalZ3 $ processProgram astBackward
+            case res2 of
+              Just (oASTR, warningsR) -> do
+                let oASTF' = rename oASTF "_forward"
+                let oASTR' = rename oASTR "_reverse"
 
-        let oASTF' = rename oASTF "_forward"
-        let oASTR' = rename oASTR "_reverse"
+                printWarnings warningsF
+                putStrLn ""
+                putStrLn $ show $ formatProgram oASTF' oASTR'
 
-        printWarnings warningsF
-        putStrLn ""
-        putStrLn $ show $ formatProgram oASTF' oASTR'
+              Nothing ->
+                exitWith $ ExitFailure 124
+          Nothing ->
+            exitWith $ ExitFailure 124
 
-    else do
-        -- Do not optimize AST
+      False -> do
         let astForward' = rename astForward "_forward"
         let astBackward' = rename astBackward "_reverse"
 
         putStrLn $ show $ formatProgram astForward' astBackward'
-
-
-
-
-
-
--- -- Below is garbage!!!!!!!!!!!!!!!
--- regularParse :: Parser a -> String -> Either ParseError a
--- regularParse p = parse p ""
-
-
--- tester :: Eq(a) => Parser a -> [(String, Either ParseError a)] -> Bool
--- tester parser sample =
---     case sample of
---         [] -> True
---         ((test, expected):tl) ->
---             if liftEq2 f g (regularParse parser test) expected then tester parser tl
---             else False
---     where
---         f :: ParseError -> ParseError -> Bool
---         f a b = a == b
---         g :: Eq(a) => a -> a -> Bool
---         g a b = a == b

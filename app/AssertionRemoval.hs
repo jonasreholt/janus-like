@@ -232,7 +232,8 @@ validate stmt expr = do
 --    * dealloc is met
 --    * ite is met
 --    * for loop is met
-processStatement :: Bool -> [ProcDecl] -> Vars -> Stmt -> Int -> [String] -> Z3 (Vars, Stmt, [String])
+processStatement :: Bool -> [ProcDecl] -> Vars -> Stmt -> Int -> [String] ->
+  Z3 (Vars, Stmt, [String])
 processStatement doOpt ast scope stmt state warnings =
   case stmt of
     Global (Var t name val _) _ -> do
@@ -244,7 +245,8 @@ processStatement doOpt ast scope stmt state warnings =
           return (Map.insert name newVar scope, stmt, warnings)
 
         Left errvar ->
-          return (scope, stmt, (show name ++ " used with invalid variable " ++ show errvar) : warnings)
+          let errmsg = show name ++ " used with invalid variable " ++ show errvar in
+            return (scope, stmt, errmsg:warnings)
 
     Global (Arr t name sz vals _) _ -> do
       newVar  <- makeArr (fromJust t) name
@@ -253,7 +255,8 @@ processStatement doOpt ast scope stmt state warnings =
           return (Map.insert name newVar' scope, stmt, warnings)
 
         Left errvar ->
-          return (scope, stmt, (show name ++ " used with invalid variable " ++ show errvar) : warnings)
+          let errmsg = show name ++ " used with invalid variable " ++ show errvar in
+            return (scope, stmt, errmsg:warnings)
 
     Local (Var t name val _) _ -> do
       newVar <- makeVar (fromJust t) name
@@ -264,7 +267,8 @@ processStatement doOpt ast scope stmt state warnings =
           return (Map.insert name newVar scope, stmt, warnings)
 
         Left errvar ->
-          return (scope, stmt, (show name ++ " used with invalid variable " ++ show errvar) : warnings)
+          let errmsg = show name ++ " used with invalid variable " ++ show errvar in
+            return (scope, stmt, errmsg:warnings)
 
     Local (Arr t name sz vals _) _ -> do
       newVar <- makeArr (fromJust t) name
@@ -372,7 +376,8 @@ processStatement doOpt ast scope stmt state warnings =
 
         _ ->
           -- One of the switched variables has been invalidated
-          return (scope, stmt, ("Either " ++ show n1 ++ " or " ++ show n2 ++ " has been invalidated") : warnings)
+          let errmsg = "Either " ++ show n1 ++ " or " ++ show n2 ++ " has been invalidated" in
+            return (scope, stmt, errmsg:warnings)
 
     Switch (Arr t1 n1 _ _ _) (Arr t2 n2 _ _ _) _ -> do
       -- newVar1 <- makeVar (fromJust t1) n1
@@ -387,7 +392,8 @@ processStatement doOpt ast scope stmt state warnings =
           return (Map.insert n1 newVar1 $ Map.insert n2 newVar2 scope, stmt, warnings)
 
         _ ->
-          return (scope, stmt, ("Either " ++ show n1 ++ " or " ++ show n2 ++ " has been invalidated") : warnings)
+          let errmsg = "Either " ++ show n1 ++ " or " ++ show n2 ++ " has been invalidated" in
+            return (scope, stmt, errmsg:warnings)
 
     Ite ifcond body1 ficond body2 pos ->
       {-
@@ -419,8 +425,10 @@ processStatement doOpt ast scope stmt state warnings =
 
                 -- Need to create the scope of body1 and body2 again, because pop erased them
                 -- TODO: Making change whole push pop above, to make sure we don't need this
-                (body1', scope1, state1, warnings') <- processStatements body1 doOpt ast scope 0 warnings
-                (body2', scope2, state2, warnings'') <- processStatements body2 doOpt ast scope 0 warnings'
+                (body1', scope1, state1, warnings') <-
+                  processStatements body1 doOpt ast scope 0 warnings
+                (body2', scope2, state2, warnings'') <-
+                  processStatements body2 doOpt ast scope 0 warnings'
 
                 -- Continuation
                 ite <- createITE ifcond' scope scope1 scope2
@@ -439,8 +447,10 @@ processStatement doOpt ast scope stmt state warnings =
                 scope' <- invalidateVars (nub $ modifiedVars body1 ++ modifiedVars body2) scope
                 return (scope', stmt, (show errvar ++ " invalidated if-else statement") : warnings)
           else do
-            (body1', scope1, state1, warnings') <- processStatements body1 doOpt ast scope 0 warnings
-            (body2', scope2, state2, warnings'') <- processStatements body2 doOpt ast scope 0 warnings'
+            (body1', scope1, state1, warnings') <-
+              processStatements body1 doOpt ast scope 0 warnings
+            (body2', scope2, state2, warnings'') <-
+              processStatements body2 doOpt ast scope 0 warnings'
             ite <- createITE ifcond' scope scope1 scope2
             return (ite, stmt, warnings'')
 
@@ -531,8 +541,10 @@ processStatement doOpt ast scope stmt state warnings =
     -- If loop is not unrollable variables modified within loop body, and not asserted in
     -- loop invariant, will be invalidated, as we can no longer use any assertions on these.
     -- Returns (new scope, outer loop optimizable?, optimized body).
-    processForLoop :: Bool -> Maybe Invariant -> Var -> [Stmt] -> Moderator -> Expr -> Pos -> [String] -> Z3 (Vars, Bool, [Stmt], [String])
-    processForLoop forward inv var@(Var t name (Just val) p1) body m@(Moderator v op incr) cond pos warnings =
+    processForLoop :: Bool -> Maybe Invariant -> Var -> [Stmt] -> Moderator -> Expr -> Pos ->
+      [String] -> Z3 (Vars, LoopInfo, [Stmt], [String])
+    processForLoop forward inv var@(Var t name (Just val) p1) body m@(Moderator v op incr) cond
+     pos warnings =
       case fromJust t of
         IntegerT ->
           case op of
@@ -560,18 +572,20 @@ processStatement doOpt ast scope stmt state warnings =
                   let unrollable = varFreeExprs [val, cond, incr] && modificationFreeIncr name body
                   case (inv, unrollable) of
                     (Just (Invariant inv' _), True) -> do
-                      (_, _, _, warnings'') <- invariant inv' body' z3var scope' warnings'
+                      (_, inf', _, warnings'') <- invariant inv' body' z3var scope' warnings'
 
                       if (start > end) then
                         error "Loops utilizing overflow/underflow is not allowed yet"
                       else do
                         let bound = (end - start) `div` incr'
-                        (scope'', validated, warnings''') <- unroll bound forward body' pos var z3expr m scope' state warnings''
+                        (scope'', validated, warnings''') <-
+                          unroll bound forward body' pos var z3expr m scope' state warnings''
 
                         if (validated) then
-                          return (scope'', True, body', warnings''')
+                          return (scope'', LoopInfo True (getLoopInfoInv inf'), body', warnings''')
                         else
-                          return (scope'', False, body', warnings''')
+                          return
+                            (scope'', LoopInfo False (getLoopInfoInv inf'), body', warnings''')
 
                     (Just (Invariant inv' _), False) ->
                       invariant inv' body' z3var scope' warnings'
@@ -582,20 +596,24 @@ processStatement doOpt ast scope stmt state warnings =
                         error "Loops utilizing overflow/underflow is not allowed yet"
                       else do
                         let bound = (end - start) `div` incr'
-                        (scope'', validated, warnings'') <- unroll bound forward body' pos var z3expr m scope' state warnings'
+                        (scope'', validated, warnings'') <-
+                          unroll bound forward body' pos var z3expr m scope' state warnings'
 
                         if (validated) then
-                          return (scope'', True, body', warnings'')
+                          return (scope'', LoopInfo True 0, body', warnings'')
                         else
-                          return (scope'', False, body', warnings'')
+                          return (scope'', LoopInfo False 0, body', warnings'')
 
                     _ ->
                       -- cannot optimize at all :(
-                      invalidateVars (modifiedVars body) scope
-                        >>= (\scope' -> return (scope', False, body', ("Loop could not be unrolled at " ++ show pos) : warnings))
+                      let errmsg = "Loop unrollable: " ++ show pos in
+                        invalidateVars (modifiedVars body) scope
+                          >>= (\scope' ->
+                                 return (scope', LoopInfo False 0, body', errmsg:warnings))
                 Left errvar ->
-                  invalidateVars (modifiedVars body) scope
-                    >>= (\scope' -> return (scope', False, body, (show name ++ " used invalid variable") : warnings))
+                  let errmsg = show name ++ " used invalid variable" in
+                    invalidateVars (modifiedVars body) scope
+                      >>= (\scope' -> return (scope', LoopInfo False 0, body, errmsg:warnings))
         BooleanT -> error "Boolean for-loops not implemented yet"
       where
         varFreeExprs :: [Expr] -> Bool
@@ -605,24 +623,26 @@ processStatement doOpt ast scope stmt state warnings =
           (VarE _:tl)        -> False && varFreeExprs tl
           (Arith _ e1 e2:tl) -> varFreeExprs [e1, e2] && varFreeExprs tl
           (Not e:tl)         -> varFreeExprs [e] && varFreeExprs tl
-          (Size n:tl)        -> False && varFreeExprs tl -- TODO: Should be True, if it worked properly
+          -- TODO: Should be True, if it worked properly
+          (Size n:tl)        -> False && varFreeExprs tl
           (SkipE:tl)         -> True && varFreeExprs tl
-        
+
         modificationFreeIncr :: Ident -> [Stmt] -> Bool
         modificationFreeIncr name1 = \case
           [] -> True
           (Mod (Moderator (Var _ name2 _ _) _ _) _ _:tl) ->
             if (name1 == name2) then False else modificationFreeIncr name1 tl
-          (_:tl) -> modificationFreeIncr name1 tl 
+          (_:tl) -> modificationFreeIncr name1 tl
 
-        invariant :: Expr -> [Stmt] -> AST -> Vars -> [String] -> Z3 (Vars, Bool, [Stmt], [String])
-        invariant inv body z3var loopScope warnings'  =
-          {-
+        {-
             Must prove invariant at:
               1. Initialization of loop.
               2. Maintenance - if true before an iteration also true after.
               3. Termination of loop! Otherwise the whole analysis does not matter.
-          -}
+        -}
+        invariant :: Expr -> [Stmt] -> AST -> Vars -> [String] ->
+          Z3 (Vars, LoopInfo, [Stmt], [String])
+        invariant inv body z3var loopScope warnings'  =
           processExpr loopScope inv >>= \case
             Right z3inv -> do
               validated <- validate stmt z3inv
@@ -650,8 +670,9 @@ processStatement doOpt ast scope stmt state warnings =
                     Right True -> do
                       {-
                         invariant true at initialization+maintenance.
-                        This ALWAYS assumes that the decreasing/increasing variable is the loop variable
-                      
+                        This ALWAYS assumes that the decreasing/increasing variable is the
+                        loop variable
+
                         Based on whether <id> starts higher or lower than its end value,
                         I can determine whether it's increasing or decreasing.
                         Now all that is needed is:
@@ -663,111 +684,53 @@ processStatement doOpt ast scope stmt state warnings =
                       case tryGetVar name scope of
                         Just z3var' -> do
                           z3ast <-
-                            case op of -- TODO: using the operator might not be good enough e.g. i += -1
+                            -- TODO: using the operator might not be good enough e.g. i += -1
+                            case op of
                               PlusEq -> Z3.mkBvugt z3var' z3var
                               _      -> Z3.mkBvult z3var' z3var
-                          
+
                           validate stmt z3ast >>= \case
                             Right True ->
-                              -- also true at termination. So create scope, invalidate changed variables not part of
-                              -- invariant.
+                              -- also true at termination. So create scope, invalidate
+                              -- changed variables not part of invariant.
                               -- Optimizing the assertion away is not possible only with invariant.
                               Z3.pop 1
-                              >> Z3.assert z3inv -- invariant is true so carry the information onwards.
+                              >> Z3.assert z3inv -- invariant true so carry the information onwards
                               >> invalidateVars (modifiedVars body \\ exprVars inv) scope
-                              >>= (\scope' -> return (scope', False, body, warnings'))
+                              >>= (\scope' ->
+                                     return (scope', LoopInfo False 0, body, warnings'))
 
                             _ ->
-                              Z3.pop 1
-                              >> invalidateVars (modifiedVars body) scope
-                              >>= (\scope' -> return (scope', False, body,
-                                    ("Loop invariant not true at termination " ++ show pos) : warnings'))
+                              let errmsg = "Loop invariant untrue at termination: " ++ show pos in
+                                Z3.pop 1
+                                >> invalidateVars (modifiedVars body) scope
+                                >>= (\scope'->
+                                       return (scope',LoopInfo False 4, body, errmsg:warnings'))
                         _ ->
                           Z3.pop 1 >>
-                          return (scope, False, body,
+                          return (scope, LoopInfo False 4, body,
                             ("Loop variable " ++ show name ++ " has been invalidated") : warnings')
                     _ ->
                       Z3.pop 1
                       >> invalidateVars (modifiedVars body) scope
-                      >>= (\scope' -> return (scope', False, body,
+                      >>= (\scope' -> return (scope', LoopInfo False 6, body,
                             ("Loop invariant not true at maintenance " ++ show pos) : warnings'))
                 Right False ->
                   invalidateVars (modifiedVars body) scope
-                  >>= (\scope' -> return (scope', False, body,
+                  >>= (\scope' -> return (scope', LoopInfo False invariantStart, body,
                         ("Loop invariant not true at initialization " ++ show pos) : warnings'))
                 Left errmsg ->
                   invalidateVars (modifiedVars body) scope
-                  >>= (\scope' -> return (scope', False, body, errmsg : warnings'))
+                  >>= (\scope' ->
+                         return (scope', LoopInfo False invariantStart, body, errmsg:warnings'))
             Left errvar ->
               invalidateVars (modifiedVars body) scope
-                >>= (\scope' -> return (scope', False, body,
+                >>= (\scope' -> return (scope', LoopInfo False invariantStart, body,
                         ("Loop invariant used invalidated variables at " ++ show pos) : warnings'))
 
 
-    -- processForLoop :: Bool -> Var -> [Stmt] -> Moderator -> Expr -> Pos -> [String] -> Z3 (Vars, Bool, [Stmt], [String])
-    -- processForLoop forward var@(Var t name (Just val) p1) body m@(Moderator v op incr) cond pos warnings =
-    --   if (varFreeExprs [val, cond, incr] && modificationFreeIncr name body) then
-    --     -- Safe to calculate unroll number and unroll
-    --     case fromJust t of
-    --       IntegerT -> do
-    --         let start = evalConstantIntExpr val
-    --         let end   = evalConstantIntExpr cond
-    --         let incr'  = evalConstantIntExpr incr
-    --         case op of
-    --           XorEq  -> error "xor for loops not implemented yet"
-
-    --           _ ->
-    --             if start > end then error "Loops utilizing overflow/underflow is not allowed yet"
-    --             else do
-    --               let bound = (end - start) `div` incr'
-
-    --               -- creating the initial variable
-    --               z3var  <- makeVar (fromJust t) name
-    --               processExpr scope val >>= \case
-    --                 Right z3expr -> do
-    --                   eq     <- Z3.mkEq z3var z3expr
-    --                   Z3.assert eq
-
-    --                   Z3.push
-    --                   -- (scope', body', state') <- processStatements True ast (Map.insert name z3var scope) body state
-    --                   (body', scope', state', warnings') <- processStatements body doOpt ast (Map.insert name z3var scope) state warnings
-    --                   Z3.pop 1
-
-    --                   (scope'', validated, warnings'') <- unroll bound forward body' pos var z3expr m scope' state' warnings'
-    --                   if (validated) then
-    --                     return (scope'', True, body', warnings'')
-    --                   else
-    --                     return (scope'', False, body', warnings'')
-    --                 Left errvar ->
-    --                   return (scope, False, body, (show name ++ " used invalid variable") : warnings)
-
-    --       BooleanT -> error "Boolean for-loops not implemented yet"
-    --   else --error "Loop not being unrollable not implemented yet"
-    --   {-
-    --     Must invalidate every every variable modified within the loop.
-    --     This is done by removing them from scope.
-    --   -}
-    --     invalidateVars (modifiedVars body) scope
-    --      >>= (\scope' -> return (scope', False, body, ("Loop could not be unrolled: " ++ show pos) : warnings))
-    --   where
-    --     varFreeExprs :: [Expr] -> Bool
-    --     varFreeExprs = \case
-    --       []            -> True
-    --       (ConstE _:tl)      -> True && varFreeExprs tl
-    --       (VarE _:tl)        -> False && varFreeExprs tl
-    --       (Arith _ e1 e2:tl) -> varFreeExprs [e1, e2] && varFreeExprs tl
-    --       (Not e:tl)         -> varFreeExprs [e] && varFreeExprs tl
-    --       (Size n:tl)        -> False && varFreeExprs tl -- TODO: Should be True, if it worked properly
-    --       (SkipE:tl)         -> True && varFreeExprs tl
-        
-    --     modificationFreeIncr :: Ident -> [Stmt] -> Bool
-    --     modificationFreeIncr name1 = \case
-    --       [] -> True
-    --       (Mod (Moderator (Var _ name2 _ _) _ _) _ _:tl) ->
-    --         if (name1 == name2) then False else modificationFreeIncr name1 tl
-    --       (_:tl) -> modificationFreeIncr name1 tl 
-
-        unroll :: Int -> Bool -> [Stmt] -> Pos -> Var -> AST -> Moderator -> Vars -> Int -> [String] -> Z3 (Vars, Bool, [String])
+        unroll :: Int -> Bool -> [Stmt] -> Pos -> Var -> AST -> Moderator -> Vars -> Int ->
+          [String] -> Z3 (Vars, Bool, [String])
         unroll bound forward body pos var@(Var t name _ _) val m scope state warnings =
           case bound of
             0 -> return (scope, True, warnings)
@@ -796,10 +759,12 @@ processStatement doOpt ast scope stmt state warnings =
                       error "loop not validating not implemented yet"
 
                 _ ->
-                  return (scope, False, ("Loop variable " ++ show name ++ " has been invalidated") : warnings)
+                  let errmsg = "Loop variable " ++ show name ++ " invalidated" in
+                    return (scope, False, errmsg:warnings)
 
 
-    processFunctionCall :: Vars -> [AArg] -> ProcDecl -> Int -> [String] -> Z3 (Vars, Stmt, [String])
+    processFunctionCall :: Vars -> [AArg] -> ProcDecl -> Int -> [String] ->
+      Z3 (Vars, Stmt, [String])
     processFunctionCall scope aargs p state warnings =  do
       p' <- renameProc Map.empty p state
       case p' of
@@ -824,7 +789,8 @@ processStatement doOpt ast scope stmt state warnings =
           return (vtable, ProcDecl name (reverse args) (reverse body) pos, state))
 
       where
-        renameArg :: (Map Ident Ident, ProcDecl, Int) -> FArg -> Z3 (Map Ident Ident, ProcDecl, Int)
+        renameArg :: (Map Ident Ident, ProcDecl, Int) -> FArg ->
+          Z3 (Map Ident Ident, ProcDecl, Int)
         renameArg (vtable, ProcDecl namep args body posp, state) = \case
           VarFA t n@(Ident name p) pos ->
             let n' = Ident (show state ++ name) p in
@@ -855,7 +821,7 @@ processStatement doOpt ast scope stmt state warnings =
 
           VarE (Lookup name exprs) ->
             let name' = tryGetVar name vtable in
-              let exprs' = renameExprs vtable exprs in 
+              let exprs' = renameExprs vtable exprs in
                 case name' of
                   Just n  -> VarE (Lookup n exprs')
                   Nothing -> VarE (Lookup name exprs')
@@ -884,14 +850,15 @@ processStatement doOpt ast scope stmt state warnings =
           (hd:tl) -> renameExpr vtable hd : renameExprs vtable tl
 
 
-        renameStmt :: (Map Ident Ident, ProcDecl, Int) -> Stmt -> Z3 (Map Ident Ident, ProcDecl, Int)
+        renameStmt :: (Map Ident Ident, ProcDecl, Int) -> Stmt ->
+          Z3 (Map Ident Ident, ProcDecl, Int)
         renameStmt (vtable, p@(ProcDecl namep args body posp), state) = \case
           Local (Var t name val pv) pos -> do
             (vtable', name') <- insert name state vtable
             let val'          = renameExpr vtable' (fromJust val)
             return ( vtable'
                     , ProcDecl namep args (Local (Var t name' (Just val') pv) pos : body) posp
-                    , state + 1) 
+                    , state + 1)
 
           Local (Arr t name sz vals pv) pos -> do
             (vtable', name') <- insert name state vtable
@@ -939,7 +906,9 @@ processStatement doOpt ast scope stmt state warnings =
             let tmp2 = tryGetVar name2 vtable
             let name2' = if (isJust tmp2) then fromJust tmp2 else name2
             return ( vtable
-                    , ProcDecl namep args (Switch (Var t name' val pv) (Var t2 name2' val2 pv2) pos : body) posp
+                    , ProcDecl namep args
+                        (Switch (Var t name' val pv) (Var t2 name2' val2 pv2) pos : body)
+                        posp
                     , state)
 
           Switch (Arr t name sz val pv) (Arr t2 name2 sz2 val2 pv2) pos -> do
@@ -948,7 +917,9 @@ processStatement doOpt ast scope stmt state warnings =
             let tmp2 = tryGetVar name2 vtable
             let name2' = if (isJust tmp2) then fromJust tmp2 else name2
             return ( vtable
-                    , ProcDecl namep args (Switch (Arr t name' sz val pv) (Arr t2 name2' sz val2 pv2) pos : body) posp
+                    , ProcDecl namep args
+                        (Switch (Arr t name' sz val pv) (Arr t2 name2' sz val2 pv2) pos : body)
+                        posp
                     , state)
 
           Ite condif bodyif condfi bodyelse pos -> do
@@ -960,14 +931,17 @@ processStatement doOpt ast scope stmt state warnings =
                 tmp2 <- foldM renameStmt (vtable, ProcDecl namep [] [] posp, state1) bodyelse
                 case tmp2 of
                   (vtable2, ProcDecl _ _ stmtselse _, state2) ->
-                    return ( vtable -- Use old vtable as variables introduced in ite is in a tighter scope
-                            , ProcDecl namep args (Ite condif' stmtsif condfi' stmtselse pos : body) posp
+                    -- Use old vtable as variables introduced in ite is in a tighter scope
+                    return ( vtable
+                            , ProcDecl namep args
+                                (Ite condif' stmtsif condfi' stmtselse pos : body)
+                                posp
                             , state2)
 
           For1 inv (Var t name val pv) body (Moderator (Var t2 _ val2 pv2) op expr) cond b pos -> do
             (vtable', name') <- insert name state vtable
-            let val'          = renameExpr vtable (fromJust val)
-            tmp2             <- foldM renameStmt (vtable', ProcDecl namep [] [] posp, state + 1) body
+            let val' = renameExpr vtable (fromJust val)
+            tmp2 <- foldM renameStmt (vtable', ProcDecl namep [] [] posp, state + 1) body
             case tmp2 of
               (vtablebody, ProcDecl _ _ stmts _, state1) -> do
                 let expr' = renameExpr vtable expr
@@ -980,8 +954,8 @@ processStatement doOpt ast scope stmt state warnings =
 
           For2 inv (Var t name val pv) (Moderator (Var t2 _ val2 pv2) op expr) body cond b pos -> do
             (vtable', name') <- insert name state vtable
-            let val'          = renameExpr vtable (fromJust val)
-            tmp2             <- foldM renameStmt (vtable', ProcDecl namep [] [] posp, state + 1) body
+            let val' = renameExpr vtable (fromJust val)
+            tmp2 <- foldM renameStmt (vtable', ProcDecl namep [] [] posp, state + 1) body
             case tmp2 of
               (vtablebody, ProcDecl _ _ stmts _, state1) -> do
                 let expr' = renameExpr vtable expr
@@ -999,7 +973,9 @@ processStatement doOpt ast scope stmt state warnings =
 
           Uncall name aargs pos ->
             return ( vtable
-                    , ProcDecl namep args (Uncall name (foldr renameAArg [] aargs) pos : body) posp
+                    , ProcDecl namep args
+                        (Uncall name (foldr renameAArg [] aargs) pos : body)
+                        posp
                     , state)
 
           Assert cond pos ->
@@ -1014,8 +990,8 @@ processStatement doOpt ast scope stmt state warnings =
                     , state)
 
           -- Not Globals can happen, as main should be the last declared procedure
-          otherwise -> error $ "Renaming statement error: " ++ show otherwise ++ " should not happen here"
-      
+          otherwise ->
+            error $ "Renaming statement error: " ++ show otherwise ++ " should not happen here"
 
         renameAArg :: AArg -> [AArg] -> [AArg]
         renameAArg elm acc =
@@ -1070,7 +1046,9 @@ processStatement doOpt ast scope stmt state warnings =
               Z3.assert =<< Z3.mkEq newVar z3Val
               return $ Map.insert name newVar scope
 
-            _ -> error $ "Connecting Arguments: Actual argument " ++ show (aargs) ++ " does not match constant " ++ show fargs
+            _ ->
+              error $ "Connecting Arguments: Actual argument "
+                ++ show (aargs) ++ " does not match constant " ++ show fargs
 
     connectArgumentsBack :: Vars -> (AArg, FArg) -> Z3 Vars
     connectArgumentsBack scope (VarAA (Var _ name1 _ _) Nothing _, VarFA t name _) = do
@@ -1094,7 +1072,8 @@ processStatement doOpt ast scope stmt state warnings =
     connectArgumentsBack scope _ = return scope
 
 
-processStatements :: [Stmt] -> Bool -> [ProcDecl] -> Vars -> Int -> [String] -> Z3 ([Stmt], Vars, Int, [String])
+processStatements :: [Stmt] -> Bool -> [ProcDecl] -> Vars -> Int -> [String] ->
+  Z3 ([Stmt], Vars, Int, [String])
 processStatements body doOpt ast scope state warnings =
   foldM (f ast) ([], scope, state, warnings) body
     >>= (\(body', scope', state', warnings') -> return (reverse body', scope', state', warnings'))
@@ -1103,18 +1082,6 @@ processStatements body doOpt ast scope state warnings =
     f ast (acc, scope, state, warnings) stmt = do
       (scope', stmt', warnings') <- processStatement doOpt ast scope stmt state warnings
       return (stmt':acc, scope', state + 1, warnings')
-      -- return (scope', stmt' : acc, state + 1, warnings')
-
-
--- processStatement :: Bool -> [ProcDecl] -> Vars -> Stmt -> Int -> [String] -> Z3 (Vars, Stmt, [String])
-
--- processStatements :: Bool -> [ProcDecl] -> Vars -> [Stmt] -> Int -> Z3 (Vars, [Stmt], Int, [String])
--- processStatements doOpt ast scope body state = foldM (f ast) (scope, [], state) body
---   where
---     f :: [ProcDecl] -> (Vars, [Stmt], Int) -> Stmt -> Z3 (Vars, [Stmt], Int)
---     f ast (scope, acc, state) stmt = do
---       res <- processStatement doOpt ast scope stmt state
---       return (fst res, acc ++ [snd res], state + 1, [])
 
 
 processArgs :: [FArg] -> Vars -> Z3 Vars
@@ -1134,7 +1101,8 @@ processArgs args scope = foldM f scope args
           return $ Map.insert n newVar vars
 
 
-processProcedure :: [ProcDecl] -> Vars -> ([ProcDecl], [String]) -> ProcDecl -> Z3 ([ProcDecl], [String])
+processProcedure :: [ProcDecl] -> Vars -> ([ProcDecl], [String]) -> ProcDecl ->
+  Z3 ([ProcDecl], [String])
 processProcedure ast scope (accp, warnings) (ProcDecl name args body pos) = do
   -- Make sure assertions created for one procedure does not influence another
   Z3.push
@@ -1169,5 +1137,3 @@ processProgram (Program decls) = do
   initialScope <- processMainStore $ head decls
   (decls', warnings) <- foldM (processProcedure (tail decls) initialScope) ([], []) decls
   return (Program $ reverse decls', reverse warnings)
-
--- show <$> evalZ3 (liftM snd (processStatements [] Map.empty (parseStatements "local int a = 2\na += 1\ndealloc int a = 3")))

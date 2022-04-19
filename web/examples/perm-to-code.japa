@@ -1,0 +1,19 @@
+procedure perm_to_code(int x[6])
+{
+    for local int k = size(x), k -= 1
+    {
+        for local int j = 0
+        {
+            if (x[j] > x[k])
+            {
+                x[j] -= 1
+            } fi (x[j] >= x[k])
+        } j += 1, until (dealloc int j = k)
+    } until (dealloc int k = 0)
+}
+
+procedure main()
+{
+    int x[6] = { 2, 0, 4, 1, 5, 6 }
+    call perm_to_code(x)
+}
