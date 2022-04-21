@@ -10,6 +10,7 @@ import Data.Map (Map, (!))
 import qualified Data.Map as Map
 import Data.List (find, nub, (\\))
 import Data.Maybe
+import Data.Either
 
 import Debug.Trace
 
@@ -17,7 +18,7 @@ import Syntax
 import AstReversing
 import EvalExpr
 
-type Vars = Map Ident AST
+type Vars = Map Ident (AST, Var)
 
 intSz = 32
 
@@ -129,7 +130,7 @@ processExpr scope e =
       case var of
         LVar n ->
           case tryGetVar n scope of
-            Just n' -> return $ Right n'
+            Just (n', _) -> return $ Right n'
             Nothing -> return (Left n)
 
         _ -> error "VarE for array not implemented yet"
@@ -152,20 +153,36 @@ processExpr scope e =
           Z3.mkNot x >>= (\val -> return $ Right val)
 
         Left n -> return (Left n)
+
+    Size (Lookup n idx) _ -> case tryGetVar n scope of
+      Just (varz3, Arr t n s e _) ->
+        let size = arrSize $ take (length idx) (fromJust s) in
+          Z3.mkBvNum intSz size >>= (\val -> return $ Right val)
+
+      Nothing -> return (Left n)
+
+    Size (LVar n) _ -> case tryGetVar n scope of
+      Just (varz3, Arr t n s e _) ->
+        let size = arrSize $ fromJust s in
+          Z3.mkBvNum intSz size >>= (\val -> return $ Right val)
+      Nothing ->
+        return $ Left n
+
     _ -> error $ "Optimization expression: Expr not implemented yet " ++ show e
 
 
 createITE :: AST -> Vars -> Vars -> Vars -> Z3 Vars
 createITE cond orig scope1 scope2 = foldM f orig $ Map.keys orig
-  where f scope var = do
+  where f scope name = do
           -- During this phase it should always be Just, as we work on the origin scope
-          let var1   = tryGetVar var scope1
-          let var2   = tryGetVar var scope2
+          let (var1z3, var)   = fromJust $ tryGetVar name scope1
+          let (var2z3, _)   = fromJust $ tryGetVar name scope2
 
-          newVar    <- makeVar (IntegerT) var -- TODO: again a hack with the type
-          ite       <- Z3.mkIte cond (fromJust var1) (fromJust var2)
+          -- Use var from one branch as type should be identical
+          newVar    <- makeVar (fromJust (getVarType var)) name
+          ite       <- Z3.mkIte cond var1z3 var2z3
           Z3.assert =<< Z3.mkEq newVar ite
-          return $ Map.insert var newVar scope
+          return $ Map.insert name (newVar, var) scope
 
 
 validateArray :: Stmt -> AST -> [Expr] -> Vars -> Z3 (Either String Bool)
@@ -235,46 +252,46 @@ validate stmt expr = do
 processStatement :: Bool -> [ProcDecl] -> Vars -> Stmt -> Int -> [String] ->
   Z3 (Vars, Stmt, [String])
 processStatement doOpt ast scope stmt state warnings =
-  case stmt of
-    Global (Var t name val _) _ -> do
+  trace (show stmt) $ case stmt of
+    Global var@(Var t name val _) _ -> do
       newVar <- makeVar (fromJust t) name
 
       processExpr scope (fromJust val) >>= \case
         Right newVal -> do
           Z3.assert =<< Z3.mkEq newVar newVal
-          return (Map.insert name newVar scope, stmt, warnings)
+          return (Map.insert name (newVar, var) scope, stmt, warnings)
 
         Left errvar ->
           let errmsg = show name ++ " used with invalid variable " ++ show errvar in
             return (scope, stmt, errmsg:warnings)
 
-    Global (Arr t name sz vals _) _ -> do
+    Global var@(Arr t name sz vals _) _ -> do
       newVar  <- makeArr (fromJust t) name
       setArray scope (fromJust vals) 0 newVar >>= \case
         Right newVar' ->
-          return (Map.insert name newVar' scope, stmt, warnings)
+          return (Map.insert name (newVar', var) scope, stmt, warnings)
 
         Left errvar ->
           let errmsg = show name ++ " used with invalid variable " ++ show errvar in
             return (scope, stmt, errmsg:warnings)
 
-    Local (Var t name val _) _ -> do
+    Local var@(Var t name val _) _ -> do
       newVar <- makeVar (fromJust t) name
 
       processExpr scope (fromJust val) >>= \case
         Right newVal -> do
           Z3.assert =<< Z3.mkEq newVar newVal
-          return (Map.insert name newVar scope, stmt, warnings)
+          return (Map.insert name (newVar, var) scope, stmt, warnings)
 
         Left errvar ->
           let errmsg = show name ++ " used with invalid variable " ++ show errvar in
             return (scope, stmt, errmsg:warnings)
 
-    Local (Arr t name sz vals _) _ -> do
+    Local var@(Arr t name sz vals _) _ -> do
       newVar <- makeArr (fromJust t) name
       setArray scope (fromJust vals) 0 newVar >>= \case
         Right newVar' ->
-          return (Map.insert name newVar' scope, stmt, warnings)
+          return (Map.insert name (newVar', var) scope, stmt, warnings)
 
         Left errvar ->
           let errmsg = show name ++ " used with invalid variable " ++ show errvar in
@@ -286,8 +303,8 @@ processStatement doOpt ast scope stmt state warnings =
         processExpr scope (fromJust val) >>= \case
           Right val ->
             case tryGetVar name scope of
-              Just var -> do
-                eq <- Z3.mkEq var val
+              Just (varz3, var) -> do
+                eq <- Z3.mkEq varz3 val
                 validated <- validate stmt eq
                 case validated of
                   Left err    ->
@@ -299,7 +316,7 @@ processStatement doOpt ast scope stmt state warnings =
               Nothing ->
                 -- The deallocated variable is invalidated so the information cannot
                 -- be used further on
-                return (scope, stmt, (show name ++ " has been invalidated") : warnings)
+                trace "found" (return (scope, stmt, (show name ++ " has been invalidated") : warnings))
 
           Left errvar ->
             let errmsg = show name ++ " used with invalid variable " ++ show errvar in
@@ -311,17 +328,17 @@ processStatement doOpt ast scope stmt state warnings =
     DLocal (Arr t name sz vals _) _ ->
       if (doOpt) then
         case tryGetVar name scope of
-          Just var -> do
+          Just (varz3, var) -> do
             newVar <- makeArr (fromJust t) name
             setArray scope (fromJust vals) 0 newVar >>= \case
               Right newVar' -> do
-                validated <- validateArray stmt var (fromJust vals) scope
+                validated <- validateArray stmt varz3 (fromJust vals) scope
                 case validated of
                   Left err ->
                     -- Continue without the assertion having any effect on analysis.
                     return (scope, stmt, err:warnings)
                   Right True  -> return (scope, Skip, warnings)
-                  Right False ->  return (scope, stmt, ":(":warnings)
+                  Right False ->  return (scope, stmt, warnings)
               Left errvar ->
                 let errmsg = show name ++ " used with invalid variable " ++ show errvar in
                   return (scope, stmt, errmsg:warnings)
@@ -337,59 +354,58 @@ processStatement doOpt ast scope stmt state warnings =
       -- Moderation can only happen for integer types. This should be checked by a type checker
       mod stmt scope warnings
 
-    Mod (Moderator (Arr _ name sz vals _) op val) idx _ ->
+    Mod (Moderator var@(Arr t name sz vals _) op val) idx _ ->
       case tryGetVar name scope of
-        Just arr ->
+        Just (arrz3, arr) ->
           processExpr scope val >>= \case
-            Right incrVal ->
-              -- TODO: Only works for 1D arrays: Need size of array for this!!
-              processExpr scope (head (fromJust idx)) >>= \case
-                Right idx' -> do
-                  oldVal  <- Z3.mkSelect arr idx'
-                  newVal  <-
-                    case op of
-                      PlusEq -> Z3.mkBvadd oldVal incrVal
-                      SubEq  -> Z3.mkBvsub oldVal incrVal
-                      XorEq  -> Z3.mkBvxor oldVal incrVal
-                  Z3.mkStore arr idx' newVal
-                  return (scope, stmt, warnings)
-                Left errvar ->
-                  let errmsg = show name ++ " just got invalidated because of " ++ show errvar in
-                    return (Map.delete name scope, stmt, errmsg:warnings)
+            Right incrVal -> case arrayIndex (fromJust idx) of
+              Right i -> do
+                idx' <- trace ("idx " ++ show i) $ Z3.mkBvNum intSz i
+                oldVal  <- Z3.mkSelect arrz3 idx'
+                newVal  <-
+                  case op of
+                    PlusEq -> Z3.mkBvadd oldVal incrVal
+                    SubEq  -> Z3.mkBvsub oldVal incrVal
+                    XorEq  -> Z3.mkBvxor oldVal incrVal
+                newVar  <- makeArr (fromJust t) name
+                newVal' <- Z3.mkStore arrz3 idx' newVal
+                Z3.assert =<< Z3.mkEq newVar newVal'
+                return (Map.insert name (newVar, var) scope, stmt, warnings)
+
+              Left err ->
+                let errmsg = show name ++ " just got invalidated because of " ++ err in
+                  return (Map.delete name scope, stmt, errmsg:warnings)
+
             Left errvar ->
               let errmsg = show name ++ " just got invalidated because of " ++ show errvar in
               return (Map.delete name scope, stmt, errmsg:warnings)
         Nothing ->
           return (scope, stmt, (show name ++ " has been invalidated") : warnings)
 
-    Switch (Var t1 n1 _ _) (Var t2 n2 _ _) _ -> do
-      -- newVar1 <- makeVar (fromJust t1) n1
-      -- newVar2 <- makeVar (fromJust t2) n2
-      newVar1 <- makeVar IntegerT n1 -- TODO: Stop this hardcoding of types
-      newVar2 <- makeVar IntegerT n2 -- TODO: Stop this hardcoding of types
+    Switch (Var (Just t1) n1 _ _) (Var (Just t2) n2 _ _) _ -> do
+      newVar1 <- makeVar t1 n1
+      newVar2 <- makeVar t2 n2
 
       case (tryGetVar n1 scope, tryGetVar n2 scope) of
-        (Just n1', Just n2') -> do
+        (Just (n1', v1), Just (n2', v2)) -> do
           Z3.assert =<< Z3.mkEq newVar1 n2'
           Z3.assert =<< Z3.mkEq newVar2 n1'
-          return (Map.insert n1 newVar1 $ Map.insert n2 newVar2 scope, stmt, warnings)
+          return (Map.insert n1 (newVar1, v1) $ Map.insert n2 (newVar2, v2) scope, stmt, warnings)
 
         _ ->
           -- One of the switched variables has been invalidated
           let errmsg = "Either " ++ show n1 ++ " or " ++ show n2 ++ " has been invalidated" in
             return (scope, stmt, errmsg:warnings)
 
-    Switch (Arr t1 n1 _ _ _) (Arr t2 n2 _ _ _) _ -> do
-      -- newVar1 <- makeVar (fromJust t1) n1
-      -- newVar2 <- makeVar (fromJust t2) n2
-      newVar1 <- makeVar IntegerT n1 -- TODO: Stop this hardcoding of types
-      newVar2 <- makeVar IntegerT n2 -- TODO: Stop this hardcoding of types
+    Switch (Arr (Just t1) n1 _ _ _) (Arr (Just t2) n2 _ _ _) _ -> do
+      newVar1 <- makeVar t1 n1
+      newVar2 <- makeVar t2 n2
 
       case (tryGetVar n1 scope, tryGetVar n2 scope) of
-        (Just n1', Just n2') -> do
+        (Just (n1', v1), Just (n2', v2)) -> do
           Z3.assert =<< Z3.mkEq newVar1 n2'
           Z3.assert =<< Z3.mkEq newVar2 n1'
-          return (Map.insert n1 newVar1 $ Map.insert n2 newVar2 scope, stmt, warnings)
+          return (Map.insert n1 (newVar1, v1) $ Map.insert n2 (newVar2, v2) scope, stmt, warnings)
 
         _ ->
           let errmsg = "Either " ++ show n1 ++ " or " ++ show n2 ++ " has been invalidated" in
@@ -469,9 +485,11 @@ processStatement doOpt ast scope stmt state warnings =
             Left err    ->
               return (scope, stmt, err:warnings)
             Right True  ->
-              return (scope, Skip, warnings)
+              Z3.assert cond
+              >> return (scope, if (doOpt) then Skip else stmt, warnings)
             Right False ->
-              Z3.assert cond >> return (scope, stmt, warnings)
+              Z3.assert cond
+              >> Z3.assert cond >> return (scope, stmt, warnings)
 
         Left errvar ->
           return (scope, stmt, (show stmt ++ " used invalidated var") : warnings)
@@ -515,10 +533,10 @@ processStatement doOpt ast scope stmt state warnings =
     _ -> error $ "Optimization statement: Stmt not implemented yet - " ++ show stmt
   where
     mod :: Stmt -> Vars -> [String] -> Z3 (Vars, Stmt, [String])
-    mod (Mod (Moderator (Var _ name _ _) op val) _ _) scope warnings = do
+    mod (Mod (Moderator var@(Var t name _ _) op val) _ _) scope warnings = do
       case tryGetVar name scope of
-        Just oldVar -> do
-          newVar      <- makeVar IntegerT name
+        Just (oldVar, _) -> do
+          newVar      <- makeVar (fromJust t) name
           processExpr scope val >>= \case
             Right incrVal -> do
               newVal <-
@@ -527,7 +545,7 @@ processStatement doOpt ast scope stmt state warnings =
                   SubEq  -> Z3.mkBvsub oldVar incrVal
                   XorEq  -> Z3.mkBvxor oldVar incrVal
               Z3.assert =<< Z3.mkEq newVar newVal
-              return (Map.insert name newVar scope, stmt, warnings)
+              return (Map.insert name (newVar, var) scope, stmt, warnings)
 
             Left errvar ->
               let errmsg = show name ++ " invalidated because of " ++ show errvar in
@@ -551,27 +569,30 @@ processStatement doOpt ast scope stmt state warnings =
             XorEq -> error "Xor for-loops not implemented yet"
             _ -> do
               -- creating initial loop variable
-              z3var <- makeVar IntegerT name
+              z3var <- makeVar (fromJust t) name
               processExpr scope val >>= \case
                 Right z3expr -> do
                   eq <- Z3.mkEq z3var z3expr
                   Z3.assert eq
-                  let scope' = Map.insert name z3var scope
+                  let scope' = Map.insert name (z3var, var) scope
 
                   Z3.push
                   (body', scope'', state', warnings') <-
                     processStatements body doOpt ast scope' state warnings
                   Z3.pop 1
 
-                  -- TODO: This is not safe to do yet!!
-                  let start = evalConstantIntExpr val
-                  let end   = evalConstantIntExpr cond
-                  let incr'  = evalConstantIntExpr incr
-
                   -- determine loop optimizer method
                   let unrollable = varFreeExprs [val, cond, incr] && modificationFreeIncr name body
                   case (inv, unrollable) of
                     (Just (Invariant inv' _), True) -> do
+                      let start = fromRight (-1) (evalConstantIntExpr val)
+                      let end   = fromRight (-1) (evalConstantIntExpr cond)
+                      let incr' = fromRight (-1) (evalConstantIntExpr incr)
+
+                      if start == -1 || end == -1 || incr' == -1
+                        then error "bum"
+                        else return ()
+
                       (_, inf', _, warnings'') <- invariant inv' body' z3var scope' warnings'
 
                       if (start > end) then
@@ -591,6 +612,10 @@ processStatement doOpt ast scope stmt state warnings =
                       invariant inv' body' z3var scope' warnings'
 
                     (Nothing, True) -> do
+                      let start = fromRight (-1) (evalConstantIntExpr val)
+                      let end   = fromRight (-1) (evalConstantIntExpr cond)
+                      let incr' = fromRight (-1) (evalConstantIntExpr incr)
+
                       -- optimize using unrolling only
                       if start > end then
                         error "Loops utilizing overflow/underflow is not allowed yet"
@@ -623,8 +648,7 @@ processStatement doOpt ast scope stmt state warnings =
           (VarE _:tl)        -> False && varFreeExprs tl
           (Arith _ e1 e2:tl) -> varFreeExprs [e1, e2] && varFreeExprs tl
           (Not e:tl)         -> varFreeExprs [e] && varFreeExprs tl
-          -- TODO: Should be True, if it worked properly
-          (Size n:tl)        -> False && varFreeExprs tl
+          (Size n _:tl)      -> True && varFreeExprs tl
           (SkipE:tl)         -> True && varFreeExprs tl
 
         modificationFreeIncr :: Ident -> [Stmt] -> Bool
@@ -682,7 +706,7 @@ processStatement doOpt ast scope stmt state warnings =
                           (assert <id> being either larger or less than start)
                       -}
                       case tryGetVar name scope of
-                        Just z3var' -> do
+                        Just (z3var', _) -> do
                           z3ast <-
                             -- TODO: using the operator might not be good enough e.g. i += -1
                             case op of
@@ -747,7 +771,7 @@ processStatement doOpt ast scope stmt state warnings =
 
               -- checking assertion at the end of loop iteration
               case tryGetVar name scope'' of
-                Just z3var -> do
+                Just (z3var, _) -> do
                   z3ast     <- Z3.mkNot =<< Z3.mkEq z3var val
                   validated <- validate (Local var pos) z3ast
                   case validated of
@@ -771,7 +795,7 @@ processStatement doOpt ast scope stmt state warnings =
         (vtable, ProcDecl _ fargs' body' _, _) -> do
           scope'  <- foldM connectArgument scope (zip aargs fargs')
           -- closure <- processStatements False ast scope' body' 0
-          (_, scope'', _, warnings') <- processStatements body' False ast scope' 0 warnings
+          (_, scope'', _, warnings') <- processStatements (reverse body') False ast scope' 0 warnings
           scope'' <- foldM connectArgumentsBack scope'' (zip aargs fargs')
           return $ (scope'', stmt, warnings)
 
@@ -835,11 +859,17 @@ processStatement doOpt ast scope stmt state warnings =
             let expr' = renameExpr vtable expr in
               Not expr'
 
-          Size name ->
+          Size (LVar name) t ->
             let name' = tryGetVar name vtable in
               case name' of
-                Just n  -> Size n
-                Nothing -> Size name
+                Just n  -> Size (LVar n) t
+                Nothing -> Size (LVar name) t
+
+          Size (Lookup name idxs) t ->
+            let name' = tryGetVar name vtable in
+              case name' of
+                Just n -> Size (Lookup n idxs) t
+                Nothing -> Size (Lookup name idxs) t
 
           otherwise -> otherwise
 
@@ -1019,32 +1049,33 @@ processStatement doOpt ast scope stmt state warnings =
         VarFA t name _ -> do
           newVar <- makeVar t name
           case aargs of
-            VarAA (Var _ namea _ _) _ _ -> do
+            VarAA var@(Var _ namea _ _) _ _ -> do
               case tryGetVar namea scope of
-                Just var -> do
-                  Z3.assert =<< Z3.mkEq newVar var
-                  return $ Map.insert name newVar scope
+                Just (varz3, _) -> do
+                  Z3.assert =<< Z3.mkEq newVar varz3
+                  return $ Map.insert name (newVar, var) scope
 
                 _ -> return scope
 
         ArrFA t name sz _ -> do
           newVar <- makeArr t name
           case aargs of
-            VarAA (Var _ namea _ _) _ _ -> do
+            VarAA var@(Arr _ namea _ _ _) _ _ -> do
               case tryGetVar namea scope of
-                Just var -> do
-                  Z3.assert =<< Z3.mkEq newVar var
-                  return $ Map.insert name newVar scope
+                Just (varz3, _) -> do
+                  Z3.assert =<< Z3.mkEq newVar varz3
+                  return $ Map.insert name (newVar, var) scope
 
                 _ -> return scope
 
         ConstFA t name _ -> do
           newVar <- makeVar t name
           case aargs of
-            ConstAA (IntegerV val) _ -> do
+            ConstAA (IntegerV val) p -> do
               z3Val <- Z3.mkBvNum intSz val
               Z3.assert =<< Z3.mkEq newVar z3Val
-              return $ Map.insert name newVar scope
+              return $ Map.insert name
+                         (newVar, Var (Just t) name (Just (ConstE (IntegerV val))) p) scope
 
             _ ->
               error $ "Connecting Arguments: Actual argument "
@@ -1054,18 +1085,18 @@ processStatement doOpt ast scope stmt state warnings =
     connectArgumentsBack scope (VarAA (Var _ name1 _ _) Nothing _, VarFA t name _) = do
       newVar <- makeVar t name1
       case tryGetVar name scope of
-        Just oldVar -> do
+        Just (oldVar, var) -> do
           Z3.assert =<< Z3.mkEq newVar oldVar
-          return $ Map.insert name1 newVar scope
+          return $ Map.insert name1 (newVar, var) scope
 
         _ -> return scope
 
     connectArgumentsBack scope (VarAA (Arr _ name1 _ _ _) (Just idxs) _, ArrFA t name _ _) = do
       newVar <- makeArr t name1
       case tryGetVar name scope of
-        Just oldVar -> do
+        Just (oldVar, var) -> do
           Z3.assert =<< Z3.mkEq newVar oldVar
-          return $ Map.insert name1 newVar scope
+          return $ Map.insert name1 (newVar, var) scope
 
         _ -> return scope
 
@@ -1090,15 +1121,18 @@ processArgs args scope = foldM f scope args
     f :: Vars -> FArg -> Z3 Vars
     f vars arg =
       case arg of
-        VarFA t n _ -> do
+        VarFA t n p -> do
           newVar <- makeVar t n
-          return $ Map.insert n newVar vars
-        ArrFA t n _ _ -> do
+          let var = Var (Just t) n Nothing p
+          return $ Map.insert n (newVar, var) vars
+        ArrFA t n s p -> do
           newArr <- makeArr t n
-          return $ Map.insert n newArr vars
-        ConstFA t n _ -> do
+          let var = Arr (Just t) n (Just s) Nothing p
+          return $ Map.insert n (newArr, var) vars
+        ConstFA t n p -> do
           newVar <- makeVar t n
-          return $ Map.insert n newVar vars
+          let var = Var (Just t) n Nothing p
+          return $ Map.insert n (newVar, var) vars
 
 
 processProcedure :: [ProcDecl] -> Vars -> ([ProcDecl], [String]) -> ProcDecl ->
@@ -1108,7 +1142,7 @@ processProcedure ast scope (accp, warnings) (ProcDecl name args body pos) = do
   Z3.push
   initialScope <- processArgs args scope
   -- (_, body', _, newWarnings) <- processStatements True ast initialScope body 0 warnings
-  (body', _, _, newWarnings) <- processStatements body True ast initialScope 0 warnings
+  (body', _, _, newWarnings) <- processStatements (reverse body) True ast initialScope 0 warnings
   Z3.pop 1
   return (ProcDecl name args body' pos : accp, newWarnings)
 
@@ -1116,17 +1150,17 @@ processProcedure ast scope (accp, warnings) (ProcDecl name args body pos) = do
 processMainStore :: ProcDecl -> Z3 Vars
 processMainStore (ProcDecl name _ body _) =
   case name of
-    Ident "main" _ -> foldM f Map.empty body
+    Ident "main" _ -> foldM f Map.empty $ reverse body
     _ -> error "This was no main"
   where
     f :: Vars -> Stmt -> Z3 Vars
     f scope = \case
-      Global (Var t name val _) _    -> do
+      Global var@(Var t name val _) _    -> do
         newVar <- makeVar (fromJust t) name
-        return $ Map.insert name newVar scope
-      Global (Arr t name sz val _) _ -> do
+        return $ Map.insert name (newVar, var) scope
+      Global var@(Arr t name sz val _) _ -> do
         newVar <- makeArr (fromJust t) name
-        return $ Map.insert name newVar scope
+        return $ Map.insert name (newVar, var) scope
       _ ->
         return scope
 

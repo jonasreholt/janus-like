@@ -50,10 +50,34 @@ formatOperatorM = \case
 
 
 formatArrayIndices :: [Integer] -> Doc
-formatArrayIndices sz = foldl (\a e -> brackets (integer e) <> a) empty sz
+formatArrayIndices sz = foldr (\e a -> brackets (integer e) <> a) empty sz
 
 formatArrayIndicesE :: [Expr] -> Doc
-formatArrayIndicesE sz = foldl (\a e -> brackets (formatExpr e) <> a) empty sz
+formatArrayIndicesE sz = foldr (\e a -> brackets (formatExpr e) <> a) empty sz
+
+
+formatArrayValues :: [Expr] -> [Integer] -> Doc
+formatArrayValues vals = \case
+  [] -> empty
+  [last] -> braces $ formatExprs vals
+  (hd:tl) ->
+    -- let vals' = splitEvery (fromIntegral (last tl)) vals in
+    let vals' = splitEvery (length vals `div` fromIntegral hd) vals in
+      braces $ f vals' (hd:tl)
+  where
+    f :: [[Expr]] -> [Integer] -> Doc
+    f vals sz = case vals of
+      [last] ->
+        formatArrayValues last (tail sz)
+      (hd:tl) ->
+        formatArrayValues hd (tail sz) <> comma <> f tl sz
+
+    -- Taken from https://hackage.haskell.org/package/list-grouping-0.1.1/docs/src/Data-List-Grouping.html#splitEvery
+    -- | partitions list into sub-lists of length given by the Int:
+    splitEvery :: Int -> [a] -> [[a]]
+    splitEvery _ [] = []
+    splitEvery n xs = as : splitEvery n bs
+      where (as,bs) = splitAt n xs
 
 
 formatExpr :: Expr -> Doc
@@ -70,12 +94,19 @@ formatExpr = \case
 
   Not e -> char '!' <> parens (formatExpr e)
 
-  -- TODO: Type hack right here man!!
-  Size (Ident n _) ->
+  Size (Lookup (Ident n _) idx) (Just t) ->
     parens $
-    text "sizeof" <> parens (text n) <+> char '/' <+> text "sizeof" <> parens (formatType IntegerT)
+    text "sizeof" <> parens (text n <> formatArrayIndicesE idx) <+> char '/'
+    <+> text "sizeof" <> parens (formatType t)
+
+  Size (LVar (Ident n _)) (Just t) ->
+    parens $
+    text "sizeof" <> parens (text n) <+> char '/'
+    <+> text "sizeof" <> parens (formatType t)
 
   SkipE -> empty
+
+  otherwise -> error $ "formatExpr: " ++ show otherwise ++ " not implemented"
 
 formatExpr' :: Doc -> Expr -> Doc
 formatExpr' acc e = acc <> comma <+> formatExpr e
@@ -115,7 +146,9 @@ formatAArgs args = formatAArg (head args) <> foldl formatAArg' empty (tail args)
 
 
 formatStmt :: Doc -> Doc -> Stmt -> Doc
+-- formatStmt :: Doc -> Stmt -> Doc -> Doc
 formatStmt spc acc stmt =
+-- formatStmt spc stmt acc =
   acc $+$ spc <>
   case stmt of
     Global (Var t (Ident n _) e _) _ ->
@@ -128,10 +161,10 @@ formatStmt spc acc stmt =
       semi
 
     Global (Arr t (Ident n _) s e _) _ ->
-      formatType (fromJust t) <+> text n <+> formatArrayIndices (fromJust s) <+>
+      formatType (fromJust t) <+> text n <> formatArrayIndices (fromJust s) <+>
       case e of
         Just e' ->
-          equals <+> braces (formatExprs (fromJust e))
+          equals <+> formatArrayValues e' (fromJust s)
         Nothing -> empty
       <>
       semi
@@ -146,10 +179,10 @@ formatStmt spc acc stmt =
       semi
 
     Local (Arr t (Ident n _) s e _) _ ->
-      formatType (fromJust t) <+> text n <+> formatArrayIndices (fromJust s) <+>
+      formatType (fromJust t) <+> text n <> formatArrayIndices (fromJust s) <+>
       case e of
         Just e' ->
-          equals <+> braces (formatExprs e')
+          equals <+> formatArrayValues e' (fromJust s)
         Nothing -> empty
       <>
       semi
@@ -158,13 +191,21 @@ formatStmt spc acc stmt =
       assert (text n <+> equals <> equals <+> formatExpr (fromJust e)) <> semi
       <> semi
 
-    DLocal (Arr t (Ident n _) s e _) _ ->
+    DLocal (Arr t (Ident n _) (Just s) e _) _ ->
       -- Need to initialize an array before hand as arrays cannot be initialized inline
       -- TODO: Hack with naming
-      formatType (fromJust t) <+> text "_tmp_" <> text n <+> equals <+>
-      braces (formatExprs (fromJust e))
+      text "// Asserting array equality" $+$
+      formatType (fromJust t) <+> text "_tmp_" <> text n <> formatArrayIndices s <+> equals <+>
+      formatArrayValues (fromJust e) s <> semi
       $+$
-      assert (text n <+> equals <> equals <+> text "_tmp_" <> text n)
+      assert (text "sizeof(_tmp_" <> text n <> rparen
+             <+> equals<>equals <+>
+             text "sizeof(" <> text n <> rparen
+             <+> text "&&" <+>
+             text "memcmp(" <> text "_tmp_" <> text n <> comma <+> text n <> comma <+>
+             text "sizeof(" <> text n <> rparen <> rparen
+             <+> equals<>equals <+> char '0'
+             )
       <> semi
 
     Mod (Moderator (Var _ (Ident n _) _ _) op e) _ _ ->
@@ -314,8 +355,8 @@ formatProcedure (ProcDecl (Ident name _) args body _) =
   $+$
   rbrace
 
-formatProcedure' :: Doc -> (ProcDecl, ProcDecl) -> Doc
-formatProcedure' acc (p, pr) =
+formatProcedure' :: (ProcDecl, ProcDecl) -> Doc -> Doc
+formatProcedure' (p, pr) acc =
   acc
   $+$
   formatProcedure p
@@ -324,17 +365,21 @@ formatProcedure' acc (p, pr) =
   $+$ space
 
 
-formatProcedureDefinition :: Doc -> (ProcDecl, ProcDecl) -> Doc
-formatProcedureDefinition acc ((ProcDecl (Ident n _) a _ _), ProcDecl (Ident nr _) ar _ _) =
+formatProcedureDefinition :: (ProcDecl, ProcDecl) -> Doc -> Doc
+formatProcedureDefinition ((ProcDecl (Ident n _) a _ _), ProcDecl (Ident nr _) ar _ _) acc =
   acc
   $+$
   text "void" <+> text n <> parens (formatFArgs a) <> semi
   $+$
   text "void" <+> text nr <> parens (formatFArgs ar) <> semi
+  $+$ space
 
 formatIncludes :: Doc
 formatIncludes =
   text "#include <assert.h>"
+  $+$ text "#include <cstring>"
+  $+$ space $+$
+  text "using namespace std;"
 
 
 formatProgram :: Program -> Program -> Doc
@@ -343,9 +388,9 @@ formatProgram (Program ps) (Program psR) =
     (main:tl) ->
       formatIncludes
       $+$ space $+$
-      foldl formatProcedureDefinition empty tl
+      foldr formatProcedureDefinition empty tl
       $+$ space $+$
-      foldl formatProcedure' empty tl
+      foldr formatProcedure' empty tl
       $+$
       formatProcedure (fst main)
     [] -> empty

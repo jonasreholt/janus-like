@@ -2,9 +2,10 @@
 https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
 
 # Todo
-- [ ] Look into whether non optimizing should add assertions for DLocal
+- [x] Look into whether non optimizing should add assertions for DLocal
 - [ ] Fix that array modification only works for 1D arrays
-- [ ] Communicate onwards whether invariant is provable correct
+- [x] Fix arrays in expressions
+- [x] Communicate onwards whether invariant is provable correct
 - [x] Actually implement array initialization both for globals and locals
   - [x] 1D
   - [x] nD
@@ -19,7 +20,7 @@ https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
       - [x] Constants
         - [x] Make unrollable for loops invalidate variables modified within!
 - [x] Write translator from AST to C++
-- [ ] Write playground website to use
+- [x] Write playground website to use
 - [ ] Write benchmark tests
 - [ ] Write report
 - [ ] profit
@@ -41,6 +42,7 @@ while (!(i == 4)) {
 }
 
 # Nice to have TODO
+- [ ] Proper error information on the playground
 - [ ] loop optimization
   - [ ] Size n should also be seen as constant, and not variable
     * Need some virtual table mapping array names to size

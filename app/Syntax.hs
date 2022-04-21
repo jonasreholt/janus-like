@@ -12,7 +12,8 @@ type Pos = SourcePos
 data Type
   = IntegerT
   | BooleanT
-  deriving (Show)
+  | UndefinedT
+  deriving (Show, Eq)
 
 data Val
   = IntegerV Integer
@@ -42,8 +43,9 @@ data Var
   = Var (Maybe Type) Ident (Maybe Expr) Pos
   -- Arr type name size value pos
   | Arr (Maybe Type) Ident (Maybe [Integer]) (Maybe [Expr]) Pos
-instance Show Var where show (Var _ name e _)            = show(name) ++ " " ++ show e
-                        show (Arr _ name _ es _)          = show(name) ++ " " ++ show es
+  deriving (Show)
+-- instance Show Var where show (Var _ name e _)            = show(name) ++ " " ++ show e
+--                         show (Arr _ name _ es _)         = show(name) ++ " " ++ show es
 instance Ord Var  where Var _ n1 _ _ <= Var _ n2 _ _     = n1 <= n2
                         Arr _ n1 _ _ _ <= Arr _ n2 _ _ _ = n1 <= n2
 instance Eq Var   where Var _ n1 _ _ == Var _ n2 _ _     = n1 == n2
@@ -59,7 +61,7 @@ data Expr
   | VarE   LVar
   | Arith  BinOp Expr Expr
   | Not    Expr
-  | Size   Ident
+  | Size   LVar (Maybe Type)
   | SkipE
   deriving (Show)
 
@@ -144,6 +146,24 @@ isInvariantOn inv = \case
 getStmtVar :: Stmt -> Var
 getStmtVar (Local var pos) = var
 getStmtVar (DLocal var pos) = var
+
+
+getFArgName :: FArg -> Ident
+getFArgName = \case
+  VarFA _ n _ -> n
+  ArrFA _ n _ _ -> n
+  ConstFA _ n _ -> n
+
+getFArgType :: FArg -> Type
+getFArgType = \case
+  VarFA t _ _ -> t
+  ArrFA t _ _ _ -> t
+  ConstFA t _ _ -> t
+
+getVarType :: Var -> Maybe Type
+getVarType = \case
+  Var t _ _ _ -> t
+  Arr t _ _ _ _ -> t
 
 
 

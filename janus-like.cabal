@@ -31,7 +31,8 @@ executable janus-like
                       Parser,
                       AssertionRemoval,
                       AstReversing,
-                      RenameProcedures
+                      RenameProcedures,
+                      TypeCheckAnnotate,
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

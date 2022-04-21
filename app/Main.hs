@@ -7,12 +7,15 @@ import Data.Bits
 import System.Timeout (timeout)
 import System.Exit
 
+import Debug.Trace
+
 import Syntax (prettyPrintPrgm)
 import Parser (parseProgram)
 import AssertionRemoval (processProgram)
 import AstReversing (reverseProgram)
 import RenameProcedures (rename)
 import JapaToCpp
+import TypeCheckAnnotate
 
 
 usage :: String
@@ -53,16 +56,18 @@ main = do
     args  <- getArgs
     let args' = checkArgs (0, Nothing) args
     prgm  <- snd args'
-    let astForward = parseProgram prgm
+    let ast = parseProgram prgm
+
+    let astForward = typeCheckAnnotate ast
     let astBackward = reverseProgram astForward
 
     case ((fst args') .&. 1) == 0 of
       True -> do
         -- Optimize AST
-        res1 <- timeOut $ evalZ3 $ processProgram astForward
+        res1 <- timeOut $ evalZ3 $ trace "forward" $ processProgram astForward
         case res1 of
           Just (oASTF, warningsF) -> do
-            res2 <- timeOut $ evalZ3 $ processProgram astBackward
+            res2 <- timeOut $ evalZ3 $ trace "reverse" $ processProgram astBackward
             case res2 of
               Just (oASTR, warningsR) -> do
                 let oASTF' = rename oASTF "_forward"

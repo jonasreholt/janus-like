@@ -218,8 +218,9 @@ term =  parens expression
     size :: Parser Expr
     size = do
       reserved "size"
-      idnt <- parens identifier
-      return $ Size idnt
+      idnt <- parens (lVal)
+      case idnt of
+        VarE lvar -> return $ Size lvar Nothing
 
 
 -- Statement parsing
