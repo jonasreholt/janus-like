@@ -1,9 +1,17 @@
 # Meeting room
 https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
+Meeting ID: 633 4349 6731
+Passcode: 276031
 
 # Todo
+- [x] Add bool to playground editor syntax
+- [x] Still need to debug loop optimizations in regards to perm-to-code.japa
+- [x] Add the new loopDescsending to invariant function to determine termination
+- [x] Make invalidation not remove var, but generalize it into a variable of
+      which we only know its existence.
+- [x] Make invariant maintenance work on general assumptions only (so only invalidated vars).
 - [x] Look into whether non optimizing should add assertions for DLocal
-- [ ] Fix that array modification only works for 1D arrays
+- [x] Fix that array modification only works for 1D arrays
 - [x] Fix arrays in expressions
 - [x] Communicate onwards whether invariant is provable correct
 - [x] Actually implement array initialization both for globals and locals
@@ -25,6 +33,59 @@ https://ucph-ku.zoom.us/j/63343496731?pwd=Z3RiWUJ2ZmwvQ3haMTJmMmpkN1RCdz09
 - [ ] Write report
 - [ ] profit
 
+
+## Report
+intro:
+* Also what I'm missing e.g. recursive procedures.
+* Why do this and also goal of project
+* Overview of method used (using theorem provers, simple language)
+* Maybe a teaser with a small japa example
+* Catch the reader with an intuition
+* Limitation is that we are not looking at any other optimization!!
+
+2:
+* small examples things showing the syntax
+* for semantics reference Robert's paper on Janus,
+  and show the changes from janus
+* focus on extentions such as invariants and for-loops.
+  Remember to show examples as there exists none.
+
+3:
+* Remember to talk about SSA and stuff
+
+4:
+* Gather theory considerations (what we ask the theorem prover,
+  how it proves things, why did we choose haskell) into section 3.
+  to avoid overloading this section.
+* 4 should focus on the engineering of the compiler.
+  This is more on the how
+* Move Lexer Parser into a front-end section
+* Use Torbens way of showing translation in the report.
+* Use diagrams to show the overview!!!
+
+5:
+* Remember to show the lackings og the optimizer
+  e.g. it cannot optimize something, but then
+  assertions of invariants can be set to make it
+  optimize it.
+  Also just things that does not work.
+  So this way we work us into what it cannot do
+
+6:
+* Clever optimization programs that advertises what the
+  optimization can do (so that it removes non obvious things)
+* e.g. in nested loops.
+
+7:
+* The haskell code consists of # lines of code divided into these
+  modules
+
+Until next time:
+Flesh out the report, fix problems in compiler,
+and think more about the test programs and testing!!
+We will look at draft report and benchmark tests
+
+
 ## Example why invariant cannot be used to prove the assertion away
 for local int i = 0, invariant(i != 0) {
   x1 += 1
@@ -42,8 +103,16 @@ while (!(i == 4)) {
 }
 
 # Nice to have TODO
+- [ ] negative integers
+- [x] reverse assertionremoval should not analyze main function!
+- [ ] Fix perm-to-code.japa reverse loop stating inner loop is ascending, as it performs
+      underflow in z3 at the moment!!
 - [ ] Proper error information on the playground
+- [ ] Boolean arithmetic. Z3 does not support it!!
 - [ ] loop optimization
+  - [x] make a small unroll to see if loop is optimizable
+    - Before processing unrollable loops, try and remove any prior known information
+      and then process the loop, to see if it's always provable correct.
   - [ ] Size n should also be seen as constant, and not variable
     * Need some virtual table mapping array names to size
     * Wait with this for later

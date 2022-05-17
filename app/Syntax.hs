@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Syntax where
 
 import Text.Parsec.Pos
@@ -18,7 +19,7 @@ data Type
 data Val
   = IntegerV Integer
   | BooleanV Bool
-  deriving (Show)
+  deriving (Show, Eq)
 
 data ModOp
   = PlusEq
@@ -31,7 +32,7 @@ data BinOp
   = Plus | Sub | Xor | Mul | Div | Modulo | BAnd | BOr
   -- Boolean operators
   | And  | Or  | Great | GreatEq | Less | LessEq | NotEq | Eq
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Ident = Ident String Pos
 instance Show Ident where show (Ident name _) = name
@@ -54,16 +55,16 @@ instance Eq Var   where Var _ n1 _ _ == Var _ n2 _ _     = n1 == n2
 data LVar
   = LVar   Ident
   | Lookup Ident [Expr] -- [Expr] so one can lookup into nD arrays
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Expr
   = ConstE Val
   | VarE   LVar
   | Arith  BinOp Expr Expr
   | Not    Expr
-  | Size   LVar (Maybe Type)
+  | Size   LVar Type
   | SkipE
-  deriving (Show)
+  deriving (Show, Eq)
 
 -- Actual parameters
 data AArg
@@ -126,6 +127,11 @@ data Program = Program [ProcDecl]
   deriving (Show)
 
 
+
+getProcDeclBody :: ProcDecl -> [Stmt]
+getProcDeclBody (ProcDecl _ _ body _) = body
+
+
 invariantStart :: Int
 invariantStart = 7
 
@@ -138,9 +144,9 @@ invariantFlip prev = \case
 
 isInvariantOn :: Int -> InvariantInfo -> Bool
 isInvariantOn inv = \case
-  Initialization -> inv .&. 1 == 1
-  Maintenance    -> inv .&. (shift 1 1) == 2
-  Termination    -> inv .&. (shift 1 2) == 4
+  Initialization -> (inv .&. 1) == 1
+  Maintenance    -> (inv .&. (shift 1 1)) == 2
+  Termination    -> (inv .&. (shift 1 2)) == 4
 
 
 getStmtVar :: Stmt -> Var
@@ -164,6 +170,11 @@ getVarType :: Var -> Maybe Type
 getVarType = \case
   Var t _ _ _ -> t
   Arr t _ _ _ _ -> t
+
+getVarName :: Var -> Ident
+getVarName = \case
+  Var _ n _ _ -> n
+  Arr _ n _ _ _ -> n
 
 
 

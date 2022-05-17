@@ -7,7 +7,9 @@ import Data.Bits
 import System.Timeout (timeout)
 import System.Exit
 
+import System.CPUTime
 import Debug.Trace
+import Text.Printf
 
 import Syntax (prettyPrintPrgm)
 import Parser (parseProgram)
@@ -38,12 +40,30 @@ checkArgs (options, file) = \case
       _        -> checkArgs (options, Just hd) tl
 
 
-printWarnings :: [String] -> IO ()
-printWarnings []      = return ()
-printWarnings (hd:tl) = putStrLn ("Warning: " ++ hd) >> printWarnings tl
+printWarnings :: Bool -> [String] -> IO ()
+printWarnings isForward warnings = case warnings of
+  [] -> return ()
+  _  ->
+    (if isForward
+    then putStrLn ("Forward directional warnings:")
+    else putStrLn ("Reverse directional warnings:"))
+    >> printWarnings' warnings
+
+printWarnings' :: [String] -> IO ()
+printWarnings' []      = return ()
+printWarnings' (hd:tl) = putStrLn ("Warning: " ++ hd) >> printWarnings' tl
 
 timeOut :: IO a -> IO (Maybe a)
 timeOut = timeout (60 * 1000000)
+
+profiler fun section = do
+  start <- getCPUTime
+  res <- fun
+  end <- getCPUTime
+  let diff = (fromIntegral (end - start)) / (10^12)
+  printf "%s time: %0.3f sec\n" section (diff :: Double)
+  res
+
 
 -- The steps in compilation:
 --      1. Parse src into AST
@@ -56,24 +76,31 @@ main = do
     args  <- getArgs
     let args' = checkArgs (0, Nothing) args
     prgm  <- snd args'
+
     let ast = parseProgram prgm
 
     let astForward = typeCheckAnnotate ast
+
     let astBackward = reverseProgram astForward
 
     case ((fst args') .&. 1) == 0 of
       True -> do
         -- Optimize AST
-        res1 <- timeOut $ evalZ3 $ trace "forward" $ processProgram astForward
+        res1 <- timeOut $ evalZ3 $ processProgram astForward True
+
         case res1 of
           Just (oASTF, warningsF) -> do
-            res2 <- timeOut $ evalZ3 $ trace "reverse" $ processProgram astBackward
+            res2 <- timeOut $ evalZ3 $ processProgram astBackward False
+
             case res2 of
               Just (oASTR, warningsR) -> do
                 let oASTF' = rename oASTF "_forward"
                 let oASTR' = rename oASTR "_reverse"
 
-                printWarnings warningsF
+
+                printWarnings True warningsF
+
+                printWarnings False warningsR
                 putStrLn ""
                 putStrLn $ show $ formatProgram oASTF' oASTR'
 

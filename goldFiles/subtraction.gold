@@ -1,0 +1,19 @@
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+// Global variables defining starting state
+int l = 2;
+int c = 2;
+ 
+ 
+int main()
+{
+    
+    
+    int a = 0;
+    a += ((2) - (c)) + (l);
+    
+}

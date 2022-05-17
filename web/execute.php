@@ -1,26 +1,12 @@
 <?php
 
 $prog_text = filter_input(INPUT_POST, "code", FILTER_UNSAFE_RAW);
-//$jana_flags = array("-t30");
-/*
-$intsize = filter_input(INPUT_POST, "intsize", FILTER_VALIDATE_REGEXP, array(
-  "options" => array("regexp" => "/^(arbitrary|32)$/")
-));
-$invert = filter_input(INPUT_POST, "invert", FILTER_VALIDATE_BOOLEAN);
 
-if ($intsize === "32") {
-  array_push($jana_flags, "-m");
-}
-if ($invert === TRUE) {
-  array_push($jana_flags, "-i");
-}
-*/
 # Read program from stdin
 //array_push($jana_flags, "-");
 
 $dir = dirname(__FILE__);
 $cmd = "$dir/japa -stdin";
-//$cmd = "$dir/jana " . implode(" ", $jana_flags);
 
 $cwd = "/tmp";
 $descriptorspec = array(

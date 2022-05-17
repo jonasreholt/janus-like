@@ -1,6 +1,205 @@
-\section{Theorem Prover}
+% This section should discuss the theory behind the optimizer
+
+\section{Theorem Prover \ms} \label{sec:z3}
 % Find representative set of theorem provers, and analyze in context of project
-\subsection{Theorem Prover Versus Other Alternatives}
+
+\begin{table*}[h!]
+    \centering
+    \begin{tabular}{|l|p{5cm}|p{5cm}|}
+        \hline
+        Name & Pros & Cons
+        \\ \hline
+        \texttt{z3} &
+        \begin{itemize}[left=0pt,topsep=0pt]
+            \item Still being developed and maintained
+        \end{itemize}\nointerlineskip
+        &
+        \begin{itemize}[left=0pt,topsep=0pt]
+            \item abc
+            \item def
+        \end{itemize}\nointerlineskip
+        \\ \hline
+        Simplify &
+        \begin{itemize}[left=0pt,topsep=0pt]
+            \item abc
+            \item def
+        \end{itemize}\nointerlineskip
+        &
+        \begin{itemize}[left=0pt,topsep=0pt]
+            \item No longer developed
+            \item Not the farstest SAT solver (p. 9 \url{https://www.cs.tau.ac.il/~msagiv/courses/ATP/SimplifyScribe.pdf})
+        \end{itemize}\nointerlineskip
+        \\ \hline
+        Cogent &
+        \begin{itemize}[left=0pt,topsep=0pt]
+            \item abc
+            \item def
+        \end{itemize}\nointerlineskip
+        &
+        \begin{itemize}[left=0pt,topsep=0pt]
+            \item abc
+            \item def
+        \end{itemize}\nointerlineskip
+        \\ \hline
+        \end{tabular}
+\end{table*}
+
+\begin{itemize}
+    \item Simplify (No longer developed on)
+        \begin{itemize}
+            \item Build up datastructure context, which it then checks
+        \end{itemize}
+    \item \texttt{z3} (Still developed)
+        \begin{itemize}
+            \item Builds up a datastructure which it then checks satisfaction on
+        \end{itemize}
+    \item Cogent
+\end{itemize}
+
+\subsection{Theorem Prover Versus Other Alternatives \ms}
 % Discussion over using theorem provers or partial evaluation?
 
-\subsection{Choosing Theorem Prover}
+\subsection{Choosing Theorem Prover \ms}
+% also theory behind validating stuff
+
+\subsection{Using the Theorem Prover \rr}
+\texttt{Z3} is a Satisfiability Modulo Theories (SMT) solver created by Microsoft specifically developed
+for program verification and analysis \cite{z3:microsoft}. It is therefore geared towards
+analyzing whether certain properties of a program are satisfied. In this projects it is to be
+used to validate certain properties. Hence the properties will be inverted, and then checked for
+satisfiability. If the inverse is not satisfiable then it must be the case, that the property
+is always satisfied.
+
+This does however pose a problem, as the project is about validating, and possibly removing,
+user created assertion, meaning they can be fallacies. If the user created a fallacy, the inverse
+would be satisfiable, meaning the assertion would not be removed. This is in itself fine, but if
+the information from the fallacy is carried on to the validation of other assertions, \texttt{z3}
+will always report that the model is unsatisfiable, meaning all assertions coming after the fallacy
+will, possibly, faultily be removed. E.g. in the simple program snippet below, \texttt{z3} will
+believe the assertion arising from \lsin{dealloc int i = 3}, will be faultily deemed valid, as the
+inverse is never satisfiable because of the assertion created.
+
+\begin{lstlisting}
+    assert(1 == 2)
+    local int i = 2
+    dealloc int i = 3
+\end{lstlisting}
+\noindent
+To accommodate this, every user inputted information (in the form of deallocations, assertions,
+fi-conditions, and invariants) are first checked if satisfiable in their regular form. If this is
+the case, it s not a fallacy, meaning the information is okay to carry on in the model.
+\\
+\\
+Every value in \texttt{z3} is immutable, but \lan functions by mutable variables, so a \lan program
+must be converted into Static Single Assignment (SSA) form. So a direct translation into
+\texttt{z3} is possible. The method proposed by Matthias Braun et al. in \cite{SSA}, will be used
+in this project, as it allows for SSA-based optimizations during the construction phase, meaning
+the abstract syntax tree, can be optimized by \texttt{z3}, while the transformation into SSA is
+being performed.
+% TODO: Explain how the algorithm work
+
+\subsubsection{Dealing with \lan constructs translation to \texttt{z3}}
+\label{translation-to-z3}
+To deal with the above mentioned problems with translation from the reversible language \lan
+utilizing mutable variables into the logic language \texttt{z3} that works only with immutable
+variables, I have used the following rules of translation.
+\\
+\\
+\textbf{Moderation statements}: The problem with this construct is that all variables in
+\texttt{z3} are immutable. This can be addressed by creating new fresh variables, and asserting
+these fresh variables to the moderated value e.g.
+\begin{verbatim}
+    x += 5  =>  (declare-const x1 Int)
+                (assert (= x1 (+ x 5)))
+\end{verbatim}
+\noindent
+This method mimics the SSA algorithm \cite{SSA}, so the SSA form is only within \texttt{z3}, and
+not present in the abstract syntax tree.
+\\
+\\
+\textbf{Conditional statements}:
+If the assertion being validated is not associated to a specific conditional, the program will
+not know which path is going to be taken at run time. Therefore both paths must be constructed,
+and then the \texttt{ite} function from \texttt{z3} can be used to determine the path. e.g.
+\begin{verbatim}
+    local int x = 5         (define-fun x () Int 5)
+    if (x < 5)              (declare-const x1 Int)
+    {                   =>  (assert (= x1 (- x 5)))
+        x -= 5              (declare-const x2 Int)
+    } fi (x == 0)           (assert (= x2 (ite (< x 5) x x1)))
+    delocal int x == 5      (assert not (= x2 5))
+\end{verbatim}
+\noindent
+\textbf{Loops}:
+Because \texttt{z3} does not have a construction for loops, loops can only be validated by unrolling
+them. The question of how far to unroll loops is however rather complex. e.g. what should be done
+with non-terminating loops, and how to detect these? Also how far should loops be unrolled? One
+important factor is, that the optimizer must be conservative, so to not change the runtime behavior.
+Which means if it's not possible to analyze how many times to unroll, the optimization is blocked
+by loops.
+
+When it comes to \texttt{for}-loops the analysis is relatively simple, as the constructs both
+tell a starting value, what happens to this variable at each iteration, and when to stop.
+So as long as the local variable being declared in the beginning, is the same as the one being
+deallocated after the loop, and the same being moderated at each iteration, it is straight forward.
+However if one of these are not the case, the analysis becomes harder.
+
+The unrolling of a simple \texttt{for}-loop can be done by transforming it into a series of
+\texttt{if}-statements that can be represented in \texttt{z3}:
+\begin{verbatim}
+    local Int bit = 1                   local int bit = 1
+    for int i = 0                       local int i = 0
+    {                                   if (!(i == 10))
+        local int z = bit           =>  {
+        bit += z                            local int z = bit   
+        delocal int z = bit / 2             bit += z
+    } i += 1; untill (int i = 10)           delocal int z = bit / 2
+                                            i += 1
+                                            if (!(i == 10))
+                                            {
+                                                ...
+                                            } fi (i == 10)
+                                        } fi (i == 10)
+                                        delocal int i = 10
+                                        delocal int bit = 2048
+\end{verbatim}
+\noindent
+\textbf{Function Calls}:
+% TODO: Talk about recursion!!!
+To model the functions correctly in \texttt{z3} inlining must be done, as all changes done
+by a function is through side effects. After inlining the function, it can be modeled using the
+other strategies outlined above. This can be done trivially as all procedures are non-recursive;
+there can however be a problem if two procedures call each other endlessly. This case is not handled
+meaning the optimizer will loop forever.
+\\
+\\
+\textbf{Reversibility}:
+Because the translation is from a reversible language to a irreversible language, every procedure
+will be translated into two: One going forward, and one backwards. It is necessary to perform
+the validation check individually for these two outcome procedures, as one way being valid, does
+not imply the other is. E.g. in the following code, the assertion can be removed in the
+forward run, but not the backwards, as giving an uneven number to \texttt{double} backwards will
+result in information loss due to integer division.
+
+\begin{lstlisting}[language=C]
+    procedure double(int bit)
+    {
+        local int z = bit
+        bit += z
+        delocal int z = bit / 2
+    }
+\end{lstlisting}
+
+\subsubsection{Interacting with the \texttt{Z3} API}
+The \texttt{z3} API has bindings to several general purpose programming languages \cite{z3:api}.
+As this project involves prototyping a compiler using \texttt{z3} to statically analyze a program,
+the language used should allow quick prototyping, and easy tree structure manipulation. For this
+purpose \texttt{Haskell} has been chosen. It allows for easy tree manipulation using pattern
+matching, and it's type construct \texttt{data}. It's functional nature, and the fact that it is
+statically typed, also makes it easy to quickly prototype functionality.
+\\
+\\
+\texttt{Haskell}'s interface with \texttt{z3} is build using the \texttt{C} API as it's fundament
+\cite{z3:api2}. In particular this bachelor project uses the \text{Z3.Monad} wrapper.
+
+

@@ -5,6 +5,10 @@ procedure foo(int arr3[2][2]) {
     local int arr1[2][2] = {{1, 1}, {2, size(arr3[0])}}
     dealloc int arr1[2][2] = {{1, 1}, {2, size(arr3[0])}}
 
+    local bool arr4[2] = {false, false}
+    //arr4[0] += true
+    dealloc bool arr4[2] = {false, true}
+
     local int arr2[2][3] = {{1, 1, 1}, {2, 2, 2}}
     arr2[1][2] += 1
     dealloc int arr2[2][3] = {{1, 1, 1}, {2, 2, 3}}

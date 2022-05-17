@@ -1,0 +1,17 @@
+Forward directional warnings:
+Warning: Z3 expression is a fallacy: Not (Arith Less (Arith Plus (ConstE (IntegerV 1)) (ConstE (IntegerV 2))) (ConstE (IntegerV 5)))
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+ 
+ 
+int main()
+{
+    if (!(((1) + (2)) < (5)))
+    {
+        assert(!(((1) + (2)) < (5)));
+    }
+}

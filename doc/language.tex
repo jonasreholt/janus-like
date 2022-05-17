@@ -1,12 +1,18 @@
 % Use Roberts article to argue reversability and that local inversion is enough
 % Also prove bijection (reversibility) of for-loops
-\section{Janus-like Language Definition} \label{sec:language-def}
+\section{Janus-like Language Definition \rr} \label{sec:language-def}
+%% MISSING:
+%    1. Semantics of the language
+%    2. Maybe small example programs
+
 This project alters and extents the syntax for \texttt{Janus} to make it better match modern
-programming languages. This "new" language will be an imperative reversible language like
-\texttt{Janus}, and henceforth will be noted as \texttt{JAPA}
+programming languages, and to simplify certain properties of the language.
+This "new" language will be an imperative reversible language like
+\texttt{Janus}, and henceforth will be noted as \lan
 (short for Janus alike programming alternative) in this report.
 But before altering the syntax and functionality of \texttt{Janus}, a more formal characterizations
 of reversibility must be made.
+
 Reversible computation refers to the use of logically reversible transformations \cite{ARTICLE:2},
 and require two things: Local reversibility and global reversibility.
 
@@ -20,7 +26,7 @@ A global process can only be reversible if the mapping from a start state to a f
 bijective \cite{ARTICLE:1}. 
 \end{myDefinition}
 \noindent
-This means that every construct of \texttt{JAPA} must preserve information over time, so the program
+This means that every construct of \lan must preserve information over time, so the program
 knows where to start of when running in either direction, and that there must be a "one-to-one"
 transformation from every state. e.g. consider the assignment operator \texttt{var = 10}. This
 statement has no way of undoing itself, as we do not know what \texttt{var} was before this
@@ -33,25 +39,28 @@ The definition for logical reversibility stated above does allow for all program
 as one could simply save a copy of the initial state and final state, as this would make
 the program bijective, as the final program becomes a tuple $(state_{initial}, state_{final})$,
 making the program transformation $\{state_{initial}\} \to \{state_{initial}, state_{final}\}$.
-These program will however not live up to Landauer's Principle, if every individual step is not
-reversible. It is therefore imminent that all construct of \texttt{LR} are reversible in them self.
+These programs will however not live up to Landauer's Principle \cite{article:3}, as every
+individual step is not reversible. It is therefore imminent that all construct of \lan are
+reversible in them self.
 
-\subsection{Data Types}
-% TODO: Add bool type here
-So far \texttt{JAPA} only support the same data types as \texttt{Janus}, which is
-integers and arrays of integers, where integers are 32 bit positive integers.
-The constraint with extending the type system to
-e.g. floats is, that the data type is imprecise, meaning no perfect inverse is ensured
-to exist.
+\subsection{Scoping rules \rr}
+\lan is statically scoped with the exception of the global store. Because the global store is
+declared within the main function, this cannot be statically scoped, as they would no be globally
+available then. The implication of all variables being statically scoped, means that it is only
+global variables that can cross implicitly between procedures; this is a consequence of only
+having the global variables declared in main, and then local variables allowed declared within a
+procedure.
+
+\subsection{Data Types \rr}
+\lan supports the data types integers, booleans, and arrays of integers or booleans.
+The constraint coming from reversibility on data types, is that simple types such as floats,
+cannot be accurately implemented, as the type in itself is imprecise, meaning no perfect inverse
+is ensured to exist.
 \\
 \\
-Together with arrays come a set of library functions, which at the moment contains:
+There only build in function is \texttt{size(id)}, which will give the length of array $id$.
 
-\begin{itemize}
-    \item \texttt{length(x)} gives the length of the array $x$.
-\end{itemize}
-
-\subsection{Declaration of Variables}
+\subsection{Declaration of Variables \rr}
 There are essentially two types of variables: Global and local. Because a global variable is
 always in scope, it preserves the information at all time (assuming all operations done on it
 are reversible). Hence global variable declaration can simply be done by:
@@ -64,7 +73,7 @@ are reversible). Hence global variable declaration can simply be done by:
     \end{tabular}
 \end{table*}
 \noindent
-Local variables are mote tricky, as they will leave the scope, meaning we cannot know the value
+Local variables are more tricky, as they will leave the scope, meaning we cannot know the value
 of the variable when running the program backwards, if the variable have left scope. Hence there
 needs to be some operation stating what the value of the variable is when it is last used, so
 the program step of leaving the scope of a local variable also becomes reversible. This can be
@@ -73,19 +82,22 @@ done in the following way:
 \begin{table*}[h]
     \centering
     \begin{tabular}{lcl}
-        \texttt{<id>} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{delocal <id> == <expr}
+        \texttt{local <type> <id>}
+        & $\underleftrightarrow{\text{Inverse of}}$ &
+        \texttt{dealloc <type> <id> == <expr}
     \end{tabular}
 \end{table*}
 \noindent
 It is important to note, that declaring a local, does not open a scope, meaning when a variable
 $y$ is shadowed by a local $x$, it is not brought into the light by deallocation of $x$.
+This is a design choice taken, as it eases the translation to \texttt{C++}.
 
-\subsection{Modification Arithmetics}
-To modify a variable there needs to be a inverse function of the operator, such that the
-modification can be reversed. As the only datatype for \texttt{JAPA} is integers, the only operators
-with an inverse (the function is bijective) is addition, subtraction, and exclusive or.
-Multiplication and division cannot be used, as they are not each others inverse when operating on
-natural numbers. Hence the operation becomes:
+\subsection{Modification Arithmetics \rr}
+To modify a variable there needs to be an inverse function of the operator, such that the
+modification can be reversed. As the only datatypes for \lan are integers and booleans,
+the only operators with an inverse (the function is bijective) is addition, subtraction, and
+exclusive or. Multiplication and division cannot be used, as they are not each others inverse
+when operating on natural numbers. Hence the operation becomes:
 
 \begin{table*}[h]
     \centering
@@ -97,7 +109,7 @@ natural numbers. Hence the operation becomes:
 \noindent
 Where \textasciicircum ~indicates exclusive or.
 
-\subsection{Arithmetics}
+\subsection{Arithmetics \rr}
 Performing arithmetics on expressions of the language does not require, that the arithmetic function
 is bijective, as it is only the state transformations that need be bijective, e.g. in
 \texttt{a += 5 $\*$ 6}, the expression \texttt{5 $\*$ 6} is not the "altering" function, and
@@ -106,51 +118,52 @@ inverse of the whole statement would simply be subtracting \texttt{5 $\*$ 6} fro
 \\
 The only thing one needs to remember is, that a variable name cannot occur at both side if the
 statement is to be reversible. Having this constraint ensures forward and backward determinism
-[FIND CITATION].
+of the modifications, which will be proven in section \nameref{subsec:reversibility}.
 
-\subsection{If Statements}
+\subsection{If Statements \rr}
 The \texttt{if}-statements are similar to those of \texttt{Janus}:
 
 \begin{table*}[h!]
     \centering
     \begin{tabular}{lcl}
         \texttt{if (<expr1>) \{} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{if (<expr2>) \{} \\
-        \texttt{ <stmts>} && \text{<stmts>$^{-1}$} \\
+        \texttt{ <stmts1>} && \text{<stmts1>$^{-1}$} \\
         \texttt{\} fi <expr2>} && \texttt{\} fi <expr1>} \\
         \texttt{else \{} && \texttt{else \{} \\
-        \texttt{ <stmts>} && \text{ <stmts>$^{-1}$} \\
+        \texttt{ <stmts2>} && \text{ <stmts2>$^{-1}$} \\
         \texttt{\}} && \texttt{\}}
     \end{tabular}
 \end{table*}
 \noindent
 Where the \texttt{else} part can be omitted.
 
-\subsection{Loops}
-\texttt{JAPA} will support two different kind of loops: a \texttt{for}- and a \texttt{from}-loop.
-The \texttt{from}-loop is identical to the one from \texttt{Janus}:
-\begin{table*}[H]
-    \centering
-    \begin{tabular}{lcl}
-        \texttt{from <expr1> loop \{} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{from <expr2> do \{ }\\
-        \texttt{ <stmts>} && \texttt{ <stmts>$^{-1}$} \\
-        \texttt{\} until (<expr2>)} && \texttt{\} until (<expr1>)} 
-    \end{tabular}
-\end{table*}
-\noindent
-The \texttt{for}-loop is closer to \texttt{C++} syntax:
+\subsection{Loops \rr}
+\lan only supports \texttt{for}-loops. These loops are closer to that of \texttt{C++} syntax, and
+it allows for some easy optimizations compared to \texttt{Janus}' \texttt{from}-loop construction,
+which are presented in \cite{janus};
+the initial condition and the end condition will always be true, so the only added assertion in
+the construct is, that the initial condition must not be true after each iteration.
 
-\begin{table*}[!h]
+The loop construct syntax can be seen in table \ref{table:for-loop-inverse}.
+\begin{table}[!h]
     \centering
-    \begin{tabular}{lcl}
-        \texttt{for <id> = <expr1> \{} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{for <id> = <expr2>; <inc>$^{-1}$ \{ }\\
-        \texttt{ <stmts>} && \texttt{ <stmts>$^{-1}$} \\
-        \texttt{\} <incr>; until (<id> == <expr2>)} && \texttt{\} until (<id> == <expr1>)} 
+    \begin{tabular}{l}
+        \texttt{for local <type> <id> = <expr1> [, invariant (<expr2>)] \{} \\
+        \texttt{ <stmts>} \\
+        \texttt{\} <incr>; until (dealloc <type> <id> == <expr3>)} \\ \\
+        $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\underleftrightarrow{\text{Inverse of}}$ \\ \\
+        \texttt{for local <type> <id> = <expr3> [, invariant (<expr2>)], <inc>$^{-1}$ \{ }\\
+        \texttt{ <stmts>$^{-1}$} \\
+        \texttt{\} until (dealloc <type> <id> == <expr1>)} 
     \end{tabular}
-\end{table*}
+    \caption{\texttt{for}-loop construct in \lan and its inverse.}
+    \label{table:for-loop-inverse}
+\end{table}
 \noindent
-Where \texttt{inc} is a modification operation typically on <id>, $a^{-1}$ indicated that
-$a$ is reversed, and having \texttt{<inc>} above the body executes it before the body and
-if it is after the body, it is executed after.
+Where \texttt{inc} is a modification operation typically on <id>, $a^{-1}$ indicates that
+$a$ is reversed, \texttt{[invariant (<expr>)]} is an optional loop invariant, and having
+\texttt{<inc>} above the body executes it before the body and if it is after the body, it
+is executed after.
 \\
 \\
 Moving the \texttt{<inc>} operation when reversing the loop is a necessity to make sure that
@@ -159,22 +172,29 @@ moved, the loop would be unaligned with its reversion. E.g. if the loop iterated
 it might stop when \texttt{<id>} is equal to the length of the list. If we reversed without moving
 the \texttt{<inc>} operation, the first iteration of the loop would access the index of the list
 length, which would be out of bounds.
+\\
+\\
+The optional loop invariant works both as a way to transfer information to the optimizer, and
+as run-time checks, if it cannot be optimized. It is checked at initialization of the loop, at the
+start of each iteration (maintenance), and at termination. Further information on this can be found
+in section \nameref{sec:z3}.
 
-\subsection{Procedures}
-Procedures in \texttt{JAPA} does not have a return value; every outcome is exposed through side
-effect, by letting arguments be pass by reference. Return values are omitted because it
+\subsection{Procedures \rr}
+Procedures in \lan does not have a return value; every outcome is exposed through side
+effect, by letting arguments be passed by reference. Return values are omitted because it
 complicates preserving reversibility, as the program needs a way to know where to enter and exit
 the procedure. This can be done by labeling all exits and possible enter areas with a condition,
 so it would require the programmer to know the exact state of the program at all possible exit areas.
-I have stayed at keeping procedure free of return values, for simplicity.
+Procedures have therefore been kept free of return values for simplicity. Procedures in \lan are
+non-recursive. This decision was taken for simplicity during the optimization phase.
 \\
 \\
 In regard to arguments, they can either be a constant value or a previous declared variable. This
 extinction needs to be taken, to ensure reversibility, as a procedure has no way of knowing, whether
-a given argument is a constant or variable, unless stated in the procedure definition. If variable
+a given argument is a constant or variable, unless stated in the procedure definition. If a variable
 was passed by value without being constant, it would be the same as creating a local variable at
 the start of the procedure; and given that the procedure input can change for every call, keeping
-track of the deallocation condition becomes complex, and I therefore force variables to be either
+track of the deallocation condition becomes complex. Variables are therefore forced to be either
 pass by reference or a constant. Hence defining a procedure can be done as:
 
 \begin{lstlisting}
@@ -183,7 +203,8 @@ pass by reference or a constant. Hence defining a procedure can be done as:
     }
 \end{lstlisting}
 \noindent
-Where \texttt{<args>} is a comma separated list of arguments written \texttt{<type> <id>} or
+Where \texttt{<args>} is a comma separated list of arguments written \texttt{<type> <id>},
+\texttt{<type> <id>[<constant>]} or
 \texttt{<type> const <id>}, where \texttt{const} indicates that the given argument is passed by
 value, and the value cannot be altered in the procedure.
 \\
@@ -200,25 +221,62 @@ reversible. It is simply done by:
 \noindent
 Where \texttt{uncall} simply reverse the underlying statements.
 
-\subsection{Formal Definition of Syntax}
-The language \texttt{JAPA} can be formally written in Bacus-Naur form as:
+\subsection*{Example program \rr}
+Given a number $n$ the program seen in listing \ref{lst:fib} produces the n'th fibonacci
+pair. The global store, which works as the starting state of the program, is defined within
+\lsin{main}; this include the starting fibonacci pair
+\lsin{x1} and \lsin{x2}. Hence the program actually ends with \lsin{x1} equal to the $n$'th
+and \lsin{x2} equal to the $(n+1)$'th fibonacci number.
+
+All \lan procedure are reversible in them self, except for the main function. Running the program
+forward is invoking it as it is. To reverse the program, \lsin{main} must be altered, so
+\lsin{x1} and \lsin{x2} are the $n$'th and $(n+1)$'th fibonacci numbers, and
+\lsin{call fib(x1, x2, 10)} is changed to \lsin{uncall fib(x1, x2, 10)}.
+
+\begin{lstlisting}[language=C++, label={lst:fib}, caption={Program finding the \lsin{n}'th fibonacci number.}]
+procedure fib(int x1, int x2, const int n) {
+    for local int i = 1 {
+        local int tmp = x2 - x1
+        x2 += x1
+        x1 += tmp
+        dealloc int tmp = x1 - (x2 - x1)
+    } i += 1, until (dealloc int i = n)
+}
+
+procedure main() {
+    int x1 = 0
+    int x2 = 1
+    
+    call fib(x1, x2, 10)
+}
+\end{lstlisting}
+
+
+\subsection{Formal Definition of Syntax \rr}
+The language \lan can be formally written in Backus-Naur form as:
 
 \begin{verbatim}
-    <program> := <v-decls> <p-decls>
-    <v-decls> := <v-decl> <v-decls> | ""
+    <program> := <p-decls>
     <p-decls> := <p-decl> <p-decls> | ""
 
-    <v-decl>  := <type> <id> | <type> <id> "[" <const> "]"
     <p-decl>  := "procedure" <id> "(" <f-args> ")" "{" <stmts> "}"
 
     <f-args>  := <f-args'> | ""
-    <f-args'> := <type> <id> "," <f-args'> | <type> <id> "[" <const> "]" "," <f-args'>
-              | "const" <type> <id> "," <f-args'>
-              | <type> <id> | <type> <id> "[" <const> "]" | "const" <type> <id>
+    <f-args'> := <f-arg> "," <f-args'>
+               | <f-arg>
+
+    <f-arg>   := <type> <id>
+               | <type> <id> "[" <const> "]"
+               | "const" <type> <id>
+
     <a-args>  := <a-args'> | ""
-    <a-args'> := <id> "," <a-args'> | <constant> "," <a-args'> | <id> "[" <expr> "]" "," <a-args'>
-              | <id> | <id> "[" <expr> "]" | <constant> 
+    <a-args'> := <a-arg> "," <a-args'>
+               | <a-arg>
     
+    <a-arg>   := <id>
+               | <id> "[" <expr> "]"
+               | <constant>
+
     <type>    := "int" | "bool"
 
     <stmts>   := <stmt> <stmts> | ""
@@ -229,15 +287,20 @@ The language \texttt{JAPA} can be formally written in Bacus-Naur form as:
               | <id> "<=>" <id>
               | "if" "(" <expr> ")" "{" <stmts> "}" "fi" "(" <expr> ")" "else" "{" <stmts> "}"
               | "if" "(" <expr> ")" "{" <stmts> "}" "fi"
-              | "for" "local" <type> <id> "=" <expr> "{" <stmts> "}"
+              | "for" "local" <type> <id> "=" <expr> <inv>
+                "{" <stmts> "}"
                 <id> <mod-op> "=" <expr> "," "until" "(" "dealloc" <type> <id> "=" <expr> ")"
-              | "for" "local" <type> <id> "=" <expr> "," <id> <mod-op> "=" <expr> "{" <stmts> "}"
+              | "for" "local" <type> <id> "=" <expr> <inv> "," <id> <mod-op> "=" <expr>
+                "{" <stmts> "}"
                 "until" "(" "dealloc" <type> <id> "=" <expr> ")"
               | "call" <id> "(" <a-args> ")"
               | "uncall" <id> "(" <a-args> ")"
+              | "assert" "(" <expr> ")"
+
+    <inv>    := "," "invariant" "(" <expr> ")" | ""
 
     <expr>    := <constant> | <id> | <id> "[" <expr> "]" | <expr> <bin-op> <expr>
-              | "length" "(" <id> ")"
+              | "size" "(" <id> ")" | "not" "(" <expr> ")"
 
     <bin-op>  := "+" | "-" | "^" | "*" | "/" | "%" | "&" | "&&" | "|" | "||" | ">"
               | ">=" | "<" | "<=" | "!=" | "=="
@@ -245,44 +308,290 @@ The language \texttt{JAPA} can be formally written in Bacus-Naur form as:
     <mod-op>  := "+" | "-" | "^"
 \end{verbatim}
 
+\subsection{Semantics \rr}
+The operational semantics of \lan programs are similar to those presented for \texttt{Janus}
+in \cite{janus}. It differentiate in regards to asserts, loops, and the introduction of local
+variables. It is therefore, only these operational semantics, that will be presented in this
+report.
+\\
+\\
+The operational semantic for a \lan assert can be seen in equation \eqref{eq:assert},
+local declaration and deallocation equation \eqref{eq:local} and \eqref{eq:dealloc},
+ for-loop can be seen in equation \eqref{eq:loop1Main} to
+\eqref{eq:loop2BaseInv}. Syntax follows the one introduced in \cite{pld}, so
+environments, $\sigma$, represents stores binding left-values
+to values. Adding a mapping of variable $id$ to value $y$ to a store is represented as
+$\sigma[id \mapsto y]$, and applying a store to a left-value results to the stored value,
+and is written as $\sigma(id)$. Every given statement takes a store and returns the possible
+modified store.
 
-% FULL GRAMMAR
-% \begin{verbatim}
-%     <program> := <v-decls> <p-decls>
-%     <v-decls> := <v-decl> <v-decls> | ""
-%     <p-decls> := <p-decl> <p-decls> | ""
+\begin{equation}
+    \frac{\sigma \vdash_{expr} e \leadsto true}
+    {\sigma \vdash_{assert} \text{assert}(e) \leadsto \sigma}
+    \text{\texttt{Assert}}
+\end{equation}
 
-%     <v-decl>  := <type> <id> | <type> <id> "[" <const> "]"
-%     <p-decl>  := "procedure" <id> "(" <f-args> ")" "{" <stmts> "}"
+\begin{equation} \label{eq:local}
+    \frac{\sigma \vdash_{expr} e \leadsto v}
+    {\sigma \vdash_{Local} \text{local } t \text{ id } = e \leadsto \sigma[id \mapsto v]}
+    \text{\texttt{Local}}
+\end{equation}
 
-%     <f-args>  := <f-args'> | ""
-%     <f-args'> := <type> <id> "," <f-args'> | <type> <id> "[" "]" "," <f-args'>
-%               | <type> <id> | <type> <id> "[" "]"
-%     <a-args>  := <a-args'> | ""
-%     <a-args'> := <id> "," <a-args'> | <constant> "," <a-args'> | <id> "[" <expr> "]" "," <a-args'>
-%               | <id> | <id> "[" <expr> "]" | <constant> 
-    
-%     <type>    := "int"
+\begin{equation}
+    \frac{\sigma \vdash_{expr} e \leadsto v ~~
+        v == \sigma(id)}
+    {\sigma \vdash_{dealloc} \text{dealloc } t \text{ id } = e \leadsto \sigma\backslash \{id\}}
+    \text{\texttt{Dealloc}}
+\end{equation}
 
-%     <stmts>   := <stmt> <stmts> | ""
-%     <stmt>    := "local" <type> <id> "=" <expr>
-%               | "dealloc" <type> <id> "=" <expr>
-%               | <id> <mod-op> "=" <expr>
-%               | <id> "[" <expr> "]" <mod-op> "=" <expr>
-%               | <id> "<=>" <id>
-%               | "if" "(" <expr> ")" "{" <stmts> "}" "fi" "(" <expr> ")" "else" "{" <stmts> "}"
-%               | "if" "(" <expr> ")" "{" <stmts> "}" "fi"
-%               | "from" "(" <expr> ")" "loop" "{" <stmts> "}" "untill" "(" <expr> ")"
-%               | "from" "(" <expr> ")" "do" "{" <stmts> "}" "untill" "(" <expr> ")"
-%               | "for" <id> "=" <expr> "{" <stmts> "}" <id> <mod-op> "=" <expr> "," "untill" "(" <expr> ")"
-%               | "for" <id> "=" <expr> "," <id> <mod-op> "=" <expr> "{" <stmts> "}" "untill" "(" <expr> ")"
-%               | "call" <id> "(" <a-args> ")"
-%               | "uncall" <id> "(" <a-args> ")"
+\begin{equation} \label{eq:loop1Main}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
+            v == false} ~~
+        \sigma' \vdash_{loop1} (e_1, s, e_2, e_3) \leadsto \sigma''}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1 ~\{s\}\text{ id }\oplus= e_2, \text{until (dealloc } t\text{ id }= e_3) \leadsto \sigma''}
+    \text{\texttt{Loop1Main}}
+\end{equation}
 
-%     <expr>    := <constant> | <id> | <id> "[" <expr> "]" | <expr> <bin-op> <expr>
+\begin{equation} \label{eq:loop1MainBase}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \sigma' \vdash_{expr} e_3 \leadsto v ~~
+        v == true}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1 ~\{s\}\text{ id }\oplus= e_2, \text{until (dealloc } t\text{ id }= e_3) \leadsto \sigma}
+    \text{\texttt{Loop1MainBase}}
+\end{equation}
 
-%     <bin-op>  := "+" | "-" | "^" | "*" | "/" | "%" | "&" | "&&" | "|" | "||" | ">"
-%               | ">=" | "<" | "<=" | "!=" | "=="
-    
-%     <mod-op>  := "+" | "-" | "^"
-% \end{verbatim}
+\begin{equation} \label{eq:loop1Rec}
+    \frac{\substack{\sigma \vdash_{expr} e_3 \leadsto v_1 \\
+            v_1 == false} ~~
+        \sigma \vdash_{stmt} s \leadsto \sigma' ~~
+        \sigma' \vdash_{AssVar} id \oplus= e_2 \leadsto \sigma'' ~~
+        \substack{\sigma \vdash_{expr} e_1 \leadsto v_2 \\
+            v_2 == false} ~~
+        \sigma'' \vdash_{Loop1} (s, e_2, e_3) \leadsto \sigma'''}
+    {\sigma \vdash_{Loop1} (e_1, s, e_2, e_3) \leadsto \sigma'''}
+    \text{\texttt{Loop1Rec}}
+\end{equation}
+
+\begin{equation} \label{eq:loop1Base}
+    \frac{\sigma \vdash_{expr} e_3 \leadsto v ~~
+        v == true}
+    {\sigma \vdash_{Loop1} (e_1, s, e_2, e_3) \leadsto \sigma}
+    \text{\texttt{Loop1Base}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2Main}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
+            v == false} ~~
+        \sigma' \vdash_{loop2} (e_1, s, e_2, e_3) \leadsto \sigma''}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1,\text{ id }\oplus= e_2 ~\{s\} \text{ until (dealloc } t\text{ id }= e_3) \leadsto \sigma''}
+    \text{\texttt{Loop2Main}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2MainBase}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \sigma' \vdash_{expr} e_3 \leadsto v ~~
+        v == true}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1,\text{ id }\oplus= e_2 ~\{s\} \text{ until (dealloc } t\text{ id }= e_3) \leadsto \sigma}
+    \text{\texttt{Loop2MainBase}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2Rec}
+    \frac{\substack{\sigma \vdash_{expr} e_3 \leadsto v_1 \\
+            v_1 == false} ~~
+        \sigma \vdash_{AssVar} id \oplus= e_2 \leadsto \sigma' ~~
+        \sigma' \vdash_{stmt} s \leadsto \sigma'' ~~
+        \substack{\sigma \vdash_{expr} e_1 \leadsto v_2 \\
+            v_2 == false} ~~
+        \sigma'' \vdash_{Loop2} (s, e_2, e_3) \leadsto \sigma'''}
+    {\sigma \vdash_{Loop2} (e_1, s, e_2, e_3) \leadsto \sigma'''}
+    \text{\texttt{Loop2Rec}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2Base}
+    \frac{\sigma \vdash_{expr} e_3 \leadsto v ~~
+        v == true}
+    {\sigma \vdash_{Loop2} (e_1, s, e_2, e_3) \leadsto \sigma}
+    \text{\texttt{Loop2Base}}
+\end{equation}
+
+\begin{equation} \label{eq:loop1MainInv}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \sigma' \vdash_{expr} e_2 \leadsto true ~~
+        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
+            v == false} ~~
+        \substack{\sigma' \vdash_{loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'' \\
+            \sigma'' \vdash_{expr} e_2 \leadsto true}}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2) ~\{s\}\text{ id }\oplus= e_3, \text{until (dealloc } t\text{ id }= e_4) \leadsto \sigma''}
+    \text{\texttt{Loop1MainInv}}
+\end{equation}
+
+\begin{equation} \label{eq:loop1MainBaseInv}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \sigma' \vdash_{expr} e_4 \leadsto true ~~
+        \sigma' \vdash_{expr} e_2 \leadsto true}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2) ~\{s\}\text{ id }\oplus= e_3, \text{until (dealloc } t\text{ id }= e_4) \leadsto \sigma}
+    \text{\texttt{Loop1MainBaseInv}}
+\end{equation}
+
+\begin{equation} \label{eq:loop1RecInv}
+    \frac{\substack{\sigma \vdash_{expr} e_4 \leadsto v_1 \\
+            v_1 == false \\
+            \sigma \vdash_{expr} e_2 \leadsto true} ~~
+        \sigma \vdash_{stmt} s \leadsto \sigma' ~~
+        \sigma' \vdash_{AssVar} id \oplus= e_3 \leadsto \sigma'' ~~
+        \substack{\sigma'' \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma''' \\
+        \sigma''' \vdash_{expr} e_2 \leadsto true}}
+    {\sigma \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'''}
+    \text{\texttt{Loop1RecInv}}
+\end{equation}
+
+\begin{equation} \label{eq:loop1BaseInv}
+    \frac{\sigma \vdash_{expr} e_4 \leadsto v ~~
+        v == true ~~
+        \sigma \vdash_{expr} e_2 \leadsto true}
+    {\sigma \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma}
+    \text{\texttt{Loop1BaseInv}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2MainInv}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \sigma' \vdash_{expr} e_2 \leadsto true ~~
+        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
+            v == false} ~~
+        \substack{\sigma' \vdash_{loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'' \\
+            \sigma'' \vdash_{expr} e_2 \leadsto true}}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2), \text{ id }\oplus= e_3 ~\{s\} \text{ until (dealloc } t\text{ id }= e_4) \leadsto \sigma''}
+    \text{\texttt{Loop2MainInv}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2MainBaseInv}
+    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+        \sigma' \vdash_{expr} e_4 \leadsto true ~~
+        \sigma' \vdash_{expr} e_2 \leadsto true}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2), \text{ id }\oplus= e_3 ~\{s\} \text{ until (dealloc } t\text{ id }= e_4) \leadsto \sigma}
+    \text{\texttt{Loop2MainBaseInv}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2RecInv}
+    \frac{\substack{\sigma \vdash_{expr} e_4 \leadsto v_1 \\
+            v_1 == false \\
+            \sigma \vdash_{expr} e_2 \leadsto true} ~~
+        \sigma' \vdash_{AssVar} id \oplus= e_3 \leadsto \sigma'' ~~
+        \sigma \vdash_{stmt} s \leadsto \sigma' ~~
+        \substack{\sigma'' \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma''' \\
+            \sigma''' \vdash_{expr} e_2 \leadsto true}}
+    {\sigma \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'''}
+    \text{\texttt{Loop2RecInv}}
+\end{equation}
+
+\begin{equation} \label{eq:loop2BaseInv}
+    \frac{\sigma \vdash_{expr} e_4 \leadsto v ~~
+        v == true ~~
+        \sigma \vdash_{expr} e_2 \leadsto true}
+    {\sigma \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma}
+    \text{\texttt{Loop2BaseInv}}
+\end{equation}
+\noindent
+Semantics of an assert it simply to assert, that the value of $e$ evaluated in $\sigma$ must
+be true.
+
+A local statement creates a new local variable to the scope, and
+the dealloc asserts the value of the variable, and removes it from scope.
+
+There are four different kinds of main rules working on the for-loop statement. All of which
+have similar semantics, but differ slightly.
+\eqref{eq:loop1Main} and \eqref{eq:loop1MainBase} defines the semantics of the simple
+forward for-loop (loop variable moderation after loop body), both for when the loop ending
+condition is false, and when it's true. The loop semantics are defined as, first initializing
+the loop variable, then checking whether the loop end condition is true. If not, the loop body
+is run together with it's loop variable moderation, and the loop start condition is ensured to
+be false. The difference between the \emph{loop1} and the \emph{loop2} rules is, whether
+the loop variable moderation is run before or after the body statement.
+
+Rules \eqref{eq:loop1MainInv} to \eqref{eq:loop2BaseInv} defined the loop semantics, when an
+invariant is given. The invariant is checked after initialization of the loop variable, at
+the start of each loop iteration, and after the loop finishes.
+
+\subsection{Reversibility \rr} \label{subsec:reversibility}
+Because the semantics of \lan is similar to that of \texttt{Janus}, as defined in \cite{janus},
+this report will focus on proving reversibility of the divergent elements.
+\\
+\\
+First off the statement must be proven to be forward and backward deterministic. If they are,
+definition \ref{def:def:localReversibility} holds, and the statement is locally reversible.
+For this Theorem \ref{theorem:determinism} must be proven (\cite{janus}):
+\begin{theorem}[Forward \& backward determinism] \label{theorem:determinism}
+    \begin{align*}
+        \forall \sigma&, \sigma', \sigma''\in Stores[\lan]. \\
+        &\sigma \vdash_{stmt} s \leadsto \sigma' \land \sigma \vdash s \leadsto \sigma''
+            \implies \sigma = \sigma'' \\
+        \forall \sigma&, \sigma', \sigma''\in Stores[\lan]. \\
+        &\sigma' \vdash_{stmt} s \leadsto \sigma \land \sigma'' \vdash_{stmt} s \leadsto \sigma
+            \implies \sigma' = \sigma''
+    \end{align*}
+\end{theorem}
+\noindent
+This theorem states that all statements in \lan are bijective, as given a state it only maps to
+another unique state, and that given a statement mapping to one state, it must come from a
+unique state; also all store states has a mapping statement between them.
+Hence there is a one-to-one correspondence, and all statements will therefore be
+invertible.
+\\
+\\
+\textbf{Asserts:}
+As assert statements in \lan does not alter the store in which they operate, both
+forward and backwards determinism is trivially true $_\square$.
+\\
+\\
+\textbf{Local variables:}
+Looking at the semantic rule \eqref{eq:local} it is imminent, that for any program state,
+the local declaration will always map to the state wherein any given $id$ maps to its given value
+$v$. In other words the mapping created by this statement, does not depend on the starting state;
+it will always have the same outcome; hence given any starting store, the local declaration can
+only map to one other store state.
+
+For backward determinism, we have that the local statement, must create the mapping to store
+$\sigma[id \mapsto v]$, for some arbitrary $id$ and $v$. If we then remove the new mapping
+$id \mapsto v$ from $\sigma$, we must get the original stores. But as this gives
+$\sigma[id \mapsto v] \backslash \{id \mapsto v\} = \sigma$. It must be true, that no matter what
+origin store, if they map to identical stores, they must themselves be equal $_\square$.
+\\
+\\
+\textbf{Deallocation of variables:}
+This prove is identical to the one for local variables. It simply removes a mapping instead of
+adding one. Hence they must be forward deterministic, as given the same store $\sigma$, the 
+statement simply removes a mapping. For backward determinism, adding the removed mapping from
+the store, can only map to one store $_\square$.
+\\
+\\
+\textbf{For loops:}
+Any given \lan for-loop can be transformed into a sequence of \lan variable declaration and
+deallocation, \texttt{Janus} from-loops, and \lan asserts by the below formula:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{l}
+        \texttt{for local <type> <id> = <expr1> [, invariant (<expr2>)] \{} \\
+        \texttt{ <stmts>} \\
+        \texttt{\} <id> $\oplus$= <expr3>; until (dealloc <type> <id> == <expr4>)} \\ \\
+        $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\Downarrow$ \\ \\
+        \texttt{local <type> <id> = <expr1>} \\
+        \texttt{[assert(<expr2>)]} \\
+        \texttt{from <expr1> loop} \\
+        \texttt{  [assert(<expr2>)]} \\
+        \texttt{  <stmts>} \\
+        \texttt{  <id> $\oplus$= <expr3>} \\
+        \texttt{until <expr4>} \\
+        \texttt{[assert(<expr2)]}
+    \end{tabular}
+    \caption{\texttt{for}-loop transform into provable sections.}
+    \label{table:for-loop-transform}
+\end{table}
+\noindent
+Backwards directional for-loops can be likewise transformed, simply by putting the
+moderation above the body statements, instead of after.
+
+Hence by the above proves, and the one for \texttt{Janus} from-loops in \cite{janus}, \lan
+for-loops must be both forward and backward deterministic $_\square$.

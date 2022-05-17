@@ -90,23 +90,25 @@ formatExpr = \case
   VarE (Lookup (Ident n _) e) -> text n <> formatArrayIndicesE e
 
   Arith op e1 e2 ->
-    formatExpr e1 <+> formatOperator op <+> formatExpr e2
+    parens (formatExpr e1)
+    <+>
+    formatOperator op
+    <+>
+    parens (formatExpr e2)
 
   Not e -> char '!' <> parens (formatExpr e)
 
-  Size (Lookup (Ident n _) idx) (Just t) ->
+  Size (Lookup (Ident n _) idx) t ->
     parens $
     text "sizeof" <> parens (text n <> formatArrayIndicesE idx) <+> char '/'
     <+> text "sizeof" <> parens (formatType t)
 
-  Size (LVar (Ident n _)) (Just t) ->
+  Size (LVar (Ident n _)) t ->
     parens $
     text "sizeof" <> parens (text n) <+> char '/'
     <+> text "sizeof" <> parens (formatType t)
 
   SkipE -> empty
-
-  otherwise -> error $ "formatExpr: " ++ show otherwise ++ " not implemented"
 
 formatExpr' :: Doc -> Expr -> Doc
 formatExpr' acc e = acc <> comma <+> formatExpr e
@@ -146,29 +148,9 @@ formatAArgs args = formatAArg (head args) <> foldl formatAArg' empty (tail args)
 
 
 formatStmt :: Doc -> Doc -> Stmt -> Doc
--- formatStmt :: Doc -> Stmt -> Doc -> Doc
 formatStmt spc acc stmt =
--- formatStmt spc stmt acc =
   acc $+$ spc <>
   case stmt of
-    Global (Var t (Ident n _) e _) _ ->
-      formatType (fromJust t) <+> text n <+>
-      case e of
-        Just e' ->
-          equals <+> formatExpr e'
-        Nothing -> empty
-      <>
-      semi
-
-    Global (Arr t (Ident n _) s e _) _ ->
-      formatType (fromJust t) <+> text n <> formatArrayIndices (fromJust s) <+>
-      case e of
-        Just e' ->
-          equals <+> formatArrayValues e' (fromJust s)
-        Nothing -> empty
-      <>
-      semi
-
     Local (Var t (Ident n _) e _) _ ->
       formatType (fromJust t) <+> text n <+>
       case e of
@@ -183,12 +165,12 @@ formatStmt spc acc stmt =
       case e of
         Just e' ->
           equals <+> formatArrayValues e' (fromJust s)
-        Nothing -> empty
+        Nothing -> braces $ char '0'
       <>
       semi
 
     DLocal (Var t (Ident n _) e _) _ ->
-      assert (text n <+> equals <> equals <+> formatExpr (fromJust e)) <> semi
+      assert (text n <+> equals <> equals <+> formatExpr (fromJust e))
       <> semi
 
     DLocal (Arr t (Ident n _) (Just s) e _) _ ->
@@ -242,6 +224,10 @@ formatStmt spc acc stmt =
       $+$
       formatStmts spc ifbody
       $+$
+      (if ficond /= SkipE
+      then spc <> assert (formatExpr ficond) <> semi
+      else empty)
+      $+$
       rbrace
       $+$
       case elsebody of
@@ -269,7 +255,7 @@ formatStmt spc acc stmt =
 
     Assert e _ -> assert (formatExpr e) <> semi
 
-    Skip -> empty
+    _ -> empty
   where
     loop :: Bool -> Var -> Maybe Invariant -> [Stmt] -> Moderator -> Expr -> LoopInfo -> Doc
     loop forward (Var t (Ident n _) e _) inv body (Moderator _ op e1) cond inf =
@@ -382,11 +368,49 @@ formatIncludes =
   text "using namespace std;"
 
 
+formatGlobalVar :: Doc -> Stmt -> Doc
+formatGlobalVar acc stmt = acc $+$ case stmt of
+  Global (Var t (Ident n _) e _) _ ->
+    formatType (fromJust t) <+> text n <+>
+    case e of
+      Just e' ->
+        equals <+> formatExpr e'
+      Nothing -> empty
+    <>
+    semi
+
+  Global (Arr t (Ident n _) s e _) _ ->
+    formatType (fromJust t) <+> text n <> formatArrayIndices (fromJust s)
+    <+> equals <+>
+    case e of
+      Just e' -> formatArrayValues e' (fromJust s)
+      Nothing -> braces $ char '0'
+    <>
+    semi
+  _ -> empty
+
+formatGlobalVars :: [Stmt] -> Doc
+formatGlobalVars body =
+  if containGlobal body
+  then text "// Global variables defining starting state"
+       $+$ foldl formatGlobalVar empty body
+  else empty
+  where
+    containGlobal :: [Stmt] -> Bool
+    containGlobal = \case
+      [] -> False
+      (Global _ _:_) -> True
+      (hd:tl) -> containGlobal tl
+
+
+
 formatProgram :: Program -> Program -> Doc
 formatProgram (Program ps) (Program psR) =
   case zip ps psR of
     (main:tl) ->
       formatIncludes
+      $+$ space $+$
+      formatGlobalVars (getProcDeclBody (fst main))
       $+$ space $+$
       foldr formatProcedureDefinition empty tl
       $+$ space $+$

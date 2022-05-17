@@ -1,14 +1,228 @@
-\section{Compiler Structure}
+\section{Compiler Structure \ms}
 % Overview of compiler structure with image
 % Information and analysis of choice of programming language
+The \lan compiler is structured into different modules that can be seen in figure
+\ref{fig:compiler-overview}. First the \lan source code is handed as input to the frontend,
+which creates an abstract syntax tree (AST), that is then type checked and annotated with
+context sensitive information. This annotated AST is then reversed, giving us a reversed AST
+$R(AST)$ and the regular. These two trees are then run through the optimizer, that outputs
+two optimized trees, that is then translated into \texttt{C++} output via standard out.
 
-\subsection{Lexer}
-% Theory behind lexing and the implementation
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.6]{imgs/compiler-overview.png}
+    \caption{Compiler structure overview.}
+    \label{fig:compiler-overview}
+\end{figure}
 
-\subsection{Parser}
-% Theory behind parser and the implementation
+\subsection{Frontend \rr}
+% Theory and information behind lexing and parsing
+The frontend consists of a lexical analysis and a syntax analysis. Both are implemented using a
+parser combinator in \texttt{Haskell}, namely Parsec. A parser combinator is a higher-order
+function taking in a parser as input, and outputting another parser. This way small simple parsers
+can be combined into more complex structures, thereby helping quick prototyping. This strong
+functionality does however come with a significant overhead, especially considering the simplicity
+of \lan \cite{parser}.
 
-\subsection{Optimization}
+The strong flexibility of parser combinators, and their strong resemblance of the underlying
+grammar does however outweigh the negativity of the performance, especially considering this is
+not the primary focus of this bachelor thesis.
+\\
+\\
+Because the language is not in LL(1) the performance of the parser is also worsen, as lookahead
+cannot be avoided e.g. in the distinction between simple variables and arrays, and the two
+kinds of for-loops. The process presented in \cite{torben} can be used to transform it into
+LL(1), but due to time constraints, this has been postponed to future works.
+\\
+\\
+The parser combinator works on a string input on which it performs intertwined lexical analysis
+and syntax analysis. The two analysis' are intertwined simply because that is how the Parsec
+library functions. This does not pose any apparent problems, as the language being analyzed has
+a fairly simple syntax. Parsec does however still keep a sense of modularity.
+
+\subsection{Type Checker \rr}
+% Theory and information behind type checking
+\lan is a statically typed language, as the type check is performed before execution of the program.
+Furthermore, it is a strongly typed language, as operations are ensured to be performed on
+types that are supported. The reason to make \lan a strongly typed language, as opposed to
+the more weakly typed \texttt{C++}, which it is translated into, is that a strongly typed
+language gives run-time guarantees that helps avoid certain type of program errors, that can be
+hard to pinpoint during debugging, and even worse, might not even show up.
+\\
+\\
+While type checking the AST two mappings are used to carry the type information synthesized by the
+recursive calls onwards, so that the information can be inherited in other part of the AST; this
+is a mapping from variable names to types, and from variable names to size. The latter is used
+to annotate the AST with array sizes, that is needed during the subsequent optimizer phase.
+No guessing of types are done during the analysis, meaning when an error is met it is reported
+and the analysis stops.
+
+\subsubsection{Type Checking Expressions}
+When type checking expressions the symbol tables for variables and array size are inherited
+attributes, and the type of expression, together with a annotated expression,
+is the synthesized attributes. The rules for type checking
+can be summarized as:
+
+\begin{itemize}
+    \item A number is simply an integer.
+
+    \item A boolean value is a bool.
+
+    \item The type of a variable is found by a lookup in the inherited variable table.
+          If the lookup is successful the type is returned back, and if it fails a error
+          is reported.
+
+    \item The type of a lookup in an array is also determined by a lookup in the variable table.
+          However, for array lookup the size needs to be annotated onto the expression, meaning
+          a lookup into the array table is performed. If both are successful it is checked
+          whether the array indexing is integers. If so the annotated
+          expression is returned together with the type. Else an error is reported.
+
+    \item For binary operations the type of the two expressions must match. As all types
+          are defined for all operators, if the two types match the operator is checked in order
+          to know what type it returns. If it is a boolean operator, the possibly annotated
+          expression is returned together with the boolean type. Else the type of the expression
+          is returned together with its annotated self. The choice that plus and multiply
+          functions also for booleans is simply because \texttt{C++} does so.
+        
+    \item The type of the \lsin{not} expression is always boolean. Meaning the expression
+          being inverted is simply checked, and then the possibly annotated expression is
+          returned with the boolean type.
+
+    \item The \lsin{size} expression always returns an integer, so the expression is simply
+          returned with the integer type.
+\end{itemize}
+
+\subsubsection{Type Checking Statements}
+Type checking statements involve the same inherited attributes, but here the synthesized are
+the type/size annotated statement, and the updated tables.
+The rules for type checking statements can be described as:
+
+\begin{itemize}
+    \item Variable definition and deallocation explicitly declare which type they are. Hence
+          the check merely involves type checking the assigned expression, and see if it matches
+          the declared type. If not an error is reported. Else the updated tables are returned
+          together with annotated statement.
+
+    \item For both simple types and arrays, the modification expression is checked if it matches
+          the moderated variable. Array types the indexing expressions are also checked
+          to be integers. If all is true, the updated tables are returned together with
+          the now annotated statement. Else an error is reported.      
+
+    \item A switch statement need to switch between two equal variables; so the types must match
+          and if it is between arrays, the size of the arrays must also match. If these are not
+          true, an error is reported, else the annotated statement together with the updated
+          tables are returned.
+
+    \item In conditional branching (if-then-else) both the if conditional, and the fi conditional
+          must be a boolean type. Because these are statements and not expressions, the two
+          branches do not have any "return" type, meaning the conditional rules are the only.
+          So if they are true, the branch bodies are type checked, and the annotated statement
+          is returned together with the inherited tables. Else an error is reported.
+
+    \item In for loops the declaration, moderation, and deallocation needs to be type checked
+          as explained above. Furthermore, the possible invariant needs to be a boolean type.
+          If all that is true, the body is type checked, and an annotated statement is returned
+          together with the inherited tables.
+
+    \item Assertions simply needs to be a boolean type. If true the annotated statement is returned
+          together with the inherited tables.
+\end{itemize}
+
+
+\subsubsection{Type Checking Procedure Definitions}
+Each procedure inherits the global store attributes, and uses this to type check its arguments,
+and procedure body. Because there are no return types of procedures, it is only the arguments and
+body, that needs type checking.
+
+When all procedures have been type checked, the annotated AST is returned and used in the
+subsequent phases of the compiler.
+
+\subsection{AST Reversing \rr}
+The reverser simply follows the rules outlined under \nameref{sec:language-def}. The AST is
+reversed at this point in the compiler, as the optimization checks needs to be performed for both
+direction as explained in \ref{translation-to-z3}.
+
+After the reversal each procedure should occur in the same order in the AST, but each
+procedure body should be reversed. To achieve this the right associative \lsin{foldr} is used to
+go through each procedure, and the left associative \lsin{foldl} is used within each procedure.
+This can be seen in listing \ref{lst:reverser}. Notice that the first procedure in the AST is
+skipped. This works under the contract, that the first procedure is always the \lsin{main}
+procedure. The \lsin{main} procedure is not reversed because, it is used to define the start state
+of the program. Hence it contains the global variables, which can only we 'reversed' if one were
+to know the end state of the program, which would defeat some of the purpose of actually writing
+the program in the first place.
+
+\begin{lstlisting}[language=Haskell, label={lst:reverser}, caption={Reversing AST.}]
+reverseProcedure (ProcDecl name args body pos) acc =
+      let body' = foldl reverseStatement [] body in
+            ProcDecl name args body' pos : acc
+
+reverseProgram (Program ps) =
+      let m = head ps in
+            let rest = foldr reverseProcedure [] (tail ps) in
+                  Program $ m:rest
+\end{lstlisting}
+\noindent
+The methods for reversing statements are implemented as outlined in \nameref{sec:language-def},
+but the implementeation for if-statements and for-loops will be descriped further here. These
+can be seen in listing \ref{lst:stmt-reverser}. If-statements have their two conditionals switched,
+such that the entrance conditional becomes the exit condition (from if path) and vice verser.
+Then both paths are reversed recursively. With for-loops the expression of the loop variable at
+entrance, is exchanged with the expression for the exit condition. Then the body is recursively
+reversed.
+
+Exchaning entrance and exit conditionals for the two constructs, guarantees that the reversed
+statements bodies, will only be executed, if they were executed during the forward run. This
+is illustrated in figure \ref{fig:rev-flow-constructs}; where reversal of the graph is done
+by converting Diamonds to circles. circles to diamonds, squares to reversed squares, and at
+last changing the arrows direction. Note that the reversible loop construct requires, that
+the entrance condiotional be true, whenever the statement is executed. This is guaranteed in
+\lan by using the for-loop construct instead of the from-loop, thereby making it possible to
+exclude that runtime check.
+
+\begin{lstlisting}[language=Haskell, label={lst:stmt-reverser}, caption={Reversing for-loops and if-statements.}]
+reverseStatement acc = \case
+      ...
+      Ite condif bodyif condfi bodyelse pos ->
+            Ite condfi
+            (foldl reverseStatement [] bodyif)
+            condif
+            (foldl reverseStatement [] bodyelse)
+            pos
+            : acc
+
+      For1 inv (Var t n (Just e) p) body mod cond b pos ->
+            For2 inv (Var t n (Just cond) p) (reverseMod mod)
+            (foldl reverseStatement [] body)
+            e b pos
+            : access
+      For2 inv (Var t n (Just e) p) mod body cond b pos ->
+            For1 inv (Var t n (Just cond) p)
+            (foldl reverseStatement [] body)
+            (reverseMod mod) e b pos
+            : acc
+      ...
+\end{lstlisting}
+
+\begin{figure}[H]
+      \centering
+      \begin{subfigure}[b]{0.4\textwidth}
+            \centering
+            \includegraphics[scale=0.5]{imgs/reversible-conditional.png}
+            \caption{Conditional.}
+      \end{subfigure}
+      \hfill
+      \begin{subfigure}[b]{0.4\textwidth}
+            \centering
+            \includegraphics[scale=0.5]{imgs/reversible-loop.png}
+            \caption{Loop.}
+      \end{subfigure}
+      \caption{Reversing conditionals and loop constructs.}
+      \label{fig:rev-flow-constructs}
+\end{figure}
+
+\subsection{Optimization \ms}
 % Strategy for optimization
 % Integration with theorem prover
 Because the compiler translates directly from the source language into an abstract syntax tree,
@@ -20,53 +234,63 @@ make this optimizer local to the source language.
 \\
 This optimization involves four steps:
 \begin{enumerate}
-    \item Discovering language constructs, that introduce assertions on translation.
-    \item Locating and gathering information for the prove.
-    \item Translating subpart of abstract syntax tree into \texttt{z3}.
+    \item Discovering language constructs, that require run-time assertions.
+    \item Locating and gathering information for the prover.
+    \item Translation of abstract syntax tree into \texttt{z3}.
     \item Deciding on whether to optimize the assertion or not, based on the answer
           from \texttt{z3}.
 \end{enumerate}
 
-\subsubsection{Language Constructs Introducing Asseritons}
+\subsubsection{Language Constructs Requirering Run-time Assertions \rr}
 The first point can be discovered by consulting the language specification introduced
 in section \ref{sec:language-def}. Here it is imminent, that the following construct introduce
 assertions for the translated code:
 \begin{itemize} % TODO: Give example showing where assertions are created
-    \item Local declaration as they require deallocation at some point for reversibility.
+    \item Deallocation of local variables.
     \item If statement as the program needs to know whether the if-path was chosen or not when
-          reversing computation.
-    \item from statement as the first boolean expression following \texttt{from} can only be true
-          before the loop runs, and the expression after \texttt{until} can only be true after
-          all iterations are complete.
+          reversing computations.
+
+    \item For statement as the initial loop state must only be true at the initialization of the
+          loop and never hereafter. This is the case, as it will function as the loop end
+          condition, when reversing the statement.
+
+    \item Assertions as it is in their nature.
 \end{itemize}
 \noindent
-Which means that when running through the abstract syntax tree, the compiler must pause translation
-when the above constructs are found, and then the optimizer module must be called to tell
-the translator, whether to include assertions or not.
+Which means that when running through the abstract syntax tree, the optimizer must stop and validate
+when the above constructs are met, and then decide on whether to optimize based on the answer from
+\texttt{z3}.
 
-\subsubsection{Gathering Information for \texttt{Z3}}
+\subsubsection{Gathering Information for \texttt{Z3} \rr}
 Point two has two main obstacles: 1) to know how much information \texttt{z3} needs for the proof,
 and 2) granting the optimizer access to this appropriate subtree.
 
 For 1) a simply approach could be to give the tree representing the current procedure to the
 optimizer. This could give too much information in the sense that only part of this subtree is
-actually needed to perform the validation check. e.g. in the small program below the only thing
+actually needed to perform the validation check. e.g. in the small program, in listing
+\ref{listing:z3-info-gather-ex}, the only thing
 needed for the validation is the two last lines. However, this would require backtracking the
 tree while keeping a list of "unassigned" variables, until this list is empty, so the first
 method is used in this optimizer. For future work, it would be a good idea to check whether the
 other approach would be faster. The below piece of code also reveal two other problem in regards
-to information: Global variables and function calls.
+to information: Global variables and procedure calls.
 
-Getting the value of a global variable
-requires that the language be interpreted on the go, making the question a matter of a table
-lookup; there is however no interpretation going on in this compiler, limiting the optimizer
-into using unspecified variables for globals.
+To address this problem, the global store is processed before any optimization is performed.
+In this way all procedures have access to this global store. \lan is statically scoped meaning
+only the global store is available across procedures; this is the case as all procedures are
+defined as the first thing in the program.
+\\
+\\
+The information gathering is simply done locally for each procedure. Meaning when optimizing
+a procedure \lsin{foo}, the only prior information is the global store. Then when a procedure
+call for \lsin{bar} is met, \lsin{bar} is processed, so its information is carried out into
+the analysis of \lsin{foo}. While doing this processing of \lsin{bar}, no optimization is done,
+as that would use information from the call site, which could lead to spurious optimizations.
+Because procedures are non-recursive this "inlining" can be done trivially without further
+analysis.
 
-Function calls hide information that might be needed when performing validation for a procedure.
-To mitigate this, aggressive inlining is used. This does however pose the question of recursive
-procedures. I will leave this question for now, and return to it below, when addressing loops.
-
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}[language=C++, label=listing:z3-info-gather-ex,
+    caption=Example on gathering information for \texttt{z3} where only last two lines are needed.]
     int c
 
     procedure g()
@@ -83,140 +307,210 @@ procedures. I will leave this question for now, and return to it below, when add
     }
 \end{lstlisting}
 
-\subsubsection{Translating to \texttt{Z3}} % and deciding on optimizing or not!
-As the compiler is implemented in \texttt{Haskell} these bindings for \texttt{z3} in
-\texttt{Haskell} is used \cite{Z3:BINDINGS}. The optimizer module is therefore a translator from
-the abstract syntax tree into these bindings, and can be seen in the \nameref{sec:appendices}.
+\subsubsection{Handling if-then-else and for loop optimization \ms}
+Conditional control-flow statements are the most complex to do a optimization run on, so they
+will be explained further in the next two subsections.
 \\
 \\
-Validating whether an assertion can be removed with \texttt{z3}, can be done by creating a model
-of the code, that ends up inverting the boolean expression being asserted, and then checking
-for satisfiability. If this is not satisfiable, then the assertion can never be false, and
-can safely be removed.
+\textbf{If-then-else}: As explained and outlined in section \ref{translation-to-z3}, the optimizer
+cannot know statically which branch is going to be taken at run-time (at least for other than
+trivial programs). Hence the translation must happen through the \texttt{z3} function
+\lsin{mkIte}.
 
-Because of constraints in \texttt{z3} the following language constructs of \texttt{JAPA} is
-problematic:
+This function works by modelling each branch flow, and then "hiding" them both behind the
+conditional decider. The code for this can bee seen in listing \ref{listing:ite}. What it does
+is, that for each variable in the scope coming into the if-then-else, the variable is checked
+in the two branches scope (the modeling of these scopes are processes prior to this) of whether
+they have been "invalidated" by being removed (invalidation will be covered under loops below).
+Then \lsin{mkIte} is used to base the decision on the variables value in the scope on the
+if-conditional.
+
+\begin{lstlisting}[language=Haskell, label=listing:ite, caption=Using \lsin{mkIte}.]
+createITE :: AST -> Vars -> Vars -> Vars -> Z3 Vars
+createITE cond orig scope1 scope2 = foldM f orig $ Map.keys orig
+    where f scope name = do
+            let var1 = tryGetVar name scope1
+            let var2 = tryGetVar name scope2
+
+            case (var1, var2) of
+            (Just (var1z3, var), Just (var2z3, _)) -> do
+                newVar <- makeVar (fromJust (getVarType var)) name
+                ite    <- Z3.mkIte cond var1z3 var2z3
+                Z3.assert =<< Z3.mkEq newVar ite
+                return $ Map.insert name (newVar, var) scope
+
+            -- else variable invalidated in some scope
+            _ -> return $ Map.delete name scope
+\end{lstlisting}
+\noindent
+\textbf{Loops}: \texttt{Z3} does not have a theory for handling loops. A loop must therefore be
+reformulated for \texttt{z3}, as mentioned in section \ref{translation-to-z3}. The optimizer
+has three different cases in which some information can be transferred to \texttt{z3}: 1)
+Loop has invariant attached and can be unrolled, 2) loop cannot be unrolled but has invariant,
+and 3) loop does not have an invariant attached but can be unrolled. For all other combinations
+it is, to the best of my knowledge, not safe to carry information to \texttt{z3}, as we cannot
+paint the whole picture. An example for this is, if it is conveyed that $x = c_1$ to \texttt{z3}
+prior to the loop, and the loop would ensure $x=c_2$, but we have no way of statically getting this.
+If the information of $x=c_1$ was then carried on past the loop, it could result in faulty
+optimizations. Invalidating $x$ is done by replacing the \texttt{z3} var representing the value
+of $x$, by a new \texttt{z3} variable, of which we know no more than it's existence; this way
+no prior information, which now may be invalid, is carried onwards in the analysis.
+
+Determining whether loops are unrollable is done with the simple method, of 
+\begin{enumerate}
+    \item Checking that the initial value, the loop modifier, and the deallocation are based on
+          simple constants.
+
+    \item No modification of the loop variable should be performed during the loop body execution.
+
+    \item The loop should not be based on integer overflow/underflow.
+
+    \item The loop unroll number does not exceed an arbitrary given bound (simply to not let
+          the recursively loop "forever").
+\end{enumerate}
+\noindent
+If all above criterions are met, the loop is deemed unrollable, and the loop will be unrolled.
+Otherwise all modified variables within the loop are invalidated, except for those in
+the loop invariant.
+
+In order for an invariant to help carry information past a loop that cannot be unrolled, it needs
+to be true at initialization of the loop, during maintenance, and the loop should terminate.
+The three criterions are validated by:
 \begin{itemize}
-    \item Moderating statements.
-    \item Conditional statements.
-    \item Loops.
-    \item Function calls.
-    \item Reversibility.
+    \item \emph{Initialization} is simply proved by validating the invariant before the loop starts.
+
+    \item \emph{Maintenance} is proved by processing a run of the body and modification, on a
+          generalized scope, and then validating the invariant. If the invariant is true for this
+          general case, it will be true for all iterations. The generalization of the scope is
+          done by "invalidating" the entire scope.
+
+    \item \emph{Termination} is proved by validating that after a general run of the loop,
+          the loop variable will be either strictly larger or smaller than before, depending
+          on the loop modifier.
 \end{itemize}
 \noindent
-For solving the difficulties of these language constructs, I have used the approach outlined
-in the talk \cite{Z3:TRANSLATION} at Compose 2016.
+Loop unrolling is only done to enable exact information for the \texttt{z3} solver. It has nothing
+per se to do we the speed of the resulting code (ignoring the fact that missing information
+might lead to assertions not being removed). Therefore, if the optimizer is given a nested loop,
+if the inner loop cannot be unrolled, there is no use in unrolling the outer loop. Information will
+be invalidated no matter what. Furthermore, as a matter of running time for the optimizer, there
+is an arbitrary bound of the amount of unrolling done. Meaning if a loop requires 31 unrolls, but
+the max is 30, the loop is not unrolled. Hence the inner loop is unrolled first, and then the outer
+loop. If the inner loop requires 10 unroll, and the outer can be unrolled 5 times, the total
+required unrolling of the outer is $10*5$.
+\\
+\\
+If a loop is deemed to not be unrollable, a generalized analysis of the loop will be performed.
+This means the loop optimizer will be run on a generalized scope. The code snippet
+\ref{require-generalize} shows an example, where this generalization is necessary to get the
+correct result. If it was run once in the normal scope, the if path would not be considered,
+meaning the for-loop would be optimized. But if \lsin{tmp} and \lsin{i} is generalized, the
+optimizer will correctly state, that the loop is not optimize-able.
+Generalizing the scope is done for all variables, that are modified within the loop body;
+this also includes the loop variable.
 
-\subsubsection*{Moderating Statements}
-The problem with this construct is that all variables in \texttt{z3} are immutable. This can
-be addressed by creating new fresh variables, and asserting these fresh variables to the moderated
-value e.g.
-\begin{verbatim}
-    x += 5  =>  (declare-const x1 Int)
-                (assert (= x1 (+ x 5)))
-\end{verbatim}
-
-\subsubsection*{Conditional statements}
-If the assertion being validated is not associated to a specific conditional, the program will
-not know which path is going to be taken at run time. Therefore both paths must be constructed,
-and then the \texttt{ite} function from \texttt{z3} can be used to determine the path. e.g.
-\begin{verbatim}
-    local int x = 5         (define-fun x () Int 5)
-    if (x < 5)              (declare-const x1 Int)
-    {                   =>  (assert (= x1 (- x 5)))
-        x -= 5              (declare-const x2 Int)
-    } fi (x == 0)           (assert (= x2 (ite (< x 5) x x1)))
-    delocal int x == 5      (assert not (= x2 5))
-\end{verbatim}
-
-\subsubsection*{Loops}
-Because \texttt{z3} does not have a construction for loops, loops can only be validated by unrolling
-them. The question of how far to unroll loops is however rather complex. e.g. what should be done
-with non-terminating loops, and how to detect these? Also how far should loops be unrolled? One
-important factor is, that the optimizer must be conservative, so to not change the runtime behavior.
-Which means if it's not possible to analyze how many times to unroll, the optimization is blocked
-by loops.
-
-When it comes to \texttt{for}-loops the analysis is relatively simple, as the constructs both
-tell a starting value, what happens to this variable at each iteration, and when to stop.
-So as long as the local variable being declared in the beginning, is the same as the one being
-deallocated after the loop, and the same being moderated at each iteration, it is straight forward.
-However if one of these are not the case, the analysis becomes harder.
-
-The unrolling of a simple \texttt{for}-loop can be done by transforming it into a series of
-\texttt{if}-statements that can be represented in \texttt{z3}:
-\begin{verbatim}
-    local Int bit = 1                   local int bit = 1
-    for int i = 0                       local int i = 0
-    {                                   if (!(i == 10))
-        local int z = bit           =>  {
-        bit += z                            local int z = bit   
-        delocal int z = bit / 2             bit += z
-    } i += 1; untill (int i = 10)           delocal int z = bit / 2
-                                            i += 1
-                                            if (!(i == 10))
-                                            {
-                                                ...
-                                            } fi (i == 10)
-                                        } fi (i == 10)
-                                        delocal int i = 10
-                                        delocal int bit = 2048
-\end{verbatim}
-
-% analyzing more complex end conditions, and show example with from loop!
-% Maybe use https://web.njit.edu/~mili/ccb.pdf for removing end assertion from until
-% Probably just end at unrolling n amount of time, and then hoping n is large enough.
-
-% \begin{verbatim}
-%     from (bit == 1) loop            if (bit == 1 && !(bit * bit > num))
-%     {                               {
-%         local int z = bit               local int z = bit
-%         bit += z                =>      bit += z
-%         delocal int z = bit / 2         delocal int z = bit / 2
-%     } until ((bit * bit) > num)         if (!(bit * bit > num))
-%                                         {                                    
-%                                             local int z = bit
-%                                             bit += z
-%                                             delocal int z = bit / 2
-%                                             if (!(bit * bit > num))
-%                                             {
-%                                                 ...
-%                                             } fi (bit * bit > num)
-%                                         } fi (bit * bit > num)
-%                                     } fi (bit * bit > num)
-% \end{verbatim}
-
-\subsubsection*{Function Calls}
-% TODO: Talk about recursion!!!
-To model the functions correctly in \texttt{z3} inlining must be done, as all changes done
-by a function is through side effects. After inlining the function, it can be modeled using the
-other strategies outlined above.
-
-\subsubsection*{Reversibility}
-Because the translation is from a reversible language to a irreversible language, every procedure
-will be translated into two: One going forward, and one backwards. It is necessary to perform
-the validation check individually for these two outcome procedures, as one way being valid, does
-not imply the other is. E.g. in the following code, the assertion can be removed in the
-forward run, but not the backwards, as giving an uneven number to \texttt{double} backwards will
-result in information loss due to integer division.
-
-\begin{lstlisting}[language=C]
-    procedure double(int bit)
-    {
-        local int z = bit
-        bit += z
-        delocal int z = bit / 2
-    }
+\begin{lstlisting}[language=C++, label=require-generalize, caption=Loop requirering generalization]
+int tmp = 0
+for local int i = 0 {
+      if (i == 3 && tmp == 0) {
+            i -= 3
+            tmp += 1
+      } fi (i == 0 && tmp == 1)
+} i += 1, until (dealloc int i = 4)
 \end{lstlisting}
 
-% Problem with language constructs
-% \begin{itemize}
-%     \item if-else statements. %do the ite thing if we don't know we take it otherwise assert if
-%     \item loops. % unroll
-%     \item function calls. %Inline? unroll recursion?
-%     \item Reversibility % do the prove forward and backward, one way is not enough bc e.g.janus playground example with square
-% \end{itemize}
+\subsection{Translation to \texttt{C++} \rr}
+The \lan compiler presented in this report does a simple translation to \texttt{C++}.
+As the focus lie on assertion removal, no work has been put into compiling effective
+\texttt{C++} code. The main function of the code generator can be seen in listing
+\ref{lst:formatMain}. It works by receiving two AST's: One forward direction and one reversed.
+It starts by inserting includes possibly required by the translated code. This includes
 
+\begin{itemize}
+      \item \lsin{assert.h} to enable use of asserts in the \texttt{C++} code.
 
-\subsection{Translation to \texttt{C++}}
-% Theory behind the optimization and implementation
+      \item \lsin{cstring} to get access to \lsin{memcmp} functionality, which is used
+            when deallocating array variables.
+\end{itemize}
+\noindent
+Then it formats the starting global store of the \lan program. This is put into the global
+scope, so that they can be accessed freely from all functions. Because the main procedure of
+the \lan program, is not reversed, it simply takes the one obtained from the forward AST
+(here the first parameter).
+
+Then function definition is created for all procedures of the program. This is done as
+functions in \texttt{C++} can only be called after their declaration, whereas in \lan
+they can be called, as long as they are in the global scope.
+After this all procedures are formatted into \texttt{C++}.
+
+\begin{lstlisting}[language=Haskell, label={lst:formatMain}, caption={Formatting AST into \texttt{C++}}]
+formatProgram :: Program -> Program -> Doc
+formatProgram (Program ps) (Program psR) =
+      case zip ps psR of
+      (main:tl) ->
+      formatIncludes
+      $+$ space $+$
+      formatGlobalVars (getProcDeclBody (fst main))
+      $+$ space $+$
+      foldr formatProcedureDefinition empty tl
+      $+$ space $+$
+      foldr formatProcedure' empty tl
+      $+$
+      formatProcedure (fst main)
+      [] -> empty
+\end{lstlisting}
+\noindent
+When transforming the different statement constructs into \texttt{C++}, the following rules
+are implemented:
+\\
+\\
+\textbf{Local variables declaration, modification, and deallocation:}
+Local variable declaration and modification are simply translated into regular variables and
+assignment modifications in \texttt{C++}, as they behave
+similarly. The only difference is, that \lan local variables needs to be deallocated at some
+point. This deallocation is translated into \texttt{C++} assertions, as they behave as a
+program runtime check.
+
+deallocation of arrays are somewhat more complicated, as arrays in \texttt{C++} cannot be
+declared inline in an assert. Hence a temporary array $_tmp_arr$ is created, with the values
+stated in the deallocation statement, and is compared to the values of $arr$, by using
+\lsin{memcmp}; as \lsin{memcmp} has no check for array length, this is checked before the
+call, using the short-circuiting operator $\&\&$.
+\\
+\\
+\textbf{Switch:}
+At the moment switch statements are translated into a series of exclusive-or bitwise operations.
+This is faster than creating a temporary variable to hold, the value of one of the variables, 
+while during the switch. However, it does alter the behavior if the two variables being
+switched aliases each other. Here the exclusive-or operations will simply zero-initialize
+the two variables, instead of switching the values. This should be altered in the future,
+unless guarantees can be made that the variables are non-aliasing.
+\\
+\\
+\textbf{If-then-else:}
+The only semantic difference between \lan conditional statements and \texttt{C++} ones,
+is the runtime assertion from the \lsin{fi}, that should be true whenever the \lsin{if}
+branch has been run. Hence the translation simply involves, transforming to a simple
+\texttt{C++} if statement, with accompanying assertion of the \lsin{fi} expression, in the
+if-branch.
+\\
+\\
+\textbf{For loops:}
+\lan for-loops are transformed into a while-loop. While-loops are chosen instead of for-loops
+as \lan for-loops can alter whether the loop variable should be modified at the start of an
+iteration or at the end. During the translation assertions can occur at the following
+destinations:
+\begin{enumerate}
+      \item \label{en:init} After loop variable initialization, if there is an invariant and it isn't proven.
+      \item \label{en:main} At the start loop body, if an invariant is given and not proven.
+      \item \label{en:body} At the end of the loop body if loop could not be proven
+      \item \label{en:term} After the loop construct, if invariant is present and not proven.
+\end{enumerate}
+\noindent
+In order to keep track of which assertions should be formatted, and which have been proven
+away, the data construct \lsin{data LoopInfo = LoopInfo Bool Int}. The bool indicates whether
+assertion \ref{en:body} above should be present or not. All invariant based assertions are
+tracked via the \lsin{LoopInfo} integer; the least significant bit indicated whether
+assertion \ref{en:init} should be formatted; the next whether assert \ref{en:main} should
+be formatted; the next whether assertion \ref{en:term} should be present. If the bit is
+$1$ the invariant assertion should be formatted, else it has been proven always valid.

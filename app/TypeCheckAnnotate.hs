@@ -84,12 +84,12 @@ checkExpr tables@(vtable, atable) p expr = case expr of
   VarE (Lookup n es) -> case Map.lookup n vtable of
     Just t -> case Map.lookup n atable of
       Just sz ->
-        if sameSize sz es
+        if equalLength sz es
         then let (es', tidx) = checkExprs tables p es in
                if tidx == IntegerT
                then (VarE (Lookup n es'), t)
                else reportArrayIdxError n
-        else reportSizeError p n (arrSize sz) (toInteger (length es))
+        else reportSizeError p n (toInteger (length sz)) (toInteger (length es))
       Nothing -> trace "2" $ reportNoTypeError n p
     Nothing -> trace "3" reportNoTypeError n p
 
@@ -102,9 +102,11 @@ checkExpr tables@(vtable, atable) p expr = case expr of
           otherwise  -> (Arith op e1' e2', otherwise)
         else reportTypeError' t1 t2
 
-  Not e -> (expr, BooleanT)
+  Not e ->
+    let e' = checkExpr tables p e in
+      (Not (fst e'), BooleanT)
 
-  Size n _ -> (Size n (Just IntegerT), IntegerT)
+  Size n _ -> (expr, IntegerT)
 
   SkipE -> (expr, UndefinedT)
 
@@ -238,10 +240,16 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
     let args' = call tables procs n args p in
       (tables, (Uncall n args' p) : acc)
 
-  Assert _ _ ->
-      (tables, stmt : acc)
+  Assert e p ->
+    let (e', t) = checkExpr tables p e in
+      if (t == BooleanT) then
+        (tables, (Assert e' p) : acc)
+      else
+        reportTypeError p BooleanT t stmt
 
   Skip -> (tables, stmt : acc)
+
+  otherwise -> (tables, otherwise : acc)
   where
     varDeclaration :: Tables -> Ident -> Type -> Expr -> Pos -> (Tables, Expr)
     varDeclaration tables@(vtable, atable) n t e p =
@@ -260,7 +268,7 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
     {-returns annotated loop constructs-}
     loop :: Tables -> Var -> Maybe Invariant -> [Stmt] -> Moderator -> Expr -> Pos
       -> (Var, Maybe Invariant, Moderator, Expr, [Stmt])
-    loop tables@(vtable, atable) var@(Var (Just t) n (Just e) p1) inv b (Moderator v op e2) cond p =
+    loop tables@(vtable, atable) var@(Var (Just t) n (Just e) p1) inv b (Moderator (Var _ _ _ p2) op e2) cond p =
       -- Say BooleanT on nothing simply for conciseness
       let (inv'', tinv) = (case inv of
                     Just (Invariant inv' pi) ->
@@ -278,7 +286,7 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
                          then
                            ( Var (Just t) n (Just e') p1
                            , inv''
-                           , Moderator v op e2'
+                           , Moderator (Var (Just t) n Nothing p2) op e2'
                            , cond'
                            , b')
                          else reportTypeError p1 exptm t1 var
@@ -337,7 +345,7 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
 
 
 checkStmts :: [ProcDecl] -> Tables -> [Stmt] -> [Stmt]
-checkStmts procs tables body = snd $ foldl (checkStmt procs) (tables, []) body
+checkStmts procs tables body = reverse $ snd $ foldl (checkStmt procs) (tables, []) body
 
 
 mapArguments :: Tables -> [FArg] -> Tables

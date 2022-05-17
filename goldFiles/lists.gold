@@ -1,0 +1,66 @@
+Forward directional warnings:
+Warning: Z3 expression is a fallacy: DLocal (Arr (Just BooleanT) arr4 (Just [2]) (Just [ConstE (BooleanV False),ConstE (BooleanV True)]) (line 10, column 13)) (line 10, column 5)
+Reverse directional warnings:
+Warning: Z3 expression is a fallacy: DLocal (Arr (Just BooleanT) arr4 (Just [2]) (Just [ConstE (BooleanV False),ConstE (BooleanV False)]) (line 8, column 11)) (line 8, column 5)
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+// Global variables defining starting state
+int arr0[1] = {0};
+int arr1[2] = {0};
+int arr2[2] = {1, 1};
+int arr3[2][2] = {0};
+int arr4[2][2] = {{1, 1},{2, 2}};
+int arr5[2][3] = {{1, 1, 1},{1, 1, 1}};
+int arr6[1][2][3] = {{{0, 0, 0},{1, 1, 1}}};
+int arr7[3][2][1] = {{{0},{1}},{{2},{3}},{{4},{5}}};
+ 
+void foo_forward(int arr3[2][2]);
+void foo_reverse(int arr3[2][2]);
+ 
+ 
+void foo_forward(int arr3[2][2])
+{
+    int arr0[2] = {1, 1};
+    
+    int arr1[2][2] = {{1, 1},{2, (sizeof(arr3[0]) / sizeof(int))}};
+    
+    bool arr4[2] = {false, false};
+    // Asserting array equality
+    bool _tmp_arr4[2] = {false, true};
+    assert(sizeof(_tmp_arr4) == sizeof(arr4) && memcmp(_tmp_arr4, arr4, sizeof(arr4)) == 0);
+    int arr2[2][3] = {{1, 1, 1},{2, 2, 2}};
+    arr2[1][2] += 1;
+    
+}
+ 
+void foo_reverse(int arr3[2][2])
+{
+    int arr2[2][3] = {{1, 1, 1},{2, 2, 3}};
+    arr2[1][2] -= 1;
+    
+    bool arr4[2] = {false, true};
+    // Asserting array equality
+    bool _tmp_arr4[2] = {false, false};
+    assert(sizeof(_tmp_arr4) == sizeof(arr4) && memcmp(_tmp_arr4, arr4, sizeof(arr4)) == 0);
+    int arr1[2][2] = {{1, 1},{2, (sizeof(arr3[0]) / sizeof(int))}};
+    
+    int arr0[2] = {1, 1};
+    
+}
+ 
+int main()
+{
+    
+    
+    
+    
+    
+    
+    
+    
+    foo_forward(arr3);
+}

@@ -1,5 +1,7 @@
-procedure main(int a[10000], int b)
+procedure main()
 {
+    int a[10000]
+    int b = a[0]
     for local int i = 0
     {
         for local int j = 0

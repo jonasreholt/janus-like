@@ -220,7 +220,7 @@ term =  parens expression
       reserved "size"
       idnt <- parens (lVal)
       case idnt of
-        VarE lvar -> return $ Size lvar Nothing
+        VarE lvar -> return $ Size lvar IntegerT
 
 
 -- Statement parsing
@@ -232,8 +232,6 @@ statement =
   <|> mod
   <|> ite
   <|> loop
-  -- <|> for1
-  -- <|> for2
   <|> function "call"
   <|> function "uncall"
   <|> assert
@@ -402,7 +400,11 @@ mainVariable =
           expr <- expression
           return $ Global (Var (Just t) idnt (Just expr) pos) pos
         Nothing ->
-          return $ Global (Var (Just t) idnt (Just (ConstE (IntegerV 0))) pos) pos
+          case t of
+            IntegerT ->
+              return $ Global (Var (Just t) idnt (Just (ConstE (IntegerV 0))) pos) pos
+            BooleanT ->
+              return $ Global (Var (Just t) idnt (Just (ConstE (BooleanV False))) pos) pos
     mainArr :: Parser Stmt
     mainArr = try $ do
       pos  <- getPosition
@@ -419,8 +421,8 @@ mainVariable =
             pos
         Nothing ->
           return $ Global
-            (Arr (Just t) idnt (Just sz)
-              (Just $ replicate (fromIntegral arrsz) (ConstE (IntegerV 0))) pos)
+            (Arr (Just t) idnt (Just sz) Nothing pos)
+              -- (Just $ replicate (fromIntegral arrsz) (ConstE (IntegerV 0))) pos)
             pos
 
 
@@ -429,7 +431,7 @@ arr' sz = do
   exprs <- braces g
   if (toInteger (length exprs) == sz) then
     return exprs
-  else error "Main array declaratio wrongfull"
+  else error "Main array declaration wrongfull"
   where
     numbers :: Parser [Expr]
     numbers = do
@@ -461,8 +463,8 @@ arr = try $ do
         return $ Arr (Just t) idnt (Just sz) (Just exprs) pos
       else error $ "Main array declaration wrongfull " ++ show pos'
     Nothing ->
-      return $ Arr (Just t) idnt (Just sz)
-        (Just (replicate (fromIntegral arrsz) (ConstE (IntegerV 0))))
+      return $ Arr (Just t) idnt (Just sz) Nothing
+        -- (Just (replicate (fromIntegral arrsz) (ConstE (IntegerV 0))))
         pos
   where
     numbers :: Parser [Expr]
@@ -484,17 +486,25 @@ procedure = do
   pos <- getPosition
   reserved "procedure"
   idnt <- identifier
-  as <- parens $ args fArg
+  -- as <- parens $ args fArg
+  as <- case idnt of
+    Ident "main" _ -> parens f
+    _ -> parens $ args fArg
   body <- case idnt of
     Ident "main"_ -> braces $ many (statement <|> mainVariable)
     _             -> braces $ many statement
   return $ ProcDecl idnt as body pos
+  where
+    f :: Parser [FArg]
+    f = return []
+
 
 -- Program consist of
 --  procedures and one main procedures
 --  The main procedure can have mainDeclarations
 program :: Parser Program
 program = do
+  whiteSpace
   procs <- many1 procedure
   return $ Program procs
 

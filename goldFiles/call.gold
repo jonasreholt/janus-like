@@ -1,0 +1,47 @@
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+// Global variables defining starting state
+int l = 2;
+int b[1] = {0};
+ 
+void f_forward();
+void f_reverse();
+ 
+void g_forward(int &a, int k[1], const int c);
+void g_reverse(int &a, int k[1], const int c);
+ 
+ 
+void f_forward()
+{
+}
+ 
+void f_reverse()
+{
+}
+ 
+void g_forward(int &a, int k[1], const int c)
+{
+    a += ((2) - (c)) + (l);
+    a -= 0;
+    f_forward();
+}
+ 
+void g_reverse(int &a, int k[1], const int c)
+{
+    f_reverse();
+    a += 0;
+    a -= ((2) - (c)) + (l);
+}
+ 
+int main()
+{
+    
+    
+    int a = 0;
+    g_forward(a, b, 2);
+    
+}

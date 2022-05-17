@@ -1,0 +1,21 @@
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+ 
+ 
+int main()
+{
+    int a = 2;
+    if ((a) < (10))
+    {
+        a += 42;
+    }
+    else
+    {
+        a -= 1;
+    }
+    
+}

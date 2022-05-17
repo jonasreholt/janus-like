@@ -159,7 +159,7 @@ var JanusHighlightRules = function() {
         "local|dealloc|call|uncall"
     );
     var builtinConstants = ("true|false");
-    var types = ("int|const");
+    var types = ("int|const|bool");
     var builtinFunctions = (
         "size"
     );

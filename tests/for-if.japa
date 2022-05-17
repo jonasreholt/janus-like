@@ -1,5 +1,6 @@
-procedure main(int a)
+procedure main()
 {
+    int a
     for local int i = 0
     {
         if (i % 2 == 0)

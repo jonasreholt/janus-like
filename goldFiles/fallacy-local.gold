@@ -1,0 +1,17 @@
+Forward directional warnings:
+Warning: Z3 expression is a fallacy: Assert (Arith Great (ConstE (IntegerV 1)) (ConstE (IntegerV 2))) (line 3, column 5)
+Warning: Z3 expression is a fallacy: DLocal (Var (Just IntegerT) a (Just (ConstE (IntegerV 1))) (line 5, column 13)) (line 5, column 5)
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+ 
+ 
+int main()
+{
+    assert((1) > (2));
+    int a = 2;
+    assert(a == 1);
+}

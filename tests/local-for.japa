@@ -1,9 +1,11 @@
-procedure main(int a)
+procedure main()
 {
+    int a = 1
     for local int i = 0
     {
         local int tmp = a
         a += tmp
+        // Cannot be optimized as a can be 0; both generalized and overflow
         dealloc int tmp = a / 2
     } i += 1, until (dealloc int i = 10)
 }

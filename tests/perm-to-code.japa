@@ -1,9 +1,13 @@
 procedure perm_to_code(int x[6])
 {
+    // cannot optimize as general is needed
     for local int k = size(x), k -= 1
     {
+        // Cannot optimize as it needs general opt, and then j could be largest integer
+        // resulting in overflow!
         for local int j = 0
         {
+            //assert(j<6) // Add this assert to optimize inner loop
             if (x[j] > x[k])
             {
                 x[j] -= 1

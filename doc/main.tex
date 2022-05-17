@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[11pt]{article}
 \usepackage[a4paper, total={7in, 9in}]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb, stmaryrd}
@@ -7,7 +7,6 @@
 \usepackage{pdfpages}
 \usepackage{float}
 \usepackage{listings, color}
-%\usepackage{minted}
 \usepackage{enumitem}
 \usepackage{fancyhdr}
 \usepackage[nottoc,numbib]{tocbibind}       % Including bibtex references in table of content
@@ -20,9 +19,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    Commands for ease of use     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\versionnr}{3}
+\newcommand{\versionnr}{4}
 \renewcommand{\*}{\cdot}                    % a pretty multiplication sign
 \renewcommand{\implies}{\rightarrow}        % implies now is simple right arrow: -->
+\newcommand{\lan}{\texttt{Japa} }
+\newcommand*\lsin{\lstinline[columns=fixed]} % inline code blocks
+
+% Commands used during production
+\newcommand{\rr}{(\textbf{\emph{REVIEW READY}})}
+\newcommand{\dn}{(\textbf{\emph{DONE}})}
+\newcommand{\ms}{(\textbf{\emph{MISSING}})}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   Defining definition boxes     %
@@ -51,6 +57,10 @@
 \newenvironment{myDefinition}[2]{ \begin{Definition}[adjusted title=#1]{}{#2} 
     \textbf{Definition \thetcbcounter.} }{\end{Definition}}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   Defining Theorem boxes        %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{theorem}{Theorem}[section]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Defining a beautiful code block %
@@ -122,6 +132,29 @@
 \bibliographystyle{ieeetr}
 
 \newpage
-\input{appendice.tex}
+%\input{appendice.tex}
 
 \end{document}
+
+% Focus on the report now
+% Interesting things are whatever goes beyond IPS course curriculum
+% The uninteresting things needs to be mentioned, but no theory discussion for it!!
+
+% In frontend only mention unconventional thing
+% If the bug is hard to fix, don't spend half a week!!
+%   then rather focus on the report!
+
+% 4.3:
+% Why on earth am I reversing the AST
+% And how am I reversing (recursive descend)
+%   How it happens precisely
+% Setting it together with the overall approach of removing assertions.
+
+% Maybe increase the font size or lessen the margins
+
+% Use more code snippet in everything "new" e.g. loops
+% TYPOS
+% Typo in 4.4.1
+% p.17
+% Loop requirering -->
+% Loop requiring

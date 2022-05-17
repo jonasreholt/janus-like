@@ -1,0 +1,19 @@
+// Finding the n'th fibonacci number.
+// Result is saved in x1.
+
+procedure fib(int x1, int x2, int n) {
+    for local int i = 1 {
+        local int tmp = x2 - x1
+        x2 += x1
+        x1 += tmp
+        dealloc int tmp = x1 - (x2 - x1)
+    } i += 1, until (dealloc int i = n)
+}
+
+procedure main() {
+    int n = 10
+    int x1 = 0
+    int x2 = 1
+    
+    call fib(x1, x2, n)
+}

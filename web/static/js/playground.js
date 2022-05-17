@@ -69,13 +69,25 @@ $(function(){
         }
     }
 
+    function formatWarnings(warnings) {
+        if (warnings || warnings.length > 0) {
+            $output.html();
+        }
+    }
+
 
     function formatOutput(output) {
         // First line contains the exit code
         var retval = parseInt(output.substr(0, output.indexOf("\n")));
         output = output.substring(output.indexOf("\n") + 1);
 
+        // Removing warnings from output code
+        // var warningsEndIdx = output.indexOf("#include") - 1;
+        // var warnings = output.substring(0, warningsEndIdx);
+        // output = output.substring(warningsEndIdx + 1);
+
         removeErrorMarkers();
+        // formatWarnings(warnings);
         if (retval > 0) {
             var session = editor.getSession();
             var match = output.match(/line (\d+), column (\d+)/);

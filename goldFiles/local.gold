@@ -1,0 +1,13 @@
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+ 
+ 
+int main()
+{
+    int a = 2;
+    
+}
