@@ -1,89 +1,228 @@
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Syntax where
 
-import Data.Int (Int32)
+import Data.Map (Map)
+import qualified Data.Map as Map
 
--- data constructions symbolising the abstract syntax of japa
+import Text.Parsec.Pos
+import Control.Monad
+import Data.Maybe
+import Data.Bits
 
-data Pos
-  = Pos Int Int
-  deriving (Eq, Ord)
+-- data constructions symbolising AST of japa
+type Pos = SourcePos
 
 data Type
-  = IntegerT Pos
-  | BooleanT Pos
+  = IntegerT
+  | BooleanT
+  | UndefinedT
+  deriving (Show, Eq)
 
 data Val
-  = IntegerV Int32 Pos
-  | BooleanV Bool Pos
+  = IntegerV Integer
+  | BooleanV Bool
+  deriving (Show, Eq)
 
 data ModOp
   = PlusEq
   | SubEq
   | XorEq
+  deriving (Show)
 
 data BinOp
-  = Plus | Sub | Xor | Mul | Div | Modulo
-  | BAnd | And | BOr | Or | Great | GreatEq
-  | Less | LessEq | NotEq | Eq
+  -- Arithmetic operators
+  = Plus | Sub | Xor | Mul | Div | Modulo | BAnd | BOr
+  -- Boolean operators
+  | And  | Or  | Great | GreatEq | Less | LessEq | NotEq | Eq
+  deriving (Show, Eq)
 
-data Ident
-  = Ident String Pos
+data Ident = Ident String Pos
+instance Show Ident where show (Ident name _) = name
+instance Ord Ident  where Ident n1 _ <= Ident n2 _ = n1 <= n2
+instance Eq Ident   where Ident n1 _ == Ident n2 _ = n1 == n2
 
-instance Ord Ident where
-  Ident n1 _ < Ident n2 _ = n1 < n2
-  Ident n1 _ <= Ident n2 _ = n1 <= n2
-  Ident n1 _ > Ident n2 _ = n1 > n2
-  Ident n1 _ >= Ident n2 _ = n1 >= n2
-instance Eq Ident where
-  (Ident n1 _) == (Ident n2 _) = n1 == n2
 
-instance Show Ident where show (Ident s _) = s
+data Var
+  = Var (Maybe Type) Ident (Maybe Expr) Pos
+  -- Arr type name size value pos
+  | Arr (Maybe Type) Ident (Maybe [Integer]) (Maybe [Expr]) Pos
+  deriving (Show)
+-- instance Show Var where show (Var _ name e _)            = show(name) ++ " " ++ show e
+--                         show (Arr _ name _ es _)         = show(name) ++ " " ++ show es
+instance Ord Var  where Var _ n1 _ _ <= Var _ n2 _ _     = n1 <= n2
+                        Arr _ n1 _ _ _ <= Arr _ n2 _ _ _ = n1 <= n2
+instance Eq Var   where Var _ n1 _ _ == Var _ n2 _ _     = n1 == n2
+                        Arr _ n1 _ _ _ == Arr _ n2 _ _ _ = n1 == n2
 
 data LVar
-  = Var    Ident Pos
-  | Lookup Ident Expr Pos
+  = LVar   Ident
+  | Lookup Ident [Expr] -- [Expr] so one can lookup into nD arrays
+  deriving (Show, Eq)
 
 data Expr
-  = ConstE  Val Pos
-  | VarE    LVar Pos
-  | Arith   Expr BinOp Expr Pos
-  | Size    Ident Pos
+  = ConstE Val
+  | VarE   LVar
+  | Arith  BinOp Expr Expr
+  | Not    Expr
+  | Size   LVar Type
+  | SkipE
+  deriving (Show, Eq)
 
+-- Actual parameters
 data AArg
-  = VarA  LVar Pos
-  | Const Type Pos
+  = VarAA   Var (Maybe [Expr]) Pos -- Maybe Expr is index for array
+  | ConstAA Val Pos
+  deriving (Show)
 
+-- Formal parameters
 data FArg
-  = VarF Type Ident Pos
-  | Arr  Type Ident Pos
+  = VarFA   Type Ident Pos
+  | ArrFA   Type Ident [Integer] Pos
+  | ConstFA Type Ident Pos
+  deriving (Show)
 
-data Moderator
-  = Moderator Ident ModOp Expr Pos
+-- <Var> <ModOp>= <Expr>
+data Moderator = Moderator Var ModOp Expr
+  deriving (Show)
+
+data Invariant = Invariant Expr Pos
+  deriving (Show)
+
+data InvariantInfo =
+    Initialization
+  | Maintenance
+  | Termination
+  deriving (Show)
+
+data LoopInfo = LoopInfo Bool Int
+  deriving (Show)
+
+getLoopInfoInv :: LoopInfo -> Int
+getLoopInfoInv (LoopInfo _ i) = i
+
+getLoopInfoBool :: LoopInfo -> Bool
+getLoopInfoBool (LoopInfo b _) = b
 
 data Stmt
-  = Local  Type Ident Expr Pos -- VarDecl Pos
-  | DLocal Type Ident Expr Pos
-  | Mod    Moderator Pos
-  | ModArr Ident Expr ModOp Expr Pos
-  | Switch Ident Ident Pos
+  -- int <(Var )>
+  = Global Var Pos
+  | Local  Var Pos
+  | DLocal Var Pos
+  | Mod    Moderator (Maybe [Expr]) Pos -- Expr is only used if Var is Arr type
+  | Switch Var Var Pos
   | Ite    Expr [Stmt] Expr [Stmt] Pos
-  | It     Expr [Stmt] Expr Pos
-  | ForT   VarDecl [Stmt] Moderator Expr Pos
-  | ForB   VarDecl Moderator [Stmt] Expr Pos
+  -- For1 loop: "for" "local" <type> <id> "=" <expr> "{" <Stmts> "}"
+  --             <id> <modop>"=" <expr>"," "unitl" "(" "dealloc" <type> <id> "=" <expr> ")"
+  | For1   (Maybe Invariant) Var [Stmt] Moderator Expr LoopInfo Pos
+  | For2   (Maybe Invariant) Var Moderator [Stmt] Expr LoopInfo Pos
   | Call   Ident [AArg] Pos
   | Uncall Ident [AArg] Pos
+  | Assert Expr Pos
+  -- | Mark   Stmt
   | Skip
-  | Mark Stmt
+  deriving (Show)
 
-data VarDef
-  = VarDef Type Ident Pos
-  | ArrDef Type Ident Expr Pos
+data ProcDecl = ProcDecl Ident [FArg] [Stmt] Pos
+  deriving (Show)
 
-data VarDecl
-  = VarDecl LVar Pos
+data Program = Program [ProcDecl]
+  deriving (Show)
 
-data ProcDecl
-  = ProcDecl Ident [FArg] [Stmt]
 
-data Program
-  = Program [VarDef] [ProcDecl]
+-- | If this reports Nothing during processing it's because name is invalidated.
+--   If it happens during renaming, it's because not all variables need to be renamed
+tryGetVar :: Ident -> Map Ident a -> Maybe a
+tryGetVar name scope =
+  Map.lookup name scope
+
+
+getProcDeclBody :: ProcDecl -> [Stmt]
+getProcDeclBody (ProcDecl _ _ body _) = body
+
+
+invariantStart :: Int
+invariantStart = 7
+
+invariantFlip :: Int -> InvariantInfo -> Int
+invariantFlip prev = \case
+  Initialization -> prev `xor` 1
+  Maintenance    -> prev `xor` (shift 1 1)
+  Termination    -> prev `xor` (shift 1 2)
+
+
+isInvariantOn :: Int -> InvariantInfo -> Bool
+isInvariantOn inv = \case
+  Initialization -> (inv .&. 1) == 1
+  Maintenance    -> (inv .&. (shift 1 1)) == 2
+  Termination    -> (inv .&. (shift 1 2)) == 4
+
+
+getStmtVar :: Stmt -> Var
+getStmtVar (Local var pos) = var
+getStmtVar (DLocal var pos) = var
+
+
+getFArgName :: FArg -> Ident
+getFArgName = \case
+  VarFA _ n _ -> n
+  ArrFA _ n _ _ -> n
+  ConstFA _ n _ -> n
+
+getFArgType :: FArg -> Type
+getFArgType = \case
+  VarFA t _ _ -> t
+  ArrFA t _ _ _ -> t
+  ConstFA t _ _ -> t
+
+getVarType :: Var -> Maybe Type
+getVarType = \case
+  Var t _ _ _ -> t
+  Arr t _ _ _ _ -> t
+
+getVarName :: Var -> Ident
+getVarName = \case
+  Var _ n _ _ -> n
+  Arr _ n _ _ _ -> n
+
+
+
+prettyPrintStmts :: String -> [Stmt] -> IO ()
+prettyPrintStmts acc stmts = mapM_ (f acc) stmts
+  where f :: String -> Stmt -> IO ()
+        f acc stmt = --putStrLn $ acc ++ show stmt
+          case stmt of
+            Ite cond body1 ficond body2 pos -> do
+              putStrLn $ acc ++ "if (" ++ show cond ++ ") {"
+              prettyPrintStmts (acc ++ "    ") body1
+              putStrLn $ acc ++ "} fi (" ++ show ficond ++ ")"
+              putStrLn $ acc ++ "else {"
+              prettyPrintStmts (acc ++ "    ") body2
+              putStrLn $ acc ++ "} " ++ show pos
+
+            For1 inv var body mod cond b _ -> do
+              putStrLn $ acc ++ "for1 (" ++ show b ++ ") " ++ "invariant (" ++ show inv ++ ") " ++ show var ++ " {"
+              prettyPrintStmts (acc ++ "    ") body
+              putStrLn $ acc ++ "} " ++ show mod ++ ", until (" ++ show cond ++ ")"
+
+            For2 inv var mod body cond b _ -> do
+              putStrLn $ acc ++ "for2 (" ++ show b ++ ") " ++ "invariant (" ++ show inv ++ ") " ++ show var ++ ", " ++ show mod ++ " {"
+              prettyPrintStmts (acc ++ "    ") body
+              putStrLn $ acc ++ "} until (" ++ show cond ++ ")"
+
+            _ -> putStrLn $ acc ++ show stmt
+
+
+argsToString :: [FArg] -> String
+argsToString args = foldl f "" args
+  where f :: String -> FArg -> String
+        f acc arg = acc ++ ", " ++ show arg
+
+prettyPrintProc :: ProcDecl -> IO ()
+prettyPrintProc (ProcDecl name args body pos) =
+  putStrLn (show name ++ "(" ++ argsToString args ++ ") {")
+    >> prettyPrintStmts "    " body >> putStrLn "}"
+
+prettyPrintPrgm :: Program -> IO ()
+prettyPrintPrgm (Program decls) = mapM_ prettyPrintProc decls
+-- mapM_ :: Monad m => (ProcDecl -> IO ()) -> [ProcDecl] -> IO ()
