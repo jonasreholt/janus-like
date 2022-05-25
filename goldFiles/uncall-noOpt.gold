@@ -10,16 +10,16 @@ using namespace std;
 int l = 2;
 int b[1] = {0};
  
-void g_forward(int &a, int k[1], const int c);
-void g_reverse(int &a, int k[1], const int c);
+void g_forward(int &a, int (& k)[1], const int c);
+void g_reverse(int &a, int (& k)[1], const int c);
  
  
-void g_forward(int &a, int k[1], const int c)
+void g_forward(int &a, int (& k)[1], const int c)
 {
     a += ((2) - (c)) + (l);
 }
  
-void g_reverse(int &a, int k[1], const int c)
+void g_reverse(int &a, int (& k)[1], const int c)
 {
     a -= ((2) - (c)) + (l);
 }

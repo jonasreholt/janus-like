@@ -1,3 +1,193 @@
 % Benchmark of compiled code: optimized vs. non-optimized
 % Benchmark of compiler with and without optimization
 \section{Benchmark of Compiled Code \ms}
+% Change benchmark script to newly created in Makefile
+% Add the numbers and remove the listing showing the extended fib program.
+To asses the impact of the optimizations done by the \lan compiler, I use the Fibonacci
+program seen in listing \ref{lst:benchmark1}. Because the compiler outputs its result
+to standard in, creating and directing output into a file is also included in compile time.
+This is done using the following \texttt{bash} command:
+$$\text{time ./japa [-noOpt] fib.japa > fib[-noOpt].cpp}$$
+\noindent
+where square brackets indicate what is added, when no optimization is run.
+\\
+\\
+Compiling the output \texttt{C++} code to machine code is done using the \texttt{g++}
+compiler, version 9.4.0 for Ubuntu. It is run using the command shown below. It is run
+without any other optimizations, to isolate the pure impact of the \lan compiler
+optimizations.grep prints unmatching line
+$$\text{g++ -O0 -o fib[-noOpt] fib[-noOpt].cpp}$$
+\\
+\\
+The benchmark code can be seen in listing \ref{lst:runbenchmark} in the appendix.
+Each compilation, and execution is run 10 times, and the average is output as the
+result. The results are listed in table \ref{table:benchmark-results}; binary size
+is measure in assembly lines.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|r|r|r|r|r|r|}
+        \hline
+        \multirow{2}{*}{Program}& \multicolumn{2}{c|}{compile time} & \multicolumn{2}{c|}{runtime} & \multicolumn{2}{c|}{runtime} \\
+        \cline{2-7}
+        & (noOpt) & (opt) & (noOpt) & (opt) & (noOpt) & (opt) \\
+        \hline
+        perm-to-code & 1.043 ms & 
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|r|r|r|}
+        \hline
+        Program                 & Compile time & Run time  & Binary size \\
+        \hline
+        Fibonacci (optimized)   & $5.220$ s    & $2.273$ s & 171 lines \\
+        \hline
+        Fibonacci (unoptimized) & $0.003$ s    & $2.998$ s & 265 lines \\
+        \hline
+    \end{tabular}
+    \label{table:benchmark-results}
+\end{table}
+\noindent
+So for the given Fibonacci code in listing \ref{lst:benchmark1}, the optimizer removes
+$94$ lines of assembly code, meaning the optimized code is $65\%$ the size of non-optimized.
+The running time of the optimized code is $75\%$ the size of the non-optimized.
+
+The compile time does however increase with $174000\%$, which is a quite significant increase.
+So future work should definitely focus on decreasing the compile time. Most of the time in the
+\lan compiler is spend by solving with \texttt{z3}. So a focus could be put on focusing
+the \texttt{z3} solver to frequently run code, such as for-loops; instead of running on the
+whole program.
+
+Profiling the compiler with optimizations for the program, reveal that approximately
+$32\%$ of the time is spend on optimizing forward directional part of the program, and
+approximately $69\%$ is used on optimizing the backward directional part of the program.
+This is even though the forward direction does more work, than the backwards optimization.
+Hence quite a chunk of the compile time could possibly be removed, if this was looked into
+further.
+
+\begin{lstlisting}[language=Haskell, label={lst:benchmark1},
+    caption={Fibonacci program used for benchmarking \lan code generation.}]
+procedure fib(int x1, int x2, const int n) {
+    for local int i = 1 {
+        local int tmp = x2 - x1
+        x2 += x1
+        x1 += tmp
+        dealloc int tmp = x1 - (x2 - x1)
+    } i += 1, until (dealloc int i = n)
+}
+
+procedure main() {
+    int x1 = 0
+    int x2 = 1
+
+    for local int i = 0 {
+        call fib(x1, x2, 2000)
+        uncall fib(x1, x2, 2000)
+    } i += 1, until (dealloc int i = 100000)
+    assert(x1 == 0 && x2 == 1)
+}
+\end{lstlisting}
+\noindent
+A comparison of the optimized code and the unoptimized can be seen in listing.
+The two listings reveal that all runtime checks that occur because of the reversibility of
+the \lan, are optimized away.
+
+\begin{varwidth}[t]{0.45\textwidth}
+\begin{lstlisting}[language=C++, caption={Optimized Fibonacci program.}]
+...
+// Global variables defining starting state
+int x1 = 0;
+int x2 = 1;
+
+...
+
+void fib_forward(int &x1, int &x2, const int n)
+{
+    int i = 1;
+    while(i != n)
+    {
+        int tmp = (x2) - (x1);
+        x2 += x1;
+        x1 += tmp;
+        i += 1;
+    }
+}
+ 
+void fib_reverse(int &x1, int &x2, const int n)
+{
+    int i = n;
+    while(i != 1)
+    {
+        i -= 1;
+        int tmp = (x1) - ((x2) - (x1));
+        x1 -= tmp;
+        x2 -= x1;
+    }
+}
+ 
+int main()
+{
+    int i = 0;
+    while(i != 100000)
+    {
+        fib_forward(x1, x2, 2000);
+        fib_reverse(x1, x2, 2000);
+        i += 1;
+    }
+}
+\end{lstlisting}
+\end{varwidth}
+\hspace{4em}
+\begin{varwidth}[t]{0.45\textwidth}
+\begin{lstlisting}[language=C++, caption={Unoptimized Fibonacci program.}]
+... 
+// Global variables defining starting state
+int x1 = 0;
+int x2 = 1;
+
+...
+  
+void fib_forward(int &x1, int &x2, const int n)
+{
+    int i = 1;
+    while(i != n)
+    {
+        int tmp = (x2) - (x1);
+        x2 += x1;
+        x1 += tmp;
+        assert(tmp == (x1) - ((x2) - (x1)));
+        i += 1;
+        assert(!(i == 1));
+    }
+}
+    
+void fib_reverse(int &x1, int &x2, const int n)
+{
+    int i = n;
+    while(i != 1)
+    {
+        i -= 1;
+        int tmp = (x1) - ((x2) - (x1));
+        x1 -= tmp;
+        x2 -= x1;
+        assert(tmp == (x2) - (x1));
+        assert(!(i == n));
+    }
+}
+    
+int main()
+{
+    int i = 0;
+    while(i != 100000)
+    {
+        fib_forward(x1, x2, 2000);
+        fib_reverse(x1, x2, 2000);
+        i += 1;
+        assert(!(i == 0));
+    }
+    assert(((x1) == (0)) && ((x2) == (1)));
+}
+\end{lstlisting}
+\end{varwidth}

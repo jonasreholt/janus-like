@@ -1,1 +1,54 @@
 \section{Testing of Compiler \ms}
+Testing of the compiler is done in two ways: Automatic and manually. Automatic tests is
+done by running the compiler, inspecting the output code, running the output using \texttt{g++},
+manually writing the prober model in \texttt{z3}, and then if it all works, a gold file is
+created with the output code, and the test then checks the output of the compiler against this
+gold file. This method is used, to track any regression in the code output. This is done, as
+the main function of the compiler is to optimize the code.
+
+Manual tests were conducted during production of the different modules. This simply involved
+running the code in \texttt{ghci}, and printing out each step of the way; prototyping towards
+the end compiler.
+\\
+\\
+The automatic tests are run using the bash script from listing \ref{lst:tester}. The test
+script goes through every test \lan file, and compares the output with the corresponding
+gold file. \lsin{2>&1} is used to direct both standard in and standard out from the compiler
+run, so that negative tests, can also be created. If the two files match a green text
+is written with "Success".
+
+
+% Talk about how testing could have been improved
+\begin{lstlisting}[language=Bash, label={lst:tester}]
+...
+compare () {
+    if [ -f $2 ]; then
+        local expected="$(cat $2)"
+        if [[ "$output" != "$expected" ]]; then
+          echo "Output for $0 does not match gold file."
+          echo "Compare $1 with $2."
+          return 1
+        else
+            return 0
+        fi
+    fi
+    echo "gold file ($2) not present"
+    return 1
+}
+
+...
+
+for f in $test_dir/*; do
+    fname="$(basename "$f")"
+    program_name="$(echo $fname | sed 's/.japa$//')"
+    printf "%*s" $file_len " $fname:  "
+
+    # Save both stderr and stdout in output, so negative tests can also be tested
+    output=$($compiler $f 2>&1)
+    if compare $fname "$gold_dir/$program_name.gold"; then
+       echo -e "\033[92mSucess.\033[0m"
+    else
+       echo -e "\033[91mTest error.\033[0m"
+    fi
+done
+\end{lstlisting}

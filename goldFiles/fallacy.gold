@@ -1,5 +1,6 @@
 Forward directional warnings:
 Warning: Z3 expression is a fallacy: Assert (Arith Great (ConstE (IntegerV 1)) (ConstE (IntegerV 2))) (line 7, column 9)
+Warning: Assert (Arith Great (ConstE (IntegerV 1)) (ConstE (IntegerV 2))) (line 7, column 9) unsatisfiable
 
 #include <assert.h>
 #include <cstring>

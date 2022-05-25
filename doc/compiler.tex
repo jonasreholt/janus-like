@@ -1,4 +1,4 @@
-\section{Compiler Structure \ms}
+\section{Compiler Structure \rr}
 % Overview of compiler structure with image
 % Information and analysis of choice of programming language
 The \lan compiler is structured into different modules that can be seen in figure
@@ -222,7 +222,7 @@ reverseStatement acc = \case
       \label{fig:rev-flow-constructs}
 \end{figure}
 
-\subsection{Optimization \ms}
+\subsection{Optimization \rr}
 % Strategy for optimization
 % Integration with theorem prover
 Because the compiler translates directly from the source language into an abstract syntax tree,
@@ -261,7 +261,8 @@ Which means that when running through the abstract syntax tree, the optimizer mu
 when the above constructs are met, and then decide on whether to optimize based on the answer from
 \texttt{z3}.
 
-\subsubsection{Gathering Information for \texttt{Z3} \rr}
+\subsubsection{Gathering Information for \texttt{Z3} \ms}
+% Write more inticate details on loops e.g. how isdescending works, and how unroll works by using satisfy instead of validate
 Point two has two main obstacles: 1) to know how much information \texttt{z3} needs for the proof,
 and 2) granting the optimizer access to this appropriate subtree.
 
@@ -307,7 +308,7 @@ analysis.
     }
 \end{lstlisting}
 
-\subsubsection{Handling if-then-else and for loop optimization \ms}
+\subsubsection{Handling if-then-else and for loop optimization \rr}
 Conditional control-flow statements are the most complex to do a optimization run on, so they
 will be explained further in the next two subsections.
 \\
@@ -418,6 +419,48 @@ for local int i = 0 {
       } fi (i == 0 && tmp == 1)
 } i += 1, until (dealloc int i = 4)
 \end{lstlisting}
+\noindent
+This loop optimization based on a generalized scope can be seen in listing
+\ref{lst:generalizeLoopOpt}. It shows that the code is wrapped in \lsin{Z3.push} and
+\lsin{Z3.pop 1}; this is to ensure that the asserts created for this, is not used further on,
+and that they do not bloat the created \texttt{z3} model, to lessen subsequent validations.
+First every variable that will be modified within the loop body is generalized, for the
+reasons explained above. Then the compiler tries to validate whether the loop variable is
+increasing or decreasing. This is used in order to put in more information about to loop
+variable for the generalized run. If this step was omitted, many optimization could not be
+done, as the generalized loop cannot guarantee that the loop variable does not overflow/underflow.
+Hence guaranteeing that the loop variable will never reach the initial value again at the end
+of an iteration becomes almost impossible; without the information from the
+\lsin{loopDescending} call.
+Then the statement body is optimized, which will be used in subsequent phases of the loop
+analysis. Finally \lsin{unroll} is called with argument $1$, which does a run of the body
+without optimization on, and then tries to validate whether the loop generated assert can be
+safely removed.
+
+\begin{lstlisting}[language=Haskell, label={lst:generalizeLoopOpt},
+      caption={Optimizing the loop based on generalized information.}]
+...
+Z3.push
+-- Generalize all variables in scope, and check for validity
+tmpScope <- invalidateVars scope' $ modifiedVars ast body
+
+-- Trying to get more information about the loop variable
+let loopVar = fst $ fromJust $ tryGetVar name tmpScope
+loopDirection <-
+      loopDescending ast scope' forward var m body state p1 bound warnings
+(case loopDirection of
+      Ascending -> Z3.assert =<< Z3.mkBvuge loopVar z3expr
+      Descending -> Z3.assert =<< Z3.mkBvule loopVar z3expr
+      Unknown -> return ())
+
+-- Trying to optimize loop based on generalized information
+(body', scope'', state', bound', warnings') <-
+      processStatements body doOpt ast tmpScope state bound warnings
+(_, validated, warnings'') <-
+      unroll 1 forward body' pos var z3expr m tmpScope state warnings'
+Z3.pop 1
+...
+\end{lstlisting}
 
 \subsection{Translation to \texttt{C++} \rr}
 The \lan compiler presented in this report does a simple translation to \texttt{C++}.
@@ -460,6 +503,15 @@ formatProgram (Program ps) (Program psR) =
       [] -> empty
 \end{lstlisting}
 \noindent
+Formatting procedure declarations are straight forward, as every procedure must return void.
+The only thing is, that parameters are all passed by reference instead of values; for
+normal variables this allows to alter the value within it; for arrays is avoids decaying the
+variable to a pointer to first element. Decaying to a pointer is avoided, so the function
+\lsin{sizeof} can still be used, even on array parameters. If the array was passed as value,
+it would be decayed to \lsin{int*} meaning \lsin{sizeof} would return $8$ (depending on the
+architecture).
+\\
+\\
 When transforming the different statement constructs into \texttt{C++}, the following rules
 are implemented:
 \\

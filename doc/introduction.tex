@@ -65,6 +65,11 @@ Gets the assertion translated, using gcc version 11.2, into:
 Meaning 7 instructions could be optimized away, herein including a conditional jump,
 that requires correct jump prediction to run efficiently.
 
+\begin{itemize}
+    \item Done at soruce program level (Also why not on IL level)
+    \item Not possible to do on assembly level
+\end{itemize}
+
 \subsection{Limitations \ms}
 The focus of this project is on finding whether a theorem prover is available for making static
 program analyse in compile time, checking whether these extra assertions can be removed. Hence
@@ -76,3 +81,4 @@ Also as this is a bachelor thesis the focus will be on freely available theorem 
 \subsection{Acknowledgements \ms}
 Special thanks to [People who help prrof read] and Matthis Kruse
 Robert Glück.
+My parents for paying most of the books and stuff

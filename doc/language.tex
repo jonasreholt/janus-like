@@ -308,7 +308,8 @@ The language \lan can be formally written in Backus-Naur form as:
     <mod-op>  := "+" | "-" | "^"
 \end{verbatim}
 
-\subsection{Semantics \rr}
+\subsection{Semantics \ms}
+% Add semantic rules for other important statements/expressions
 The operational semantics of \lan programs are similar to those presented for \texttt{Janus}
 in \cite{janus}. It differentiate in regards to asserts, loops, and the introduction of local
 variables. It is therefore, only these operational semantics, that will be presented in this
@@ -325,7 +326,7 @@ $\sigma[id \mapsto y]$, and applying a store to a left-value results to the stor
 and is written as $\sigma(id)$. Every given statement takes a store and returns the possible
 modified store.
 
-\begin{equation}
+\begin{equation} \label{eq:assert}
     \frac{\sigma \vdash_{expr} e \leadsto true}
     {\sigma \vdash_{assert} \text{assert}(e) \leadsto \sigma}
     \text{\texttt{Assert}}
@@ -337,7 +338,7 @@ modified store.
     \text{\texttt{Local}}
 \end{equation}
 
-\begin{equation}
+\begin{equation} \label{eq:dealloc}
     \frac{\sigma \vdash_{expr} e \leadsto v ~~
         v == \sigma(id)}
     {\sigma \vdash_{dealloc} \text{dealloc } t \text{ id } = e \leadsto \sigma\backslash \{id\}}
@@ -346,29 +347,27 @@ modified store.
 
 \begin{equation} \label{eq:loop1Main}
     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
-        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
-            v == false} ~~
         \sigma' \vdash_{loop1} (e_1, s, e_2, e_3) \leadsto \sigma''}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1 ~\{s\}\text{ id }\oplus= e_2, \text{until (dealloc } t\text{ id }= e_3) \leadsto \sigma''}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1 ~\{s\}\text{ id }\assigneq e_2, \text{until (dealloc } t\text{ id }= e_3) \leadsto \sigma''}
     \text{\texttt{Loop1Main}}
 \end{equation}
 
-\begin{equation} \label{eq:loop1MainBase}
-    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
-        \sigma' \vdash_{expr} e_3 \leadsto v ~~
-        v == true}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1 ~\{s\}\text{ id }\oplus= e_2, \text{until (dealloc } t\text{ id }= e_3) \leadsto \sigma}
-    \text{\texttt{Loop1MainBase}}
-\end{equation}
+% \begin{equation} \label{eq:loop1MainBase}
+%     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+%         \sigma' \vdash_{expr} e_3 \leadsto v ~~
+%         v == true}
+%     {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1 ~\{s\}\text{ id }\assigneq e_2, \text{until (dealloc } t\text{ id }= e_3) \leadsto \sigma}
+%     \text{\texttt{Loop1MainBase}}
+% \end{equation}
 
 \begin{equation} \label{eq:loop1Rec}
     \frac{\substack{\sigma \vdash_{expr} e_3 \leadsto v_1 \\
             v_1 == false} ~~
         \sigma \vdash_{stmt} s \leadsto \sigma' ~~
-        \sigma' \vdash_{AssVar} id \oplus= e_2 \leadsto \sigma'' ~~
+        \sigma' \vdash_{AssVar} id \assigneq e_2 \leadsto \sigma'' ~~
         \substack{\sigma \vdash_{expr} e_1 \leadsto v_2 \\
             v_2 == false} ~~
-        \sigma'' \vdash_{Loop1} (s, e_2, e_3) \leadsto \sigma'''}
+        \sigma'' \vdash_{Loop1} (e_1, s, e_2, e_3) \leadsto \sigma'''}
     {\sigma \vdash_{Loop1} (e_1, s, e_2, e_3) \leadsto \sigma'''}
     \text{\texttt{Loop1Rec}}
 \end{equation}
@@ -382,25 +381,23 @@ modified store.
 
 \begin{equation} \label{eq:loop2Main}
     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
-        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
-            v == false} ~~
         \sigma' \vdash_{loop2} (e_1, s, e_2, e_3) \leadsto \sigma''}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1,\text{ id }\oplus= e_2 ~\{s\} \text{ until (dealloc } t\text{ id }= e_3) \leadsto \sigma''}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1,\text{ id }\assigneq e_2 ~\{s\} \text{ until (dealloc } t\text{ id }= e_3) \leadsto \sigma''}
     \text{\texttt{Loop2Main}}
 \end{equation}
 
-\begin{equation} \label{eq:loop2MainBase}
-    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
-        \sigma' \vdash_{expr} e_3 \leadsto v ~~
-        v == true}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1,\text{ id }\oplus= e_2 ~\{s\} \text{ until (dealloc } t\text{ id }= e_3) \leadsto \sigma}
-    \text{\texttt{Loop2MainBase}}
-\end{equation}
+% \begin{equation} \label{eq:loop2MainBase}
+%     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+%         \sigma' \vdash_{expr} e_3 \leadsto v ~~
+%         v == true}
+%     {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1,\text{ id }\assigneq e_2 ~\{s\} \text{ until (dealloc } t\text{ id }= e_3) \leadsto \sigma}
+%     \text{\texttt{Loop2MainBase}}
+% \end{equation}
 
 \begin{equation} \label{eq:loop2Rec}
     \frac{\substack{\sigma \vdash_{expr} e_3 \leadsto v_1 \\
             v_1 == false} ~~
-        \sigma \vdash_{AssVar} id \oplus= e_2 \leadsto \sigma' ~~
+        \sigma \vdash_{AssVar} id \assigneq e_2 \leadsto \sigma' ~~
         \sigma' \vdash_{stmt} s \leadsto \sigma'' ~~
         \substack{\sigma \vdash_{expr} e_1 \leadsto v_2 \\
             v_2 == false} ~~
@@ -419,28 +416,26 @@ modified store.
 \begin{equation} \label{eq:loop1MainInv}
     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
         \sigma' \vdash_{expr} e_2 \leadsto true ~~
-        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
-            v == false} ~~
         \substack{\sigma' \vdash_{loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'' \\
             \sigma'' \vdash_{expr} e_2 \leadsto true}}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2) ~\{s\}\text{ id }\oplus= e_3, \text{until (dealloc } t\text{ id }= e_4) \leadsto \sigma''}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2) ~\{s\}\text{ id }\assigneq e_3, \text{until (dealloc } t\text{ id }= e_4) \leadsto \sigma''}
     \text{\texttt{Loop1MainInv}}
 \end{equation}
 
-\begin{equation} \label{eq:loop1MainBaseInv}
-    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
-        \sigma' \vdash_{expr} e_4 \leadsto true ~~
-        \sigma' \vdash_{expr} e_2 \leadsto true}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2) ~\{s\}\text{ id }\oplus= e_3, \text{until (dealloc } t\text{ id }= e_4) \leadsto \sigma}
-    \text{\texttt{Loop1MainBaseInv}}
-\end{equation}
+% \begin{equation} \label{eq:loop1MainBaseInv}
+%     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+%         \sigma' \vdash_{expr} e_4 \leadsto true ~~
+%         \sigma' \vdash_{expr} e_2 \leadsto true}
+%     {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2) ~\{s\}\text{ id }\assigneq e_3, \text{until (dealloc } t\text{ id }= e_4) \leadsto \sigma}
+%     \text{\texttt{Loop1MainBaseInv}}
+% \end{equation}
 
 \begin{equation} \label{eq:loop1RecInv}
     \frac{\substack{\sigma \vdash_{expr} e_4 \leadsto v_1 \\
             v_1 == false \\
             \sigma \vdash_{expr} e_2 \leadsto true} ~~
         \sigma \vdash_{stmt} s \leadsto \sigma' ~~
-        \sigma' \vdash_{AssVar} id \oplus= e_3 \leadsto \sigma'' ~~
+        \sigma' \vdash_{AssVar} id \assigneq e_3 \leadsto \sigma'' ~~
         \substack{\sigma'' \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma''' \\
         \sigma''' \vdash_{expr} e_2 \leadsto true}}
     {\sigma \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'''}
@@ -458,31 +453,29 @@ modified store.
 \begin{equation} \label{eq:loop2MainInv}
     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
         \sigma' \vdash_{expr} e_2 \leadsto true ~~
-        \substack{\sigma' \vdash_{expr} e_3 \leadsto v \\
-            v == false} ~~
-        \substack{\sigma' \vdash_{loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'' \\
+        \substack{\sigma' \vdash_{loop2} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'' \\
             \sigma'' \vdash_{expr} e_2 \leadsto true}}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2), \text{ id }\oplus= e_3 ~\{s\} \text{ until (dealloc } t\text{ id }= e_4) \leadsto \sigma''}
+    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2), \text{ id }\assigneq e_3 ~\{s\} \text{ until (dealloc } t\text{ id }= e_4) \leadsto \sigma''}
     \text{\texttt{Loop2MainInv}}
 \end{equation}
 
-\begin{equation} \label{eq:loop2MainBaseInv}
-    \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
-        \sigma' \vdash_{expr} e_4 \leadsto true ~~
-        \sigma' \vdash_{expr} e_2 \leadsto true}
-    {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2), \text{ id }\oplus= e_3 ~\{s\} \text{ until (dealloc } t\text{ id }= e_4) \leadsto \sigma}
-    \text{\texttt{Loop2MainBaseInv}}
-\end{equation}
+% \begin{equation} \label{eq:loop2MainBaseInv}
+%     \frac{\sigma \vdash_{local} \text{local } t \text{ id } = e_1 \leadsto \sigma' ~~
+%         \sigma' \vdash_{expr} e_4 \leadsto true ~~
+%         \sigma' \vdash_{expr} e_2 \leadsto true}
+%     {\sigma \vdash_{stmt} \text{for local }t\text{ id }= e_1, \text{ invariant }(e_2), \text{ id }\assigneq e_3 ~\{s\} \text{ until (dealloc } t\text{ id }= e_4) \leadsto \sigma}
+%     \text{\texttt{Loop2MainBaseInv}}
+% \end{equation}
 
 \begin{equation} \label{eq:loop2RecInv}
     \frac{\substack{\sigma \vdash_{expr} e_4 \leadsto v_1 \\
             v_1 == false \\
             \sigma \vdash_{expr} e_2 \leadsto true} ~~
-        \sigma' \vdash_{AssVar} id \oplus= e_3 \leadsto \sigma'' ~~
+        \sigma' \vdash_{AssVar} id \assigneq e_3 \leadsto \sigma'' ~~
         \sigma \vdash_{stmt} s \leadsto \sigma' ~~
         \substack{\sigma'' \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma''' \\
             \sigma''' \vdash_{expr} e_2 \leadsto true}}
-    {\sigma \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'''}
+    {\sigma \vdash_{Loop2} (e_1, e_2, s, e_3, e_4) \leadsto \sigma'''}
     \text{\texttt{Loop2RecInv}}
 \end{equation}
 
@@ -490,7 +483,7 @@ modified store.
     \frac{\sigma \vdash_{expr} e_4 \leadsto v ~~
         v == true ~~
         \sigma \vdash_{expr} e_2 \leadsto true}
-    {\sigma \vdash_{Loop1} (e_1, e_2, s, e_3, e_4) \leadsto \sigma}
+    {\sigma \vdash_{Loop2} (e_1, e_2, s, e_3, e_4) \leadsto \sigma}
     \text{\texttt{Loop2BaseInv}}
 \end{equation}
 \noindent
@@ -502,7 +495,7 @@ the dealloc asserts the value of the variable, and removes it from scope.
 
 There are four different kinds of main rules working on the for-loop statement. All of which
 have similar semantics, but differ slightly.
-\eqref{eq:loop1Main} and \eqref{eq:loop1MainBase} defines the semantics of the simple
+\eqref{eq:loop1Main} defines the semantics of the simple
 forward for-loop (loop variable moderation after loop body), both for when the loop ending
 condition is false, and when it's true. The loop semantics are defined as, first initializing
 the loop variable, then checking whether the loop end condition is true. If not, the loop body

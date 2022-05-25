@@ -11,8 +11,8 @@ int b[1] = {0};
 void f_forward();
 void f_reverse();
  
-void g_forward(int &a, int k[1], const int c);
-void g_reverse(int &a, int k[1], const int c);
+void g_forward(int &a, int (& k)[1], const int c);
+void g_reverse(int &a, int (& k)[1], const int c);
  
  
 void f_forward()
@@ -23,14 +23,14 @@ void f_reverse()
 {
 }
  
-void g_forward(int &a, int k[1], const int c)
+void g_forward(int &a, int (& k)[1], const int c)
 {
     a += ((2) - (c)) + (l);
     a -= 0;
     f_forward();
 }
  
-void g_reverse(int &a, int k[1], const int c)
+void g_reverse(int &a, int (& k)[1], const int c)
 {
     f_reverse();
     a += 0;
