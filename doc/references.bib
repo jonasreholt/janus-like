@@ -1,21 +1,103 @@
 @ARTICLE{ARTICLE:1,
     AUTHOR="Eli Rose",
     TITLE="Arrow: A Modern Reversible Programming Language",
+    journal={Bsc Thesis Oberlin College, Ohio},
     YEAR="2015",
 } % https://core.ac.uk/download/pdf/47055442.pdf
 
 @article{ARTICLE:2,
   author          = {Luke Muehlhauser},
-  title           = {Mike Frank on reversible computing},
-  journal         = {Machine Intelligence Research institite},
+  title           = {Mike {Frank} on reversible computing},
+  journal         = {Machine Intelligence Research Institite},
   year            = {2014}
 } % https://intelligence.org/2014/01/31/mike-frank-on-reversible-computing/
 
-@misc{Z3:BINDINGS,
-  author       = {Abal, I. and Castro, D.},
+@article{article:3,
+  author          = {Rolf Landauer},
+  title           = {Irreversibility and Heat Generation in the Computing Process},
+  journal         = {IBM Journal of Research and Development},
+  volume          = {44},
+  pages           = {261--269},
+  year            = {1961}
+} % http://worrydream.com/refs/Landauer%20-%20Irreversibility%20and%20Heat%20Generation%20in%20the%20Computing%20Process.pdf
+
+@article{janus,
+  author          = {Glück, R. and Yokoyama, T.},
+  title           = {A Reversible Programming Language and its Invertible Self-Interpreter},
+  journal         = {PEPM '07},
+  year            = {2007}
+} % https://dl-acm-org.ep.fjernadgang.kb.dk/doi/abs/10.1145/1244381.1244404
+
+@article{z3:microsoft,
+  author          = {Moura, L. and Bjørner, N.},
+  title           = {Z3: An Efficient {SMT} Solver},
+  journal         = {Tools and Algorithms for the Construction and Analysis of Systems. p337-340},
+  year            = {2015}
+} % https://soeg.kb.dk/discovery/fulldisplay?docid=cdi_springer_books_10_1007_978_3_540_78800_3_24&context=PC&vid=45KBDK_KGL%3AKGL&lang=da&search_scope=MyInst_and_CI&adaptor=Primo+Central&tab=Everything&query=any%2Ccontains%2CZ3%3A+An+Efficient+SMT+Solver
+
+@article{SSA,
+  author          = {Braun, M. and Buchwald, S. and Hack, S. and Leißa, R. and Mallon, C. and Zwinkau, A.},
+  title           = {Simple and Efficient Construction of Static Single Assignment Form},
+  journal         = {Compiler Construction, lecture Note in Computer Science, Springer},
+  volume          = {22},
+  pages           = {102--122},
+  year            = {2015}
+} % https://soeg.kb.dk/discovery/fulldisplay?docid=cdi_springer_books_10_1007_978_3_642_37051_9_6&context=PC&vid=45KBDK_KGL%3AKGL&lang=da&search_scope=MyInst_and_CI&adaptor=Primo+Central&tab=Everything&query=any%2Ccontains%2CSimple+and+Efficient+Construction+of+Static+Single+Assignment+Form
+
+@article{parser,
+  author          = {Kurš, J. and Vraný, J. and Ghafari, M. and Lungu, M. and Nierstrasz, O.},
+  title           = {Efficient Parsing with Parser Combinators},
+  journal         = {Science of Computer Programming 161. p 57-88},
+  year            = {2018}
+}
+
+@book{torben,
+  author         = {Mogensen, T.},
+  title          = {Introduction to Compiler Design},
+  publisher      = {Springer},
+  year           = {2017}
+}
+
+@book{pld,
+  author         = {Mogensen, T.},
+  title          = {Programming Language Design and Implementation},
+  publisher      = {Course notes for Programming Language Design on University of Copenhagen},
+  year           = {February 10, 2022}
+}
+
+@misc{z3:api,
+  author       = {doxygen},
+  title        = {Z3. An Efficient Theorem Prover},
+  howpublished = {\url{https://z3prover.github.io/api/html/index.html}},
+  year         = {Accessed: 30/04-2022}
+}
+
+@misc{z3:api2,
+  author       = {Iago Abal and David Castro},
   title        = {z3: Bindings for the Z3 Theorem Prover},
   howpublished = {\url{https://hackage.haskell.org/package/z3}},
-  note         = {Accessed: 18/02-2022}
+  year         = {Accessed: 30/04-2022}
+}
+
+@misc{cabal,
+  author       = {Cabal Team},
+  title        = {Welcome to the Cabal User Guide},
+  howpublished = {\urld{https://cabal.readthedocs.io/en/3.6/#}},
+  year         = {Accessed: 26/05-2022}
+}
+
+@misc{janusInterp,
+  author       = {Kirkedal, Michael and others},
+  title        = {Jana-JanusInterp},
+  howpublished = {Github},
+  year         = {2018}
+}
+
+@misc{janusPlayground,
+  author       = {Nielsen, C. and Budde, M.},
+  title        = {About the Janus Playground},
+  howpublished = {\url{http://topps.diku.dk/pirc/janus-playground/}},
+  year         = {Accessed: 26/05-2022}
 }
 
 @conference{Z3:TRANSLATION,
@@ -26,6 +108,8 @@
 } % his website: https://www.jelv.is/talks/compose-2016/
   % Conference video showing how to use Z3!!
   % https://www.youtube.com/watch?v=ruNFcH-KibY
+
+
 
 
 % termination Analysis of Integer Linear Loops?
