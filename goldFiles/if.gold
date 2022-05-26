@@ -5,7 +5,7 @@
 using namespace std;
  
 // Global variables defining starting state
-int a = 0;
+unsigned int a = 0;
  
  
 int main()

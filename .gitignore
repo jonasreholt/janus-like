@@ -1,1 +1,14 @@
 dist-newstyle/*
+
+dist-newstyle
+
+*.gz
+*.aux
+*.bbl
+*.log
+*.fls
+*.pdf
+*.out
+
+*.hi
+*.o

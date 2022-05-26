@@ -5,23 +5,23 @@
 using namespace std;
  
  
-void f_forward(int &a);
-void f_reverse(int &a);
+void f_forward(unsigned int &a);
+void f_reverse(unsigned int &a);
  
  
-void f_forward(int &a)
+void f_forward(unsigned int &a)
 {
     a += 5;
 }
  
-void f_reverse(int &a)
+void f_reverse(unsigned int &a)
 {
     a -= 5;
 }
  
 int main()
 {
-    int b = 5;
+    unsigned int b = 5;
     f_forward(b);
     
 }

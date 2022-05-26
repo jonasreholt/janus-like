@@ -7,39 +7,39 @@ Warning: Loop invariant not true at initialization (line 4, column 5)
 using namespace std;
  
 // Global variables defining starting state
-int x1 = 0;
-int x2 = 0;
+unsigned int x1 = 0;
+unsigned int x2 = 0;
  
-void foo_forward(int &x1, int &x2, const int n);
-void foo_reverse(int &x1, int &x2, const int n);
+void foo_forward(unsigned int &x1, unsigned int &x2, const unsigned int n);
+void foo_reverse(unsigned int &x1, unsigned int &x2, const unsigned int n);
  
  
-void foo_forward(int &x1, int &x2, const int n)
+void foo_forward(unsigned int &x1, unsigned int &x2, const unsigned int n)
 {
     assert((x1) == (x2));
-    int i = 0;
+    unsigned int i = 0;
     while(i != n)
     {
         x1 += i;
         i += 1;
         
     }
-    int haps = x1;
+    unsigned int haps = x1;
     
-    int fabs = n;
+    unsigned int fabs = n;
     fabs += x2;
     
 }
  
-void foo_reverse(int &x1, int &x2, const int n)
+void foo_reverse(unsigned int &x1, unsigned int &x2, const unsigned int n)
 {
-    int fabs = (x2) + (n);
+    unsigned int fabs = (x2) + (n);
     fabs -= x2;
     
-    int haps = x1;
+    unsigned int haps = x1;
     
     assert((x1) >= (x2));
-    int i = n;
+    unsigned int i = n;
     while(i != 0)
     {
         assert((x1) >= (x2));
@@ -55,7 +55,7 @@ int main()
 {
     
     
-    int a = 0;
+    unsigned int a = 0;
     
     foo_forward(x1, x2, 4);
 }

@@ -18,7 +18,7 @@ formatSpace n
 
 formatType :: Type -> Doc
 formatType = \case
-  IntegerT -> text "int"
+  IntegerT -> text "unsigned int"
   BooleanT -> text "bool"
 
 

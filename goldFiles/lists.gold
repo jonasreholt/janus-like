@@ -9,46 +9,46 @@ Warning: Z3 expression is a fallacy: DLocal (Arr (Just BooleanT) arr4 (Just [2])
 using namespace std;
  
 // Global variables defining starting state
-int arr0[1] = {0};
-int arr1[2] = {0};
-int arr2[2] = {1, 1};
-int arr3[2][2] = {0};
-int arr4[2][2] = {{1, 1},{2, 2}};
-int arr5[2][3] = {{1, 1, 1},{1, 1, 1}};
-int arr6[1][2][3] = {{{0, 0, 0},{1, 1, 1}}};
-int arr7[3][2][1] = {{{0},{1}},{{2},{3}},{{4},{5}}};
+unsigned int arr0[1] = {0};
+unsigned int arr1[2] = {0};
+unsigned int arr2[2] = {1, 1};
+unsigned int arr3[2][2] = {0};
+unsigned int arr4[2][2] = {{1, 1},{2, 2}};
+unsigned int arr5[2][3] = {{1, 1, 1},{1, 1, 1}};
+unsigned int arr6[1][2][3] = {{{0, 0, 0},{1, 1, 1}}};
+unsigned int arr7[3][2][1] = {{{0},{1}},{{2},{3}},{{4},{5}}};
  
-void foo_forward(int (& arr3)[2][2]);
-void foo_reverse(int (& arr3)[2][2]);
+void foo_forward(unsigned int (& arr3)[2][2]);
+void foo_reverse(unsigned int (& arr3)[2][2]);
  
  
-void foo_forward(int (& arr3)[2][2])
+void foo_forward(unsigned int (& arr3)[2][2])
 {
-    int arr0[2] = {1, 1};
+    unsigned int arr0[2] = {1, 1};
     
-    int arr1[2][2] = {{1, 1},{2, (sizeof(arr3[0]) / sizeof(int))}};
+    unsigned int arr1[2][2] = {{1, 1},{2, (sizeof(arr3[0]) / sizeof(unsigned int))}};
     
     bool arr4[2] = {false, false};
     // Asserting array equality
     bool _tmp_arr4[2] = {false, true};
     assert(sizeof(_tmp_arr4) == sizeof(arr4) && memcmp(_tmp_arr4, arr4, sizeof(arr4)) == 0);
-    int arr2[2][3] = {{1, 1, 1},{2, 2, 2}};
+    unsigned int arr2[2][3] = {{1, 1, 1},{2, 2, 2}};
     arr2[1][2] += 1;
     
 }
  
-void foo_reverse(int (& arr3)[2][2])
+void foo_reverse(unsigned int (& arr3)[2][2])
 {
-    int arr2[2][3] = {{1, 1, 1},{2, 2, 3}};
+    unsigned int arr2[2][3] = {{1, 1, 1},{2, 2, 3}};
     arr2[1][2] -= 1;
     
     bool arr4[2] = {false, true};
     // Asserting array equality
     bool _tmp_arr4[2] = {false, false};
     assert(sizeof(_tmp_arr4) == sizeof(arr4) && memcmp(_tmp_arr4, arr4, sizeof(arr4)) == 0);
-    int arr1[2][2] = {{1, 1},{2, (sizeof(arr3[0]) / sizeof(int))}};
+    unsigned int arr1[2][2] = {{1, 1},{2, (sizeof(arr3[0]) / sizeof(unsigned int))}};
     
-    int arr0[2] = {1, 1};
+    unsigned int arr0[2] = {1, 1};
     
 }
  

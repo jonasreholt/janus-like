@@ -29,8 +29,11 @@ Passcode: 276031
         - [x] Make unrollable for loops invalidate variables modified within!
 - [x] Write translator from AST to C++
 - [x] Write playground website to use
-- [ ] Write benchmark tests
+- [x] Write benchmark tests
+- [ ] Write execution test; testing runtime behavior of optimized and unoptimized.
 - [ ] Write report
+  - [ ] Maybe add some more in-depth profiling analysis of execution time for benchmark
+        section.
 - [ ] profit
 
 

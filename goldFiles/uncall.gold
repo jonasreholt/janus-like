@@ -5,19 +5,19 @@
 using namespace std;
  
 // Global variables defining starting state
-int l = 2;
-int b[1] = {0};
+unsigned int l = 2;
+unsigned int b[1] = {0};
  
-void g_forward(int &a, int (& k)[1], const int c);
-void g_reverse(int &a, int (& k)[1], const int c);
+void g_forward(unsigned int &a, unsigned int (& k)[1], const unsigned int c);
+void g_reverse(unsigned int &a, unsigned int (& k)[1], const unsigned int c);
  
  
-void g_forward(int &a, int (& k)[1], const int c)
+void g_forward(unsigned int &a, unsigned int (& k)[1], const unsigned int c)
 {
     a += ((2) - (c)) + (l);
 }
  
-void g_reverse(int &a, int (& k)[1], const int c)
+void g_reverse(unsigned int &a, unsigned int (& k)[1], const unsigned int c)
 {
     a -= ((2) - (c)) + (l);
 }
@@ -26,7 +26,7 @@ int main()
 {
     
     
-    int a = 2;
+    unsigned int a = 2;
     g_reverse(a, b, 2);
     
 }

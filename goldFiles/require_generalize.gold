@@ -5,15 +5,15 @@
 using namespace std;
  
 // Global variables defining starting state
-int n = 4;
-int tmp = 0;
+unsigned int n = 4;
+unsigned int tmp = 0;
  
  
 int main()
 {
     
     
-    int i = 0;
+    unsigned int i = 0;
     while(i != n)
     {
         if (((i) == (3)) && ((tmp) == (0)))

@@ -7,18 +7,18 @@ Warning: Loop Unroll exceeds bound
 using namespace std;
  
 // Global variables defining starting state
-int a[10000] = {0};
-int b = a[0];
+unsigned int a[10000] = {0};
+unsigned int b = a[0];
  
  
 int main()
 {
     
     
-    int i = 0;
+    unsigned int i = 0;
     while(i != 100)
     {
-        int j = 0;
+        unsigned int j = 0;
         while(j != 100)
         {
             b += a[(i) + (j)];

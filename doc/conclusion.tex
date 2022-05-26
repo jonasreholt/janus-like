@@ -12,4 +12,8 @@ Further work:
           from it.
     \item Make loop unroll check also check whether the local int is the same being modified,
           and deallocated.
+    \item \textbf{\emph{RUNNING FACTORIAL 100 REVEALS THAT THE GENERALIZED LOOP DOES NOT WORK
+          AS IT THINKS THE VARIABLE IS ALWAYS INCREASES, BUT IT OVERFLOWS!!!}}
+    \item Tests comparing that both noOpt and opt fails assertion at same time during runtime.
+          Mostly to ensure optimizer does not change runtime behavior.
 \end{itemize}

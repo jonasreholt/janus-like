@@ -1,0 +1,21 @@
+/*
+    Finding the factorial of 5.
+    Return values is in res.
+*/
+
+procedure factorial(int res, const int n) {
+    for local int i = 1 {
+        local int tmp = res
+        res += tmp * i - tmp
+        dealloc int tmp = res / i
+    } i += 1, until(dealloc int i = n+1)
+}
+
+procedure main() {
+    int res = 1
+
+    for local int i = 0 {
+        call factorial(res, 10)
+    	uncall factorial(res, 10)
+    } i += 1, until(dealloc int i = 1000)
+}

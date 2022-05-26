@@ -5,46 +5,46 @@
 using namespace std;
  
 // Global variables defining starting state
-int x1 = 0;
-int x2 = 0;
+unsigned int x1 = 0;
+unsigned int x2 = 0;
  
-void fib_forward(int &x1, int &x2, const int n);
-void fib_reverse(int &x1, int &x2, const int n);
+void fib_forward(unsigned int &x1, unsigned int &x2, const unsigned int n);
+void fib_reverse(unsigned int &x1, unsigned int &x2, const unsigned int n);
  
  
-void fib_forward(int &x1, int &x2, const int n)
+void fib_forward(unsigned int &x1, unsigned int &x2, const unsigned int n)
 {
     x1 += 1;
     x2 += 1;
-    int i = 2;
+    unsigned int i = 2;
     while(i != (n) - (1))
     {
-        int tmp = x2;
+        unsigned int tmp = x2;
         x2 += (x1) + (x2);
         x2 ^= x1 x1 ^= x2 x2 ^= x1
         assert(tmp == x2);
         i += 1;
         
     }
-    int haps = x1;
+    unsigned int haps = x1;
     
-    int fabs = n;
+    unsigned int fabs = n;
     fabs += x2;
     
 }
  
-void fib_reverse(int &x1, int &x2, const int n)
+void fib_reverse(unsigned int &x1, unsigned int &x2, const unsigned int n)
 {
-    int fabs = (x2) + (n);
+    unsigned int fabs = (x2) + (n);
     fabs -= x2;
     
-    int haps = x1;
+    unsigned int haps = x1;
     
-    int i = (n) - (1);
+    unsigned int i = (n) - (1);
     while(i != 2)
     {
         i -= 1;
-        int tmp = x2;
+        unsigned int tmp = x2;
         x2 ^= x1 x1 ^= x2 x2 ^= x1
         x2 -= (x1) + (x2);
         assert(tmp == x2);
@@ -58,7 +58,7 @@ int main()
 {
     
     
-    int a = 0;
+    unsigned int a = 0;
     
     fib_forward(x1, x2, 4);
 }

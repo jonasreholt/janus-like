@@ -5,16 +5,16 @@
 using namespace std;
  
 // Global variables defining starting state
-int a = 1;
+unsigned int a = 1;
  
  
 int main()
 {
     
-    int i = 0;
+    unsigned int i = 0;
     while(i != 10)
     {
-        int tmp = a;
+        unsigned int tmp = a;
         a += tmp;
         
         i += 1;

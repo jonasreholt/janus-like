@@ -1,0 +1,53 @@
+Forward directional warnings:
+Warning: Loop Unroll exceeds bound
+
+#include <assert.h>
+#include <cstring>
+ 
+using namespace std;
+ 
+// Global variables defining starting state
+unsigned int res = 1;
+ 
+void factorial_forward(unsigned int &res, const unsigned int n);
+void factorial_reverse(unsigned int &res, const unsigned int n);
+ 
+ 
+void factorial_forward(unsigned int &res, const unsigned int n)
+{
+    unsigned int i = 1;
+    while(i != (n) + (1))
+    {
+        unsigned int tmp = res;
+        res += ((tmp) * (i)) - (tmp);
+        assert(tmp == (res) / (i));
+        i += 1;
+        
+    }
+}
+ 
+void factorial_reverse(unsigned int &res, const unsigned int n)
+{
+    unsigned int i = (n) + (1);
+    while(i != 1)
+    {
+        i -= 1;
+        unsigned int tmp = (res) / (i);
+        res -= ((tmp) * (i)) - (tmp);
+        assert(tmp == res);
+        
+    }
+}
+ 
+int main()
+{
+    
+    unsigned int i = 0;
+    while(i != 1000)
+    {
+        factorial_forward(res, 100);
+        factorial_reverse(res, 100);
+        i += 1;
+        
+    }
+}

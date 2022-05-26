@@ -5,13 +5,13 @@
 using namespace std;
  
 // Global variables defining starting state
-int a = 0;
+unsigned int a = 0;
  
  
 int main()
 {
     
-    int i = 0;
+    unsigned int i = 0;
     while(i != 5)
     {
         if (((i) % (2)) == (0))

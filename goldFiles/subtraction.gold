@@ -5,15 +5,15 @@
 using namespace std;
  
 // Global variables defining starting state
-int l = 2;
-int c = 2;
+unsigned int l = 2;
+unsigned int c = 2;
  
  
 int main()
 {
     
     
-    int a = 0;
+    unsigned int a = 0;
     a += ((2) - (c)) + (l);
     
 }

@@ -7,13 +7,13 @@ Warning: Loop Unroll exceeds bound
 using namespace std;
  
 // Global variables defining starting state
-int tmp = 0;
+unsigned int tmp = 0;
  
  
 int main()
 {
     
-    int i = 0;
+    unsigned int i = 0;
     while(i != 1000)
     {
         if (((i) == (9999)) && ((tmp) == (0)))
