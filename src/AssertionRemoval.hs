@@ -107,8 +107,6 @@ modifiedVars ast = \case
         let (_, p', _) = renameProc Map.empty p 0 in
           getProcDeclBody p'
 
---Z3 (Map Ident Ident, ProcDecl, Int)
-
 
 exprVars :: Expr -> [Ident]
 exprVars = f []
@@ -321,10 +319,6 @@ satisfiable expr = do
   Z3.push
   Z3.assert expr
   validated <- Z3.solverCheck
-  ------------------------
-  -- odin <- Z3.solverToString
-  -- trace (show odin) $return()
-  ------------------------
   Z3.pop 1
   case validated of
     Z3.Sat   -> return True
@@ -377,13 +371,6 @@ validate sinner expr = do
   Z3.assert expr
   val <- Z3.solverCheck
   Z3.pop 1
-  -----------------------
-  -- (if show sinner == show "av"
-  --   then do
-  --     allah <- Z3.solverToString
-  --     trace ("\nallah\n"++show sinner++"\n"++show allah) $return ()
-  --   else return ())
-  -----------------------
   case val of
     Z3.Sat -> do
       Z3.push
@@ -771,30 +758,6 @@ processStatement doOpt ast scope stmt state bound warnings =
                                         , bound'
                                         , warnings'')
 
-                                -- if bound' <= unrollBound
-                                --   then do 
-                                --     -- (body', scope'', state', warnings'') <-
-                                --     --   loopBody True forward scope' body state bound' warnings'
-                                --     -- bound-1 as we just processed the body once above
-                                --     (body', scope'', validated, warnings'') <-
-                                --       unroll bound' doOpt forward body pos var z3expr m scope'
-                                --         state warnings'
-
-                                --     return (scope''
-                                --             , LoopInfo validated (getLoopInfoInv inf')
-                                --             , body'
-                                --             , bound'
-                                --             , warnings'')
-                                --   else do
-                                --     (scope'', body', validated, warnings'') <-
-                                --       generalizedAnalysis scope' body z3expr m state warnings'
-
-                                --     return (  scope''
-                                --             , LoopInfo validated (getLoopInfoInv inf')
-                                --             , body'
-                                --             , bound'
-                                --             , "Loop unroll exceeded bound":warnings'')
-
                     (Just (Invariant inv' _), False) -> do
                       Z3.push
                       (_, body', validated, warnings') <-
@@ -837,30 +800,6 @@ processStatement doOpt ast scope stmt state bound warnings =
                                         , bound'
                                         , warnings')
 
-                                -- if bound' <= unrollBound
-                                --   then do
-                                --     -- (body', scope'', state', warnings') <-
-                                --     --   loopBody True forward scope' body state bound' warnings
-
-                                --     -- bound-1 as we just processed first iteration above.
-                                --     (body', scope'', validated', warnings') <-
-                                --       unroll bound' doOpt forward body pos var z3expr m scope' state warnings
-
-                                --     return (scope''
-                                --             , LoopInfo validated' invariantStart
-                                --             , body'
-                                --             , bound'
-                                --             , warnings')
-                                --   else do
-                                --     (scope'', body', validated, warnings') <-
-                                --       generalizedAnalysis scope' body z3expr m state warnings
-
-                                --     return (  scope''
-                                --             , LoopInfo validated invariantStart
-                                --             , body'
-                                --             , bound'
-                                --             , ("Loop Unroll exceeds bound"):warnings')
-
                     _ -> do
                       (tmpScope, body', validated, warnings') <-
                         generalizedAnalysis scope' body z3expr m state warnings
@@ -883,7 +822,6 @@ processStatement doOpt ast scope stmt state bound warnings =
       where
         generalizedAnalysis :: Vars -> [Stmt] -> AST -> Moderator -> Int -> [String] -> Z3 (Vars, [Stmt], Bool, [String])
         generalizedAnalysis scope body z3expr m state warnings = do
-          -- Z3.push
           -- Generalize all variables in scope, and check for validity
           tmpScope <- invalidateVars scope $ modifiedVars ast body
 
@@ -896,15 +834,8 @@ processStatement doOpt ast scope stmt state bound warnings =
             Descending -> Z3.assert =<< Z3.mkBvule loopVar z3expr
             Unknown -> return ())
 
-          -- Trying to optimize loop based on generalized information
-          -- Z3.push
-          -- (body', scope'', state', bound', warnings') <-
-          --   processStatements body doOpt ast tmpScope state bound warnings
-          -- Z3.pop 1
-
           (body', _, validated, warnings') <-
             unroll 1 doOpt forward body pos var z3expr m tmpScope state warnings
-          -- Z3.pop 1
           return (tmpScope, body', validated, warnings')
 
 
@@ -916,7 +847,7 @@ processStatement doOpt ast scope stmt state bound warnings =
           (VarE _:tl)        -> False && varFreeExprs tl
           (Arith _ e1 e2:tl) -> varFreeExprs [e1, e2] && varFreeExprs tl
           (Not e:tl)         -> varFreeExprs [e] && varFreeExprs tl
-          (Size n _:tl)      -> False -- && varFreeExprs tl
+          (Size n _:tl)      -> False
           (SkipE:tl)         -> True && varFreeExprs tl
 
         modificationFreeIncr :: Ident -> [Stmt] -> Bool
@@ -1024,10 +955,6 @@ processStatement doOpt ast scope stmt state bound warnings =
                       -- the expression can be satisfied first.
                       z3ast <- Z3.mkEq z3var val
                       -- Checking satisfiability of negated assert
-                      ------------------------------------
-                      -- odin <- Z3.solverToString
-                      -- trace ("\nodin\n"++show odin++"\n"++show var++"\n") $ return ()
-                      ------------------------------------
                       validated <- satisfiable z3ast
                       
                       if not validated
@@ -1040,25 +967,6 @@ processStatement doOpt ast scope stmt state bound warnings =
                               return (body', scope'', True, warnings')
                         else
                           return (body', scope'', False, warnings')
-
-                      -- z3ast     <- Z3.mkNot =<< Z3.mkEq z3var val
-                      -- validated <- validate var z3ast
-                      ------------------------------------
-                      -- odin <- Z3.solverToString
-                      -- trace ("\nodin\n"++show odin++"\n"++show var++"\n") $ return ()
-                      ------------------------------------
-                      -- case validated of
-                      --   Right True  ->
-                      --     if bound' <= unrollBound
-                      --       then
-                      --         -- Only optimize body on first run
-                      --         unroll (bound-1) False forward z3expr body' pos var val m scope'' state' warnings'
-                      --       else 
-                      --         return (body', scope'', True, warnings')
-                      --   Right False ->
-                      --     return (body', scope'', False, warnings')
-                      --   Left err ->
-                      --     return (body', scope'', False, err:warnings')
 
                     _ ->
                       let errmsg = "Loop variable " ++ show name ++ " invalidated" in
@@ -1097,26 +1005,6 @@ processStatement doOpt ast scope stmt state bound warnings =
           (_, scope', _, _, _) <-
             loopBody False forward scope body state bound warnings
 
-          -- Initial guess at direction, as it's expensive to prove direction
-          -- let newVar = fst $ fromJust $ tryGetVar n scope
-          -- isDesc <- isDescending loopVar' newVar
-          -- isAsc  <- isAscending loopVar' newVar
-          -- case op of
-          --   PlusEq ->
-          --     if isAsc
-          --       then Z3.pop 1 >> return Ascending
-          --       else if isDesc
-          --         then Z3.pop 1 >> return Descending
-          --         else Z3.pop 1 >> return Unknown
-
-          --   SubEq ->
-          --     if isDesc
-          --       then Z3.pop 1 >> return Descending
-          --       else if isAsc
-          --         then Z3.pop 1 >> return Ascending
-          --         else Z3.pop 1 >> return Unknown
-          --   _ -> error "XOR loop not implemented yet!"
-
           -- Determining whether loop is decreasing
           let newVar = fst $ fromJust $ tryGetVar n scope'
           assDesc <- Z3.mkBvuge loopVar' newVar
@@ -1134,53 +1022,10 @@ processStatement doOpt ast scope stmt state bound warnings =
               assAscNeg <- Z3.mkNot assAsc
               ascending <- satisfiable assAscNeg
 
-              -- ascending <- validate "av" assAsc
-
               Z3.pop 1
-
               if not ascending
                 then return Ascending
                 else return Unknown
-          -- where
-          --   isDescending :: AST -> AST -> Z3 Bool
-          --   isDescending oldVar newVar = do
-          --     -- Determining whether loop is decreasing
-          --     assDesc <- Z3.mkBvuge oldVar newVar
-          --     assDescNeg <- Z3.mkNot assDesc
-          --     -- Checking whether the negated is satisfiable
-          --     descending <- satisfiable assDescNeg
-          --     return $ not descending
-          --   isAscending :: AST -> AST -> Z3 Bool
-          --   isAscending oldVar newVar = do
-          --     -- It cannot be descending, so check if it's ascending
-          --     -- Have to check whether it's always ascending
-          --     assAsc <- Z3.mkBvule oldVar newVar
-          --     assAscNeg <- Z3.mkNot assAsc
-          --     ascending <- satisfiable assAscNeg
-          --     return $ not ascending
-              -- case ascending of
-              --   Right True -> return Ascending
-              --   _ -> return Unknown
-
-          -- descending <- validate loopVar assDesc
-
-          -- case descending of
-          --   Right True -> Z3.pop 1 >> return Descending
-          --   Right False ->
-          --     -- It is possible that it is descending, but also ascending
-          --     Z3.pop 1 >> return Unknown
-
-          --   Left err -> do
-          --     -- It cannot be descending, so check if it's ascending
-          --     -- Have to check whether it's always ascending
-          --     assAsc <- Z3.mkBvule loopVar' newVar
-          --     ascending <- validate "av" assAsc
-
-          --     Z3.pop 1
-
-          --     case ascending of
-          --       Right True -> return Ascending
-          --       _ -> return Unknown
 
     processFunctionCall :: Vars -> [AArg] -> ProcDecl -> Int -> Bound -> [String] ->
       Z3 (Vars, Stmt, Bound, [String])

@@ -422,7 +422,6 @@ mainVariable =
         Nothing ->
           return $ Global
             (Arr (Just t) idnt (Just sz) Nothing pos)
-              -- (Just $ replicate (fromIntegral arrsz) (ConstE (IntegerV 0))) pos)
             pos
 
 
@@ -464,7 +463,6 @@ arr = try $ do
       else error $ "Main array declaration wrongfull " ++ show pos'
     Nothing ->
       return $ Arr (Just t) idnt (Just sz) Nothing
-        -- (Just (replicate (fromIntegral arrsz) (ConstE (IntegerV 0))))
         pos
   where
     numbers :: Parser [Expr]
@@ -486,7 +484,6 @@ procedure = do
   pos <- getPosition
   reserved "procedure"
   idnt <- identifier
-  -- as <- parens $ args fArg
   as <- case idnt of
     Ident "main" _ -> parens f
     _ -> parens $ args fArg
@@ -527,9 +524,6 @@ parseStatements = parseString $ many1 statement
 
 parseProcedure :: String -> ProcDecl
 parseProcedure = parseString procedure
-
--- parseProgram :: String -> Program
--- parseProgram = parseString program
 
 parseProgram :: String -> Program
 parseProgram str =

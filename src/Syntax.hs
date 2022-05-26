@@ -48,8 +48,6 @@ data Var
   -- Arr type name size value pos
   | Arr (Maybe Type) Ident (Maybe [Integer]) (Maybe [Expr]) Pos
   deriving (Show)
--- instance Show Var where show (Var _ name e _)            = show(name) ++ " " ++ show e
---                         show (Arr _ name _ es _)         = show(name) ++ " " ++ show es
 instance Ord Var  where Var _ n1 _ _ <= Var _ n2 _ _     = n1 <= n2
                         Arr _ n1 _ _ _ <= Arr _ n2 _ _ _ = n1 <= n2
 instance Eq Var   where Var _ n1 _ _ == Var _ n2 _ _     = n1 == n2
@@ -112,14 +110,11 @@ data Stmt
   | Mod    Moderator (Maybe [Expr]) Pos -- Expr is only used if Var is Arr type
   | Switch Var Var Pos
   | Ite    Expr [Stmt] Expr [Stmt] Pos
-  -- For1 loop: "for" "local" <type> <id> "=" <expr> "{" <Stmts> "}"
-  --             <id> <modop>"=" <expr>"," "unitl" "(" "dealloc" <type> <id> "=" <expr> ")"
   | For1   (Maybe Invariant) Var [Stmt] Moderator Expr LoopInfo Pos
   | For2   (Maybe Invariant) Var Moderator [Stmt] Expr LoopInfo Pos
   | Call   Ident [AArg] Pos
   | Uncall Ident [AArg] Pos
   | Assert Expr Pos
-  -- | Mark   Stmt
   | Skip
   deriving (Show)
 
@@ -190,7 +185,7 @@ getVarName = \case
 prettyPrintStmts :: String -> [Stmt] -> IO ()
 prettyPrintStmts acc stmts = mapM_ (f acc) stmts
   where f :: String -> Stmt -> IO ()
-        f acc stmt = --putStrLn $ acc ++ show stmt
+        f acc stmt =
           case stmt of
             Ite cond body1 ficond body2 pos -> do
               putStrLn $ acc ++ "if (" ++ show cond ++ ") {"
@@ -225,4 +220,3 @@ prettyPrintProc (ProcDecl name args body pos) =
 
 prettyPrintPrgm :: Program -> IO ()
 prettyPrintPrgm (Program decls) = mapM_ prettyPrintProc decls
--- mapM_ :: Monad m => (ProcDecl -> IO ()) -> [ProcDecl] -> IO ()

@@ -341,9 +341,6 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
 
 
 
-
-
-
 checkStmts :: [ProcDecl] -> Tables -> [Stmt] -> [Stmt]
 checkStmts procs tables body = reverse $ snd $ foldl (checkStmt procs) (tables, []) body
 

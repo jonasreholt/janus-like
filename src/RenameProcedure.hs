@@ -190,7 +190,7 @@ renameProc vtable (ProcDecl name fargs body pos) state =
                         , ProcDecl namep args (for1':body) posp
                         , state1)
 
-      Call name aargs pos -> -- (\a b -> getVar b vtable : a)
+      Call name aargs pos ->
         ( vtable
         , ProcDecl namep args (Call name (foldr renameAArg [] aargs) pos : body) posp
         , state)
