@@ -11,14 +11,11 @@ procedure fib(int x1, int x2, const int n) {
 }
 
 procedure main() {
-
     int x1 = 0
     int x2 = 1
 
     for local int i = 0 {
-        call fib(x1, x2, 2000)
-        uncall fib(x1, x2, 2000)
-    } i += 1, until (dealloc int i = 100000)
-    assert(x1 == 0 && x2 == 1)
-
+        call fib(x1, x2, 200)
+    	uncall fib(x1, x2, 200)
+    } i += 1, until(dealloc int i = 1000)
 }

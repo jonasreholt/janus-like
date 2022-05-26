@@ -7,6 +7,9 @@
 # Kill on an error
 set -e
 
+# Ensure newest compiler
+make
+
 base_dir="$(dirname "$0")/.."
 compiler="$base_dir/bin/japa"
 test_dir="$base_dir/tests"
@@ -52,7 +55,7 @@ for f in $test_dir/*; do
     # Save both stderr and stdout in output, so negative tests can also be tested
     output=$($compiler $f 2>&1)
     if compare $fname "$gold_dir/$program_name.gold"; then
-       echo -e "\033[92mSucess.\033[0m"
+       echo -e "\033[92mSuccess.\033[0m"
     else
        echo -e "\033[91mTest error.\033[0m"
     fi
