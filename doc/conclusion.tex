@@ -1,19 +1,62 @@
-\section{Conclusion \ms}
-% Possibly "future work"
-Further work:
-\begin{itemize}
-    \item Recursive procedures.
-    \item Checking if other approach mentioned under compiler section is faster.
-    \item Handling procedures calling each other endlessly not resulting in infinite loop
-          for optimizer.
-    \item Convert grammar into LL(1).
-    \item Better loop termination technique.
-    \item Invalidation should merely generalize variables, meaning remove any known information
-          from it.
-    \item Make loop unroll check also check whether the local int is the same being modified,
-          and deallocated.
-    \item \textbf{\emph{RUNNING FACTORIAL 100 REVEALS THAT THE GENERALIZED LOOP DOES NOT WORK
-          AS IT THINKS THE VARIABLE IS ALWAYS INCREASES, BUT IT OVERFLOWS!!!}}
-    \item Tests comparing that both noOpt and opt fails assertion at same time during runtime.
-          Mostly to ensure optimizer does not change runtime behavior.
-\end{itemize}
+\section{Conclusion and future work \rr}
+This project presented the language \lan derived from the reversible language \texttt{Janus}.
+\lan keeps the reversibility property derived from \texttt{Janus}, but changes e.g. the loop
+construct in order to remove some runtime assertions directly from the language construct.
+
+The \lan compiler presented in this project, translates from the source language into \texttt{C++}
+code. It tries to remove runtime assertions by the use of the SMT solver \texttt{z3}. This is
+done by recursing through the AST, translating into a \texttt{z3} model using its API for
+\texttt{Haskell}. Each time a construct creating a runtime assertions is met, a query is made to
+\texttt{z3}, in order to determine whether the assertion can be proven to always hold. This is
+done by the steps:
+\begin{enumerate}
+      \item If it is a user-generated assertion, the assertion is checked to be satisfiable.
+      \item The assertion is negated, and the \texttt{z3} model is checked to be satisfiable.
+      \item If the negated assertion is not satisfiable, it means the assertion is always valid
+            and can be optimized away.
+\end{enumerate}
+\noindent
+In order to create a proper translation into \texttt{z3}, a simple type checker goes through the
+AST before the optimization phase, both in order to (of cause) type check, but more importantly
+annotate the AST with both types and array sizes.
+\\
+\\
+Using the SMT solver \texttt{z3} the \lan compiler showed ability, to optimize most runtime
+assertions away. The area in which the chosen method proved to be less effective, was when
+analyzing reversed procedures. This probably stems from the fact, that the reversed procedure
+some times work with "unspoken" starting contracts e.g. that the input numbers are always equal
+when the forward procedure has been executed before.
+
+Loop constructs also showed resistance towards optimizations, which makes sense, as \texttt{z3}
+has no theory concerning loops. This means measures needed to be taken, in order to gather as much
+information as safely possible, for \texttt{z3} to correctly validate assertions. In the best case
+scenario loops were unrollable, so the pure information was retrievable, but in all other
+cases, generalization methods was needed, to remove any possibly wrong information from the
+SMT model.
+
+This project showed great promise in regards to optimizing assertions away from imperative
+reversible languages, but at present moment, the execution time of the compiler is rather slow.
+For a simple Fibonacci program consisting of $21$ lines of code, the compile time was
+$5.7$ seconds, with optimizations. This slow speed stem from the use of the \texttt{z3}
+solver, and is probably caused by bad usage by the writer of this bachelor thesis.
+\\
+\\
+The \lan language, as presented in this project, is rather simple, with simple types and
+no recursion. For future work, implementing recursion would make sense, in crating a more
+modern and pleasant language to work with. The slow execution time of the compiler should,
+however, be a top priority, to improve development iteration time, to actually make the
+optimization useful, as a "sparring" partner, to improve speed of developed code. As previously
+mentioned the focus for this, should probably start at the use of \texttt{z3}, mainly of which
+theories are called with the solver.
+
+To avoid removing previously known information about variables, when analyzing loops that cannot
+be unrolled, a method somewhat like the one presented in \cite{ai}, where loops are analyzed
+using a combination of abstract interpretation and a SMT. This might be able to improve the
+analysis of loops.
+\\
+\\
+Last but not least, the compiler currently have a bug with variables overflowing, as discussed
+in section \ref{sec:tests}. This should be looked into, as a natural starting point for further
+work. As an extension to this, the test suite should be widened; both with more edge case tests,
+but also with tests comparing the runtime behavior between the optimized code, and the unoptimized.
+These should be created to minimize the error change of the gold files being wrong.

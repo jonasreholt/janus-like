@@ -1,6 +1,6 @@
 % Use Roberts article to argue reversability and that local inversion is enough
 % Also prove bijection (reversibility) of for-loops
-\section{Janus-like Language Definition \rr} \label{sec:language-def}
+\section{Janus-like language definition \rr} \label{sec:language-def}
 This project alters and extents the syntax for \texttt{Janus} to make it better match modern
 programming languages, and to simplify certain properties of the language.
 This "new" language will be an imperative reversible language like
@@ -47,7 +47,7 @@ global variables that can cross implicitly between procedures; this is a consequ
 having the global variables declared in main, and then local variables allowed declared within a
 procedure.
 
-\subsection{Data Types \rr}
+\subsection{Data types \rr}
 \lan supports the data types integers, booleans, and arrays of integers or booleans.
 The constraint coming from reversibility on data types, is that simple types such as floats,
 cannot be accurately implemented, as the type in itself is imprecise, meaning no perfect inverse
@@ -56,7 +56,7 @@ is ensured to exist.
 \\
 There only build in function is \texttt{size(id)}, which will give the length of array $id$.
 
-\subsection{Declaration of Variables \rr}
+\subsection{Declaration of variables \rr}
 There are essentially two types of variables: Global and local. Because a global variable is
 always in scope, it preserves the information at all time (assuming all operations done on it
 are reversible). Hence global variable declaration can simply be done by:
@@ -88,7 +88,7 @@ It is important to note, that declaring a local, does not open a scope, meaning 
 $y$ is shadowed by a local $x$, it is not brought into the light by deallocation of $x$.
 This is a design choice taken, as it eases the translation to \texttt{C++}.
 
-\subsection{Modification Arithmetics \rr}
+\subsection{Modification arithmetics \rr}
 To modify a variable there needs to be an inverse function of the operator, such that the
 modification can be reversed. As the only datatypes for \lan are integers and booleans,
 the only operators with an inverse (the function is bijective) is addition, subtraction, and
@@ -116,7 +116,7 @@ The only thing one needs to remember is, that a variable name cannot occur at bo
 statement is to be reversible. Having this constraint ensures forward and backward determinism
 of the modifications, which will be proven in section \nameref{subsec:reversibility}.
 
-\subsection{If Statements \rr}
+\subsection{If statements \rr}
 The \texttt{if}-statements are similar to those of \texttt{Janus}:
 
 \begin{table*}[h!]
@@ -248,7 +248,7 @@ procedure main() {
 \end{lstlisting}
 
 
-\subsection{Formal Definition of Syntax \rr}
+\subsection{Formal definition of syntax \rr}
 The language \lan can be formally written in Backus-Naur form as:
 
 \begin{verbatim}

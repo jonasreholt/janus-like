@@ -1,69 +1,103 @@
 % This section should discuss the theory behind the optimizer
 
-\section{Theorem Prover \ms} \label{sec:z3}
+\section{Theorem prover \rr} \label{sec:z3}
 % Find representative set of theorem provers, and analyze in context of project
-
-\begin{table*}[h!]
-    \centering
-    \begin{tabular}{|l|p{5cm}|p{5cm}|}
-        \hline
-        Name & Pros & Cons
-        \\ \hline
-        \texttt{z3} &
-        \begin{itemize}[left=0pt,topsep=0pt]
-            \item Still being developed and maintained
-        \end{itemize}\nointerlineskip
-        &
-        \begin{itemize}[left=0pt,topsep=0pt]
-            \item abc
-            \item def
-        \end{itemize}\nointerlineskip
-        \\ \hline
-        Simplify &
-        \begin{itemize}[left=0pt,topsep=0pt]
-            \item abc
-            \item def
-        \end{itemize}\nointerlineskip
-        &
-        \begin{itemize}[left=0pt,topsep=0pt]
-            \item No longer developed
-            \item Not the farstest SAT solver (p. 9 \url{https://www.cs.tau.ac.il/~msagiv/courses/ATP/SimplifyScribe.pdf})
-        \end{itemize}\nointerlineskip
-        \\ \hline
-        Cogent &
-        \begin{itemize}[left=0pt,topsep=0pt]
-            \item abc
-            \item def
-        \end{itemize}\nointerlineskip
-        &
-        \begin{itemize}[left=0pt,topsep=0pt]
-            \item abc
-            \item def
-        \end{itemize}\nointerlineskip
-        \\ \hline
-        \end{tabular}
-\end{table*}
+This project involve statically analyzing a given program, to identify assertions that are
+provably always correct, and therefore redundant. To achieve this one could look to tools used in
+the field of program verification or static analyses for compiler.
+Some of these method include abstract interpretation, and the use of SMT
+(Satisfiability Modulo Theories) solvers.
+\\
+\\
+Abstract interpretation involves transforming language constructs into a sound approximation,
+that can then be partially executed, to assess certain properties of the language construct.
+With this, one can withdraw information about the possible executions of the construct, and
+thereby get information, that would otherwise not be possible. Hence it can be used to determine,
+whether runtime assertions are true or not. However, due to this abstraction of the program,
+information is also lost \cite{ai}. A project that already include use of abstract interpretation,
+used for a similar use case as this project is \texttt{Astrée} \cite{astree}, which is a static
+analyzer that proves the absence of runtime errors. This also includes "user-provided assertions"
+\cite{astree}. Hence abstract interpretation has been proven, as a technique for validating
+runtime assertions.
+\\
+\\
+SMT solvers see their use in computer aided verification of computer programs, where programs
+are transformed into logical models, that can then be verified using a SMT solver. Thereby proving
+certain properties of the underlying program \cite{sigda}. For this to work, it is needed to
+translate a program from \lan into these mathematical models, that a SMT can then solve. Hence
+the work will lay on the translation, and on what information safely can be used for the model.
+Because of this mathematical model, SMT solvers work on SSA (Static Single Assignment) form,
+meaning during (or before) this translation into a mathematical model, the \lan program must also
+be translated into SSA form. A project that use SMT solver to verify properties of programs is
+\texttt{Dafny}, a language created with build in program verifications \cite{dafny}. The verifier
+for \texttt{Dafny} works as part of the compiler. Hence this method has also been showcased to work
+for approximately the same purpose as this project aims to solve.
+\\
+\\
+This project will use the SMT technique to statically analyze \lan programs. This is done because
+of the following reasons:
 
 \begin{itemize}
-    \item Simplify (No longer developed on)
-        \begin{itemize}
-            \item Build up datastructure context, which it then checks
-        \end{itemize}
-    \item \texttt{z3} (Still developed)
-        \begin{itemize}
-            \item Builds up a datastructure which it then checks satisfaction on
-        \end{itemize}
-    \item Cogent
+    \item There exists industry-proven solvers on the market, that are fairly straight forward
+          to use; many of which are open source projects. Where abstract interpretation requires
+          more upfront work, to decide on
+          abstraction level sets, and transformation. Hence the SMT solvers has a lower level
+          of entrance.
+
+    \item The case of \texttt{Dafny} shows, that it can be a viable solution within the compilation
+          process.
 \end{itemize}
 
-\subsection{Theorem Prover Versus Other Alternatives \ms}
-% Discussion over using theorem provers or partial evaluation?
 
-\subsection{Choosing Theorem Prover \ms}
-% also theory behind validating stuff
+\subsection{Choosing theorem prover \rr}
+The \texttt{SMT-LIB} standard has worked towards standardizing the interface of SMT solvers \cite{smtlib}.
+This standardization include a language constructed around S-expressions, best known from
+the programming language \texttt{Lisp} \cite{pld}. Following this standardization has at least
+the advantage, that the libraries implementing it, have access to a wide variety of benchmark tests,
+making their speed directly comparable with other SMT solvers \cite{smtlib}. So narrowing possible
+SMT solver to only those that implement the \texttt{SMT-LIB}, gives a possibility to use the
+yearly competition \texttt{SMT-COMP}, as one guideline to compare the different solvers.
+\\
+\\
+The first narrowing comes from the supported theories. To use it for \lan, the SMT solver must
+support the following theories:
 
-\subsection{Using the Theorem Prover \rr}
-\texttt{Z3} is a Satisfiability Modulo Theories (SMT) solver created by Microsoft specifically developed
+\begin{itemize}
+    \item Bitvector theory as \lan works on unsigned 32 bit integers, meaning the value
+          representation is bounded, so using normal integer theories would not work.
+
+    \item Boolean theory simply because \lan has boolean values. However, this constraint is
+          trivial as SMT is a generalization of the boolean satisfiability problem (SAT), so
+          all SMT solvers will support this theory.
+
+    \item Array theory because \lan supports the use of arrays. This theory can be avoided, if
+          one simulated arrays by simply having a unique variable for each array element.
+
+    \item Linear arithmetic theory so arithmetic operations can be directly modelled. Non-linear
+          arithmetic is not needed, as \lan does not support floats.
+\end{itemize}
+\noindent
+The next narrowing comes from looking at \texttt{SMT-COMP} for the year 2021 \cite{smtcomp}, and see
+how each theorem prover performs. Looking through the best performing SMT solvers on the theories
+mentioned above three solvers stand out: \texttt{cvc5}, \texttt{z3}, and \texttt{Yices2}.
+\texttt{cvc5} is the top performer on the incremental track \cite{smtcomincr} followed by
+\texttt{z3}. While \texttt{Yices2} performs good on quantifier-free logic \cite{smtcommod},
+where \texttt{z3} also make it to top five in all categories.
+\\
+\\
+Based on the above, the available languages with API's, and the fact that \texttt{z3} is used in
+a variety of projects, some of which are similar use cases as this such as \texttt{Dafny},
+\texttt{z3} has been chosen as the theorem prover to use for this project. It supports the
+needed theories, to make life easy for analyzing \lan, an it performs quite well for these
+theories. It s open sourced, and provides API's for the biggest number of languages of the three.
+Also \texttt{z3} is a Microsoft product, meaning a big company is backing the continued
+progress of the project. Last but not least, a unofficial API for \texttt{z3} is provided
+through the programming language \texttt{Haskell}, which I have chosen based on the arguments
+in section \ref{sec:z3interaction}.
+
+
+\subsection{Using the theorem prover \rr}
+\texttt{Z3} is a SMT solver created by Microsoft specifically developed
 for program verification and analysis \cite{z3:microsoft}. It is therefore geared towards
 analyzing whether certain properties of a program are satisfied. In this projects it is to be
 used to validate certain properties. Hence the properties will be inverted, and then checked for
@@ -190,7 +224,7 @@ result in information loss due to integer division.
     }
 \end{lstlisting}
 
-\subsubsection{Interacting with the \texttt{Z3} API}
+\subsubsection{Interacting with the \texttt{z3} API} \label{sec:z3interaction}
 The \texttt{z3} API has bindings to several general purpose programming languages \cite{z3:api}.
 As this project involves prototyping a compiler using \texttt{z3} to statically analyze a program,
 the language used should allow quick prototyping, and easy tree structure manipulation. For this

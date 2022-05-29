@@ -1,4 +1,4 @@
-\section{Benchmark of Compiled Code \rr}
+\section{Benchmark of compiled code \rr}
 To asses the impact of the optimization run done by the \lan compiler, the
 example programs presented in the we interface, except for the "unrollableLoop" program.
 However, extra loops calling and uncalling each function are inserted to make the programs
@@ -77,7 +77,10 @@ $32\%$ of the time is spend on optimizing forward directional part of the progra
 approximately $69\%$ is used on optimizing the backward directional part of the program.
 This happens even though the reverse actually skips optimizations for the \lsin{main}
 procedure. Hence if the reason for this increase could be found, a good chunk of the
-execution might be removable.
+execution might be removable. The fact that the reversed fib is significantly slower
+to optimized than the non-reversed, might hint that the \texttt{z3} solver has a harder
+time picking the appropriate solvers, based on the information it is given, so it might
+end up picking a solver, that directs it in a less efficient direction of the solver-tree.
 
 \begin{varwidth}[t]{0.45\textwidth}
 \begin{lstlisting}[language=C++, caption={Optimized Fibonacci program.}]

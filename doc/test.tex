@@ -1,4 +1,5 @@
-\section{Testing of Compiler \ms}
+\section{Testing of compiler \rr} \label{sec:tests}
+%Also add the example of failing test
 Testing of the compiler is done in two ways: Automatic and manually. Automatic tests is
 done by running the compiler, inspecting the output code, running the output using \texttt{g++},
 manually writing the prober model in \texttt{z3}, and then if it all works, a gold file is
@@ -16,6 +17,13 @@ script goes through every test \lan file, and compares the output with the corre
 gold file. \lsin{2>&1} is used to direct both standard in and standard out from the compiler
 run, so that negative tests, can also be created. If the two files match a green text
 is written with "Success".
+
+There are $32$ test programs that cover a small set of edge cases. Currently all test programs
+are successful except for one. An image of a test-run can be seen in figure \ref{fig:testrun}.
+The failing test is \texttt{factorial-overflow.japa}, and it fails as the compiler wrongfully
+removes an assertion that should not be removed. The optimizer wrongfully says that the assertion
+created by the \lsin{dealloc} in the forward direction can be removed. There was not enough time
+to find the root cause of this issue, so it is left for future work.
 
 
 % Talk about how testing could have been improved

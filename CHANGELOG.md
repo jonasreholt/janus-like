@@ -30,6 +30,8 @@ Passcode: 276031
 - [x] Write translator from AST to C++
 - [x] Write playground website to use
 - [x] Write benchmark tests
+- [ ] Improve execution time by utilizing only linear arithmetic (<, <=, =) (https://stackoverflow.com/questions/12511503/z3-performance-with-non-linear-arithmetic)
+- [ ] Fix the error in generalized loop analysis leading to failing test
 - [ ] Write execution test; testing runtime behavior of optimized and unoptimized.
 - [ ] Write report
   - [ ] Maybe add some more in-depth profiling analysis of execution time for benchmark
