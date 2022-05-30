@@ -21,7 +21,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    Commands for ease of use     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\versionnr}{5}
+\newcommand{\versionnr}{0.5}
 \renewcommand{\*}{\cdot}                    % a pretty multiplication sign
 \renewcommand{\implies}{\rightarrow}        % implies now is simple right arrow: -->
 \newcommand{\lan}{\texttt{Japa} }
@@ -97,6 +97,26 @@
 
 \lstset{style=mystyle}
 
+% CSS
+\lstdefinelanguage{CSS}{
+  keywords={color,background-image:,margin,padding,font,weight,display,position,top,left,right,bottom,list,style,border,size,white,space,min,width, transition:, transform:, transition-property, transition-duration, transition-timing-function},	
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  alsoletter={:},
+  alsodigit={-}
+}
+
+% JavaScript
+\lstdefinelanguage{JavaScript}{
+  morekeywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]//,
+  morestring=[b]",
+  morestring=[b]'
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %        Defining header          %
@@ -135,7 +155,7 @@
 \bibliographystyle{ieeetr}
 
 \newpage
-%\input{appendice.tex}
+\input{appendice.tex}
 
 \end{document}
 

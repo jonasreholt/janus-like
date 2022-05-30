@@ -1,6 +1,6 @@
 % This section should discuss the theory behind the optimizer
 
-\section{Theorem prover \rr} \label{sec:z3}
+\section{Theorem prover } \label{sec:z3}
 % Find representative set of theorem provers, and analyze in context of project
 This project involve statically analyzing a given program, to identify assertions that are
 provably always correct, and therefore redundant. To achieve this one could look to tools used in
@@ -49,7 +49,7 @@ of the following reasons:
 \end{itemize}
 
 
-\subsection{Choosing theorem prover \rr}
+\subsection{Choosing theorem prover }
 The \texttt{SMT-LIB} standard has worked towards standardizing the interface of SMT solvers \cite{smtlib}.
 This standardization include a language constructed around S-expressions, best known from
 the programming language \texttt{Lisp} \cite{pld}. Following this standardization has at least
@@ -96,7 +96,7 @@ through the programming language \texttt{Haskell}, which I have chosen based on 
 in section \ref{sec:z3interaction}.
 
 
-\subsection{Using the theorem prover \rr}
+\subsection{Using the theorem prover }
 \texttt{Z3} is a SMT solver created by Microsoft specifically developed
 for program verification and analysis \cite{z3:microsoft}. It is therefore geared towards
 analyzing whether certain properties of a program are satisfied. In this projects it is to be

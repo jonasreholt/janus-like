@@ -1,19 +1,20 @@
-\section{Reflection over project \ms}
+\section{Reflection over project }
+After having completed this project, and experiencing the consequences of the workflow I
+adopted, I can see that automated tests should probably have been implemented from the start.
+The test section also reveals, the lack of unit tests for each function, as only the full
+behavior of the compiler is tested. I fell in the trap, of ignoring setting up these tests
+using \texttt{cabal}, as I simply felt swarmed already having to learn \texttt{Haskell}, \texttt{z3},
+and all the other things needed for this thesis. I probably shouldn't have ignored it, as it lead
+to some annoying bugs, when I finally implemented the tests of the full behavior.
 
-
-\begin{itemize}
-    \item Should have used \texttt{Boogie 2}
-    \item Testing
-    \item Working more people
-\end{itemize}
-
-Should have used \texttt{Boogie 2}
-
-Another tool for analyzing and verifying properties of \lan programs, could have been the use
-of an intermediate language, that uses tools such as mentioned above, to perform optimization
-runs on the intermediate code. \texttt{Boogie 2} is such a tool. It is an intermediate
-language representation, that uses the SMT solver \texttt{z3} to verify the program \cite{boogey}.
-
-%https://www.microsoft.com/en-us/research/project/boogie-an-intermediate-verification-language/publications/
-%https://boogie-docs.readthedocs.io/en/latest/
-%https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/krml178.pdf
+As an extension to this, it would probably have been nice to work with more people on this
+project, so I had someone to spar with on a daily basis.
+\\
+\\
+Looking back it would probably have made sense to use \texttt{Boogie 2} instead of directly
+communicating with \texttt{z3}. \texttt{Boogie 2} is a intermediate language representation, used
+for verifying programming languages. Hence it works for multiple SMT solvers, and is used in
+projects such as \texttt{Dafny}. Working with this intermediate language, might have made
+it easier correctly modelling program structures. The reason why I did not chose it was, that
+\lan is a reversible language, meaning it does not follow the ordinary program structure, meaning
+representing the reversible semantics in the intermediate code might be unnecessary complicated.

@@ -1,4 +1,4 @@
-\section{Compiler structure \rr}
+\section{Compiler structure}
 The \lan compiler is structured into different modules that can be seen in figure
 \ref{fig:compiler-overview}. First the \lan source code is handed as input to the frontend,
 which creates an abstract syntax tree (AST), that is then type checked and annotated with
@@ -13,7 +13,7 @@ two optimized trees, that is then translated into \texttt{C++} output via standa
     \label{fig:compiler-overview}
 \end{figure}
 
-\subsection{Frontend \rr}
+\subsection{Frontend}
 % Theory and information behind lexing and parsing
 The frontend consists of a lexical analysis and a syntax analysis. Both are implemented using a
 parser combinator in \texttt{Haskell}, namely Parsec. A parser combinator is a higher-order
@@ -38,7 +38,7 @@ and syntax analysis. The two analysis' are intertwined simply because that is ho
 library functions. This does not pose any apparent problems, as the language being analyzed has
 a fairly simple syntax. Parsec does however still keep a sense of modularity.
 
-\subsection{Type checker \rr}
+\subsection{Type checker}
 % Theory and information behind type checking
 \lan is a statically typed language, as the type check is performed before execution of the program.
 Furthermore, it is a strongly typed language, as operations are ensured to be performed on
@@ -136,7 +136,7 @@ body, that needs type checking.
 When all procedures have been type checked, the annotated AST is returned and used in the
 subsequent phases of the compiler.
 
-\subsection{AST reversing \rr}
+\subsection{AST reversing }
 The reverser simply follows the rules outlined under \nameref{sec:language-def}. The AST is
 reversed at this point in the compiler, as the optimization checks needs to be performed for both
 direction as explained in \ref{translation-to-z3}.
@@ -220,7 +220,7 @@ reverseStatement acc = \case
       \label{fig:rev-flow-constructs}
 \end{figure}
 
-\subsection{Optimization \rr}
+\subsection{Optimization }
 % Strategy for optimization
 % Integration with theorem prover
 Because the compiler translates directly from the source language into an abstract syntax tree,
@@ -239,7 +239,7 @@ This optimization involves four steps:
           from \texttt{z3}.
 \end{enumerate}
 
-\subsubsection{Language constructs requirering runtime assertions \rr}
+\subsubsection{Language constructs requirering runtime assertions }
 The first point can be discovered by consulting the language specification introduced
 in section \ref{sec:language-def}. Here it is imminent, that the following construct introduce
 assertions for the translated code:
@@ -259,7 +259,7 @@ Which means that when running through the abstract syntax tree, the optimizer mu
 when the above constructs are met, and then decide on whether to optimize based on the answer from
 \texttt{z3}.
 
-\subsubsection{Gathering information for \texttt{z3} \rr}
+\subsubsection{Gathering information for \texttt{z3} }
 % Write more inticate details on loops e.g. how isdescending works, and how unroll works by using satisfy instead of validate
 Point two has two main obstacles: 1) to know how much information \texttt{z3} needs for the proof,
 and 2) granting the optimizer access to this appropriate subtree.
@@ -306,7 +306,7 @@ analysis.
     }
 \end{lstlisting}
 
-\subsubsection{Handling if-then-else and for loop optimization \rr}
+\subsubsection{Handling if-then-else and for loop optimization }
 Conditional control-flow statements are the most complex to do a optimization run on, so they
 will be explained further in the next two subsections.
 \\
@@ -456,7 +456,7 @@ generalizedAnalysis scope body z3expr m state warnings = do
       return (tmpScope, body', validated, warnings')
 \end{lstlisting}
 
-\subsection{Translation to \texttt{C++} \rr}
+\subsection{Translation to \texttt{C++} }
 The \lan compiler presented in this report does a simple translation to \texttt{C++}.
 As the focus lie on assertion removal, no work has been put into compiling effective
 \texttt{C++} code. The main function of the code generator can be seen in listing

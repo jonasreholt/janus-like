@@ -1,6 +1,6 @@
 % Use Roberts article to argue reversability and that local inversion is enough
 % Also prove bijection (reversibility) of for-loops
-\section{Janus-like language definition \rr} \label{sec:language-def}
+\section{Janus-like language definition} \label{sec:language-def}
 This project alters and extents the syntax for \texttt{Janus} to make it better match modern
 programming languages, and to simplify certain properties of the language.
 This "new" language will be an imperative reversible language like
@@ -39,7 +39,7 @@ These programs will however not live up to Landauer's Principle \cite{article:3}
 individual step is not reversible. It is therefore imminent that all construct of \lan are
 reversible in them self.
 
-\subsection{Scoping rules \rr}
+\subsection{Scoping rules}
 \lan is statically scoped with the exception of the global store. Because the global store is
 declared within the main function, this cannot be statically scoped, as they would no be globally
 available then. The implication of all variables being statically scoped, means that it is only
@@ -47,7 +47,7 @@ global variables that can cross implicitly between procedures; this is a consequ
 having the global variables declared in main, and then local variables allowed declared within a
 procedure.
 
-\subsection{Data types \rr}
+\subsection{Data types}
 \lan supports the data types integers, booleans, and arrays of integers or booleans.
 The constraint coming from reversibility on data types, is that simple types such as floats,
 cannot be accurately implemented, as the type in itself is imprecise, meaning no perfect inverse
@@ -56,7 +56,7 @@ is ensured to exist.
 \\
 There only build in function is \texttt{size(id)}, which will give the length of array $id$.
 
-\subsection{Declaration of variables \rr}
+\subsection{Declaration of variables}
 There are essentially two types of variables: Global and local. Because a global variable is
 always in scope, it preserves the information at all time (assuming all operations done on it
 are reversible). Hence global variable declaration can simply be done by:
@@ -88,7 +88,7 @@ It is important to note, that declaring a local, does not open a scope, meaning 
 $y$ is shadowed by a local $x$, it is not brought into the light by deallocation of $x$.
 This is a design choice taken, as it eases the translation to \texttt{C++}.
 
-\subsection{Modification arithmetics \rr}
+\subsection{Modification arithmetics}
 To modify a variable there needs to be an inverse function of the operator, such that the
 modification can be reversed. As the only datatypes for \lan are integers and booleans,
 the only operators with an inverse (the function is bijective) is addition, subtraction, and
@@ -105,7 +105,7 @@ when operating on natural numbers. Hence the operation becomes:
 \noindent
 Where \textasciicircum ~indicates exclusive or.
 
-\subsection{Arithmetics \rr}
+\subsection{Arithmetics}
 Performing arithmetics on expressions of the language does not require, that the arithmetic function
 is bijective, as it is only the state transformations that need be bijective, e.g. in
 \texttt{a += 5 $\*$ 6}, the expression \texttt{5 $\*$ 6} is not the "altering" function, and
@@ -116,7 +116,7 @@ The only thing one needs to remember is, that a variable name cannot occur at bo
 statement is to be reversible. Having this constraint ensures forward and backward determinism
 of the modifications, which will be proven in section \nameref{subsec:reversibility}.
 
-\subsection{If statements \rr}
+\subsection{If statements}
 The \texttt{if}-statements are similar to those of \texttt{Janus}:
 
 \begin{table*}[h!]
@@ -133,7 +133,7 @@ The \texttt{if}-statements are similar to those of \texttt{Janus}:
 \noindent
 Where the \texttt{else} part can be omitted.
 
-\subsection{Loops \rr}
+\subsection{Loops}
 \lan only supports \texttt{for}-loops. These loops are closer to that of \texttt{C++} syntax, and
 it allows for some easy optimizations compared to \texttt{Janus}' \texttt{from}-loop construction,
 which are presented in \cite{janus};
@@ -175,7 +175,7 @@ as run-time checks, if it cannot be optimized. It is checked at initialization o
 start of each iteration (maintenance), and at termination. Further information on this can be found
 in section \nameref{sec:z3}.
 
-\subsection{Procedures \rr}
+\subsection{Procedures}
 Procedures in \lan does not have a return value; every outcome is exposed through side
 effect, by letting arguments be passed by reference. Return values are omitted because it
 complicates preserving reversibility, as the program needs a way to know where to enter and exit
@@ -217,7 +217,7 @@ reversible. It is simply done by:
 \noindent
 Where \texttt{uncall} simply reverse the underlying statements.
 
-\subsection*{Example program \rr}
+\subsection*{Example program}
 Given a number $n$ the program seen in listing \ref{lst:fib} produces the n'th fibonacci
 pair. The global store, which works as the starting state of the program, is defined within
 \lsin{main}; this include the starting fibonacci pair
@@ -248,7 +248,7 @@ procedure main() {
 \end{lstlisting}
 
 
-\subsection{Formal definition of syntax \rr}
+\subsection{Formal definition of syntax}
 The language \lan can be formally written in Backus-Naur form as:
 
 \begin{verbatim}
@@ -304,7 +304,7 @@ The language \lan can be formally written in Backus-Naur form as:
     <mod-op>  := "+" | "-" | "^"
 \end{verbatim}
 
-\subsection{Semantics \rr}
+\subsection{Semantics}
 The operational semantics of \lan programs are similar to those presented for \texttt{Janus}
 in \cite{janus}. It differentiate in regards to asserts, loops, function calls/uncalls
 as these can carry parameters in \lan, and the introduction of local
@@ -534,7 +534,7 @@ Rules \eqref{eq:loop1MainInv} to \eqref{eq:loop2BaseInv} defined the loop semant
 invariant is given. The invariant is checked after initialization of the loop variable, at
 the start of each loop iteration, and after the loop finishes.
 
-\subsection{Reversibility \rr} \label{subsec:reversibility}
+\subsection{Reversibility} \label{subsec:reversibility}
 Because the semantics of \lan is similar to that of \texttt{Janus}, as defined in \cite{janus},
 this report will focus on proving reversibility of the divergent elements.
 \\
