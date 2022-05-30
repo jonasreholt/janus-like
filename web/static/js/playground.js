@@ -1,3 +1,4 @@
+/*   A LOT OF THE CHANGES HAPPENED HERE IS THE REMOVAL OF UNNECESSARY CODE   */
 $(function(){
     editor = ace.edit("editor");
     editor.setTheme("ace/theme/tomorrow");
@@ -48,6 +49,7 @@ $(function(){
             options = defaults;
         }
 
+        /*   ORIGINAL CODE STARTING HERE   */
         $executing.fadeIn();
         var code = editor.getValue();
         $.post("execute.php", {
@@ -58,6 +60,7 @@ $(function(){
             .always(function() {
                 $executing.fadeOut();
             });
+        /*   ORIGINAL CODE ENDING HERE   */
     }
 
     var prevErrors = [];

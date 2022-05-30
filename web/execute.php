@@ -1,9 +1,8 @@
 <?php
 
-$prog_text = filter_input(INPUT_POST, "code", FILTER_UNSAFE_RAW);
+// Most things changed here is the removal of unnecessary code.
 
-# Read program from stdin
-//array_push($jana_flags, "-");
+$prog_text = filter_input(INPUT_POST, "code", FILTER_UNSAFE_RAW);
 
 $dir = dirname(__FILE__);
 $cmd = "$dir/japa -stdin";

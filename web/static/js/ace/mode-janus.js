@@ -154,12 +154,15 @@ var oop = require("../lib/oop");
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var JanusHighlightRules = function() {
+    /*   ADDED FOR, DEALLOC AND REMOVED FROM, LOOP, DO*/
     var keywords = (
         "procedure|if|else|fi|for|loop|until|" +
         "local|dealloc|call|uncall"
     );
     var builtinConstants = ("true|false");
+    /*   ADDED CONST   */
     var types = ("int|const|bool");
+    /*   CHANGED SO ONLY SIZE IS A BUILD IN FUNCTION   */
     var builtinFunctions = (
         "size"
     );

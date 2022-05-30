@@ -1,3 +1,4 @@
+/*   ORIGINAL CODE STARTING HERE   */
 #wrapper {
     position: absolute;
     width:100%;
@@ -6,7 +7,9 @@
     bottom: 0;
     left: 0;
 }
+/*   ORIGINAL CODE ENDING HERE   */
 
+/*   CHANGED DIFFERENT PROPERTIES BELOW   */
 #editor {
     width:50%;
     position: absolute;
