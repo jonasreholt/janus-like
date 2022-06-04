@@ -24,7 +24,7 @@ void fib_forward(unsigned int &x1, unsigned int &x2, const unsigned int n)
         x1 += tmp;
         
         i += 1;
-        
+        assert(!(i == 1));
     }
 }
  
@@ -38,7 +38,7 @@ void fib_reverse(unsigned int &x1, unsigned int &x2, const unsigned int n)
         x1 -= tmp;
         x2 -= x1;
         
-        
+        assert(!(i == n));
     }
 }
  

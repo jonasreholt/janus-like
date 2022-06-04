@@ -24,7 +24,7 @@ void fib_forward(unsigned int &x1, unsigned int &x2, const unsigned int n)
         x2 ^= x1 x1 ^= x2 x2 ^= x1
         assert(tmp == x2);
         i += 1;
-        
+        assert(!(i == 2));
     }
     unsigned int haps = x1;
     
@@ -48,7 +48,7 @@ void fib_reverse(unsigned int &x1, unsigned int &x2, const unsigned int n)
         x2 ^= x1 x1 ^= x2 x2 ^= x1
         x2 -= (x1) + (x2);
         assert(tmp == x2);
-        
+        assert(!(i == (n) - (1)));
     }
     x2 -= 1;
     x1 -= 1;

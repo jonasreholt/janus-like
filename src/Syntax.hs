@@ -157,6 +157,9 @@ getStmtVar :: Stmt -> Var
 getStmtVar (Local var pos) = var
 getStmtVar (DLocal var pos) = var
 
+getModVar :: Moderator -> Var
+getModVar (Moderator var _ _) = var
+
 
 getFArgName :: FArg -> Ident
 getFArgName = \case
@@ -180,6 +183,10 @@ getVarName = \case
   Var _ n _ _ -> n
   Arr _ n _ _ _ -> n
 
+getVarPos :: Var -> Pos
+getVarPos = \case
+  Var _ _ _ p -> p
+  Arr _ _ _ _ p -> p
 
 
 prettyPrintStmts :: String -> [Stmt] -> IO ()

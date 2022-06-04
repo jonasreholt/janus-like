@@ -15,6 +15,7 @@ void factorial_reverse(unsigned int &res, const unsigned int n);
  
 void factorial_forward(unsigned int &res, const unsigned int n)
 {
+    assert((n) == (100));
     unsigned int i = 1;
     while(i != (n) + (1))
     {
@@ -24,10 +25,12 @@ void factorial_forward(unsigned int &res, const unsigned int n)
         i += 1;
         
     }
+    
 }
  
 void factorial_reverse(unsigned int &res, const unsigned int n)
 {
+    assert((n) == (100));
     unsigned int i = (n) + (1);
     while(i != 1)
     {
@@ -37,6 +40,7 @@ void factorial_reverse(unsigned int &res, const unsigned int n)
         assert(tmp == res);
         
     }
+    
 }
  
 int main()

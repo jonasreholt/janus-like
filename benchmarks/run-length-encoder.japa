@@ -1,0 +1,45 @@
+// Run-length encoding. Taken from Janus Playground.
+// Below adaptation assumes last piece in text is the zero byte.
+
+procedure encode(int text[7], int arc[14]) {
+    local int j = 0
+    for local int i = 0 {
+        // Move text[i] to arc[j] and zero out text[i]
+        arc[j] += text[i]
+        text[i]-= arc[j]
+
+        arc[j+1] += 1
+        i += 1
+        for local int tmp = 1 {
+            if (arc[j] != text[i]) {
+                tmp -= arc[j+1]
+            } fi (tmp == 0)
+            else {
+                // clearing text[i]
+                text[i] -= arc[j]
+                arc[j+1] += 1
+                i += 1
+                tmp += 1
+            }
+        } tmp += 0, until (dealloc int tmp = 0)
+        j += 2
+    } i += 0, until (dealloc int i = size(text) - 1)
+
+    // Don't know the value of j, as it depends on number of consequent equal numbers in text,
+    // so we zero it out.
+    for local int tmp = size(text) - 1 {
+        j -= 2
+    } tmp -= arc[j+1], until (dealloc int tmp = 0)
+
+    dealloc int j = 0
+}
+
+procedure main() {
+    int text[7] = { 1, 1, 2, 2, 2, 1, 0 }
+    int arc[14]
+
+    for local int i = 0 {
+        call encode(text, arc)
+        uncall encode(text, arc)
+    } i+= 1, until (dealloc int i = 2000)
+}

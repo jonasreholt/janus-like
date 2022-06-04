@@ -4,11 +4,13 @@
 */
 
 procedure factorial(int res, const int n) {
+    assert(n == 10)
     for local int i = 1 {
         local int tmp = res
         res += tmp * i - tmp
         dealloc int tmp = res / i
     } i += 1, until(dealloc int i = n+1)
+    assert(n == 10)
 }
 
 procedure main() {

@@ -1,8 +1,8 @@
 procedure main() {
           int tmp = 0
-          for local int i = 0 {
-              if (i == 9999 && tmp == 0) {
-                 i -= 9999
+          for local int i = 1 {
+              if (i == 999 && tmp == 0) {
+                 i -= 999
                  tmp += 1
               } fi (i == 0 && tmp == 1)
           } i += 1, until (dealloc int i = 1000)

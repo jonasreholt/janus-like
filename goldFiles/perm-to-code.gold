@@ -27,9 +27,9 @@ void perm_to_code_forward(unsigned int (& x)[6])
                 x[j] -= 1;
             }
             j += 1;
-            
+            assert(!(j == 0));
         }
-        
+        assert(!(k == (sizeof(x) / sizeof(unsigned int))));
     }
 }
  
@@ -47,7 +47,7 @@ void perm_to_code_reverse(unsigned int (& x)[6])
                 x[j] += 1;
                 assert((x[j]) > (x[k]));
             }
-            
+            assert(!(j == k));
         }
         k += 1;
         
