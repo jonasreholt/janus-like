@@ -24,7 +24,7 @@ bijective \cite{ARTICLE:1}.
 \noindent
 This means that every construct of \lan must preserve information over time, so the program
 knows where to start of when running in either direction, and that there must be a "one-to-one"
-transformation from every state. e.g. consider the assignment operator \texttt{var = 10}. This
+transformation from every state. e.g.\ consider the assignment operator \texttt{var = 10}. This
 statement has no way of undoing itself, as we do not know what \texttt{var} was before this
 assignment, meaning it goes against definition \ref{def:def:localReversibility}. It also removes
 the bijective property of the program, as all previous states of \texttt{var} leads to the same
@@ -107,7 +107,7 @@ Where \textasciicircum ~indicates exclusive or.
 
 \subsection{Arithmetics}
 Performing arithmetics on expressions of the language does not require, that the arithmetic function
-is bijective, as it is only the state transformations that need be bijective, e.g. in
+is bijective, as it is only the state transformations that need be bijective, e.g.\ in
 \texttt{a += 5 $\*$ 6}, the expression \texttt{5 $\*$ 6} is not the "altering" function, and
 inverse of the whole statement would simply be subtracting \texttt{5 $\*$ 6} from \texttt{a}.
 \\
@@ -140,7 +140,7 @@ which are presented in \cite{janus};
 the initial condition and the end condition will always be true, so the only added assertion in
 the construct is, that the initial condition must not be true after each iteration.
 
-The loop construct syntax can be seen in table \ref{table:for-loop-inverse}.
+The loop construct syntax can be seen in \autoref{table:for-loop-inverse}.
 \begin{table}[!h]
     \centering
     \begin{tabular}{l}
@@ -218,7 +218,7 @@ reversible. It is simply done by:
 Where \texttt{uncall} simply reverse the underlying statements.
 
 \subsection*{Example program}
-Given a number $n$ the program seen in listing \ref{lst:fib} produces the n'th fibonacci
+Given a number $n$ the program seen in \autoref{lst:fib} produces the n'th fibonacci
 pair. The global store, which works as the starting state of the program, is defined within
 \lsin{main}; this include the starting fibonacci pair
 \lsin{x1} and \lsin{x2}. Hence the program actually ends with \lsin{x1} equal to the $n$'th
@@ -540,8 +540,8 @@ this report will focus on proving reversibility of the divergent elements.
 \\
 \\
 First off the statement must be proven to be forward and backward deterministic. If they are,
-definition \ref{def:def:localReversibility} holds, and the statement is locally reversible.
-For this Theorem \ref{theorem:determinism} must be proven (\cite{janus}):
+definition \autoref{def:def:localReversibility} holds, and the statement is locally reversible.
+For this \autoref{theorem:determinism} must be proven (\cite{janus}):
 \begin{theorem}[Forward \& backward determinism] \label{theorem:determinism}
     \begin{align*}
         \forall \sigma&, \sigma', \sigma''\in Stores[\lan]. \\

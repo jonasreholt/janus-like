@@ -3,7 +3,7 @@
 \section{Theorem prover } \label{sec:z3}
 % Find representative set of theorem provers, and analyze in context of project
 This project involve statically analyzing a given program, to identify assertions that are
-provably always correct, and therefore redundant. To achieve this one could look to tools used in
+provably always correct, and therefore redundant. To achieve this, one could look to tools used in
 the field of program verification or static analyses for compiler.
 Some of these method include abstract interpretation, and the use of SMT
 (Satisfiability Modulo Theories) solvers.
@@ -132,7 +132,7 @@ the abstract syntax tree, can be optimized by \texttt{z3}, while the transformat
 being performed.
 % TODO: Explain how the algorithm work
 
-\subsubsection{Dealing with \lan constructs translation to \texttt{z3}}
+\subsubsection{Dealing with \lan constructs translation to \texttt{z3}} \label{sec:dealingWithz3}
 \label{translation-to-z3}
 To deal with the above mentioned problems with translation from the reversible language \lan
 utilizing mutable variables into the logic language \texttt{z3} that works only with immutable
@@ -198,6 +198,12 @@ The unrolling of a simple \texttt{for}-loop can be done by transforming it into 
                                         delocal int bit = 2048
 \end{verbatim}
 \noindent
+\textbf{Invariants}:
+Modelling invariants in \texttt{z3} is done as simply, as "inserting" assertions at the appropriate
+places of the program. These include at loop initialization, at the start of each iteration, and
+just after the loop termination.
+\\
+\\
 \textbf{Function Calls}:
 % TODO: Talk about recursion!!!
 To model the functions correctly in \texttt{z3} inlining must be done, as all changes done
@@ -235,5 +241,7 @@ statically typed, also makes it easy to quickly prototype functionality.
 \\
 \texttt{Haskell}'s interface with \texttt{z3} is build using the \texttt{C} API as it's fundament
 \cite{z3:api2}. In particular this bachelor project uses the \text{Z3.Monad} wrapper.
+Which puts abstraction on top of the base level of the API, allowing for easier manipulation
+and creation of the \texttt{z3} model.
 
 

@@ -21,7 +21,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    Commands for ease of use     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\versionnr}{0.5}
+\newcommand{\versionnr}{0.6}
 \renewcommand{\*}{\cdot}                    % a pretty multiplication sign
 \renewcommand{\implies}{\rightarrow}        % implies now is simple right arrow: -->
 \newcommand{\lan}{\texttt{Japa} }
@@ -147,7 +147,6 @@
 \input{test.tex}
 \input{benchmark.tex}
 \input{web-interface.tex}
-\input{reflection.tex}
 \input{conclusion.tex}
 
 \newpage
@@ -164,8 +163,6 @@
 % The uninteresting things needs to be mentioned, but no theory discussion for it!!
 
 % In frontend only mention unconventional thing
-% If the bug is hard to fix, don't spend half a week!!
-%   then rather focus on the report!
 
 % 4.3:
 % Why on earth am I reversing the AST
@@ -173,11 +170,25 @@
 %   How it happens precisely
 % Setting it together with the overall approach of removing assertions.
 
-% Maybe increase the font size or lessen the margins
-
 % Use more code snippet in everything "new" e.g. loops
-% TYPOS
-% Typo in 4.4.1
-% p.17
-% Loop requirering -->
-% Loop requiring
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Internal trial exam where I just present the presentation, to try out the timing
+
+% Exam room: HCØ A106 "A106 at HCØ for the thesis defenses on June 21"
+
+% Benchmark:
+%            If one had more examples one could say: In this "diverse" set of programs, that
+%            cover the different analysis cases, it works like this for nested conditionals,
+%            and so forth. So it should be more about analytical overview of what it can do
+%            and what it cannot, and not so much about runtime. So highlight some cases where
+%            it could not be removed, show that it possibly could be easily fixed.
+%           So ite, for unrollable, for generalized, nested conditional and so forth.
+%           Did the unroll work well, do my
+%           generalization work? Can stuff be "fixed" easily by handcrafted assertions.
+
+
+% Maybe add a flag to chose loop bound. Add a micropoint to why 100 was used as default
+
+% 3.2.2: Either expand it with concrete examples of the API, or mix it with another section.

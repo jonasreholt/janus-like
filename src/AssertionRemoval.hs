@@ -399,9 +399,9 @@ squeezeLoopInfo scope ast state bound name m cond body forward =
       Z3.push
       tmpScope <- invalidateVars scope $ (getVarName (getModVar m)) : modifiedVars ast body
 
-      -- validating that i < n always true
+      -- validating that i <= n always true
       let z3expr = fst $ fromJust $ tryGetVar name scope
-      lessThan <- satisfiable =<< Z3.mkBvuge z3expr z3cond
+      lessThan <- satisfiable =<< Z3.mkBvugt z3expr z3cond
 
       if not lessThan
         then do
@@ -413,14 +413,14 @@ squeezeLoopInfo scope ast state bound name m cond body forward =
           -- validate that i <= n is always true
           (iterator2, z3cond'2) <- prepareInfo scope' name cond
           satisfied <- satisfiable =<< Z3.mkBvugt iterator2 z3cond'2
-
+          
           Z3.pop 1
           if not satisfied
             then (Z3.assert =<< Z3.mkBvule iterator z3cond') >> return tmpScope
             else return tmpScope
         else do
-          -- validating that i > n always
-          greaterThan <- satisfiable =<< Z3.mkBvule z3expr z3cond
+          -- validating that i >= n always
+          greaterThan <- satisfiable =<< Z3.mkBvult z3expr z3cond
           if not greaterThan
             then do
               (iterator, z3cond') <- prepareInfo tmpScope name cond
@@ -433,11 +433,11 @@ squeezeLoopInfo scope ast state bound name m cond body forward =
               satisfied <- satisfiable =<< Z3.mkBvult iterator2 z3cond'2
 
               Z3.pop 1
-
               if not satisfied
                 then (Z3.assert =<< Z3.mkBvuge iterator z3cond') >> return tmpScope
                 else return tmpScope
-            else Z3.pop 1 >> return tmpScope
+            else do
+              Z3.pop 1 >> return tmpScope
     Left _ -> error "bummelum"
   where
     prepareInfo :: Vars -> Ident -> Expr -> Z3 (AST, AST)
@@ -767,15 +767,27 @@ processStatement doOpt ast scope stmt state bound warnings =
           * Increment,
           * End condition.
     -}
-    For1 inv var body m cond b pos -> do
-      (scope', b', body', bound', warnings') <-
-        processForLoop scope True inv var body m cond pos warnings
-      return (scope', For1 inv var body' m cond b' pos, bound', warnings')
+    For1 inv var body m cond b pos ->
+      if doOpt
+        then do
+          (scope', b', body', bound', warnings') <-
+            processForLoop scope True inv var body m cond pos warnings
+          return (scope', For1 inv var body' m cond b' pos, bound', warnings')
+        else do
+          (scope', _, _, bound', _) <-
+            processForLoop scope True inv var body m cond pos warnings
+          return (scope', For1 inv var body m cond b pos, bound', warnings)
 
-    For2 inv var m body cond b pos -> do
-      (scope', b', body', bound', warnings') <-
-        processForLoop scope False inv var body m cond pos warnings
-      return (scope', For2 inv var m body' cond b' pos, bound', warnings')
+    For2 inv var m body cond b pos ->
+      if doOpt
+        then do
+          (scope', b', body', bound', warnings') <-
+            processForLoop scope False inv var body m cond pos warnings
+          return (scope', For2 inv var m body' cond b' pos, bound', warnings')
+        else do
+          (scope', _, _, bound', _) <-
+            processForLoop scope False inv var body m cond pos warnings
+          return (scope', For2 inv var m body cond b pos, bound', warnings)
 
     Skip -> return (scope, Skip, bound, warnings)
     _ -> error $ "Optimization statement: Stmt not implemented yet - " ++ show stmt
@@ -805,113 +817,208 @@ processStatement doOpt ast scope stmt state bound warnings =
                         varFreeExprs [val, cond, incr]
                         && modificationFreeIncr name body
 
-                  case (inv, unrollable) of
-                    (Just (Invariant inv' _), True) -> do
-                      let Right start = evalConstantIntExpr val
-                      let Right end   = evalConstantIntExpr cond
-                      let Right incr' = evalConstantIntExpr incr
-                      (_, inf', _, warnings') <- invariant inv' body z3var scope' warnings
+                  let incr' = fromRight (-1) (evalConstantIntExpr incr)
 
-                      if incr' > 0
-                        then do let bound' =
-                                      bound *
-                                      (case op of
-                                         PlusEq ->
-                                           if (start > end) then
-                                             error "Loop utilizing overflow not allowed"
-                                           else (end - start) `div` incr'
-                                         SubEq ->
-                                           if (start < end) then
-                                             error "Loop utilizing underflow not allowed"
-                                           else (start - end) `div` incr')
+                  if not doOpt
+                    -- Only gather information for further analysis
+                    then case (inv, unrollable && incr' > 0) of
+                      (Just (Invariant inv' _), True) -> do
+                        let Right start = evalConstantIntExpr val
+                        let Right end   = evalConstantIntExpr cond
+                        let bound' =
+                              bound *
+                              (case op of
+                                PlusEq ->
+                                  if (start > end) then
+                                    error "Loop utilizing overflow not allowed"
+                                  else (end - start) `div` incr'
+                                SubEq ->
+                                  if (start < end) then
+                                    error "Loop utilizing underflow not allowed"
+                                  else (start - end) `div` incr')
 
-                                (body', scope'', validated, warnings'') <-
-                                  unroll bound' doOpt forward body pos var z3expr m scope'
-                                    state warnings'
+                        if bound' <= unrollBound
+                          then do
+                            (_, scope'', _, _) <-
+                              unroll bound' doOpt forward body pos var z3expr m scope'
+                                state warnings
 
-                                return (scope''
-                                        , LoopInfo validated (getLoopInfoInv inf')
-                                        , body'
-                                        , bound'
-                                        , warnings'')
-                        else do
-                          (tmpScope, body', validated, warnings'') <-
-                            generalizedAnalysis scope' body z3expr m cond state warnings'
+                            return  ( scope''
+                                    , LoopInfo False invariantStart
+                                    , body
+                                    , bound'
+                                    , warnings)
+                          else do
+                            (scope'', _, _, _) <-
+                              invariant inv' body z3var scope' warnings
 
-                          return ( tmpScope
-                                , LoopInfo validated (getLoopInfoInv inf')
-                                , body'
+                            return  ( scope''
+                                    , LoopInfo False invariantStart
+                                    , body
+                                    , bound
+                                    , warnings)
+
+                      (Just (Invariant inv' _), False) -> do
+                        (scope'', _, _, _) <-
+                          invariant inv' body z3var scope' warnings
+
+                        return  ( scope''
+                                , LoopInfo False invariantStart
+                                , body
                                 , bound
-                                , warnings'')
+                                , warnings)
 
-                    (Just (Invariant inv' _), False) -> do
-                      Z3.push
-                      (_, body', validated, warnings') <-
-                        generalizedAnalysis scope' body z3expr m cond state warnings
-                      Z3.pop 1
+                      (Nothing, True) -> do
+                        let Right start = evalConstantIntExpr val
+                        let Right end   = evalConstantIntExpr cond
+                        let bound' =
+                              bound *
+                              (case op of
+                                PlusEq ->
+                                  if (start > end) then
+                                    error "Loop utilizing overflow not allowed"
+                                  else (end - start) `div` incr'
+                                SubEq ->
+                                  if (start < end) then
+                                    error "Loop utilizing underflow not allowed"
+                                  else (start - end) `div` incr')
 
-                      (scope'', info', body'', warnings'') <-
-                        invariant inv' body' z3var scope' warnings'
+                        if bound' <= unrollBound
+                          then do
+                            (_, scope'', _, _) <-
+                              unroll bound' doOpt forward body pos var z3expr m scope'
+                                state warnings
 
-                      return (scope''
-                             , LoopInfo validated (getLoopInfoInv info')
-                             , body'', bound, warnings'')
+                            return  ( scope''
+                                    , LoopInfo False invariantStart
+                                    , body
+                                    , bound'
+                                    , warnings)
+                          else do
+                            correctedScope <- invalidateVars scope $ (getVarName (getModVar m)) : modifiedVars ast body
+                            return  ( correctedScope
+                                    , LoopInfo False invariantStart
+                                    , body
+                                    , bound
+                                    , warnings)
 
-                    (Nothing, True) -> do
-                      let Right start = evalConstantIntExpr val
-                      let Right end   = evalConstantIntExpr cond
-                      let Right incr' = evalConstantIntExpr incr
-                      if incr' > 0
-                        then do let bound' =
-                                      bound *
-                                      (case op of
+                      (Nothing, False) -> do
+                        correctedScope <-
+                          invalidateVars scope $ (getVarName (getModVar m)) : modifiedVars ast body
+                        return  ( correctedScope
+                                , LoopInfo False invariantStart
+                                , body
+                                , bound
+                                , warnings)
+
+                    -- Do optimization run
+                    else case (inv, unrollable) of
+                      (Just (Invariant inv' _), True) -> do
+                        let Right start = evalConstantIntExpr val
+                        let Right end   = evalConstantIntExpr cond
+                        -- let Right incr' = evalConstantIntExpr incr
+                        (_, inf', _, warnings') <- invariant inv' body z3var scope' warnings
+
+                        if incr' > 0
+                          then do let bound' =
+                                        bound *
+                                        (case op of
                                           PlusEq ->
-                                            if start > end then
-                                              error "Loops utilizing overflow is not allowed"
-                                            else
-                                              (end - start) `div` incr'
+                                            if (start > end) then
+                                              error "Loop utilizing overflow not allowed"
+                                            else (end - start) `div` incr'
                                           SubEq ->
-                                            if start < end then
-                                              error "Loops utilizing underflow not allowed"
-                                            else
-                                              (start - end) `div` incr')
+                                            if (start < end) then
+                                              error "Loop utilizing underflow not allowed"
+                                            else (start - end) `div` incr')
 
-                                (body', scope'', validated', warnings') <-
-                                  unroll bound' doOpt forward body pos var z3expr m scope' state warnings
+                                  (body', scope'', validated, warnings'') <-
+                                    unroll bound' doOpt forward body pos var z3expr m scope'
+                                      state warnings'
 
-                                return (scope''
-                                        , LoopInfo validated' invariantStart
-                                        , body'
-                                        , bound'
-                                        , warnings')
-                        else do
-                          (tmpScope, body', validated, warnings') <-
-                            generalizedAnalysis scope' body z3expr m cond state warnings
+                                  return (scope''
+                                          , LoopInfo validated (getLoopInfoInv inf')
+                                          , body'
+                                          , bound'
+                                          , warnings'')
+                          else do
+                            (tmpScope, body', validated, warnings'') <-
+                              generalizedAnalysis scope' body z3expr m cond state warnings'
 
-                          return ( tmpScope
-                                , LoopInfo validated invariantStart
-                                , body'
-                                , bound
-                                , warnings')
+                            return ( tmpScope
+                                  , LoopInfo validated (getLoopInfoInv inf')
+                                  , body'
+                                  , bound
+                                  , warnings'')
 
-                    _ -> do
-                      (tmpScope, body', validated, warnings') <-
-                        generalizedAnalysis scope' body z3expr m cond state warnings
+                      (Just (Invariant inv' _), False) -> do
+                        Z3.push
+                        (_, body', validated, warnings') <-
+                          generalizedAnalysis scope' body z3expr m cond state warnings
+                        Z3.pop 1
 
-                      return ( tmpScope
-                             , LoopInfo validated invariantStart
-                             , body'
-                             , bound
-                             , warnings')
+                        (scope'', info', body'', warnings'') <-
+                          invariant inv' body' z3var scope' warnings'
+
+                        return (scope''
+                              , LoopInfo validated (getLoopInfoInv info')
+                              , body'', bound, warnings'')
+
+                      (Nothing, True) -> do
+                        let Right start = evalConstantIntExpr val
+                        let Right end   = evalConstantIntExpr cond
+                        let Right incr' = evalConstantIntExpr incr
+                        if incr' > 0
+                          then do let bound' =
+                                        bound *
+                                        (case op of
+                                            PlusEq ->
+                                              if start > end then
+                                                error "Loops utilizing overflow is not allowed"
+                                              else
+                                                (end - start) `div` incr'
+                                            SubEq ->
+                                              if start < end then
+                                                error "Loops utilizing underflow not allowed"
+                                              else
+                                                (start - end) `div` incr')
+
+                                  (body', scope'', validated', warnings') <-
+                                    unroll bound' doOpt forward body pos var z3expr m scope' state warnings
+
+                                  return (scope''
+                                          , LoopInfo validated' invariantStart
+                                          , body'
+                                          , bound'
+                                          , warnings')
+                          else do
+                            (tmpScope, body', validated, warnings') <-
+                              generalizedAnalysis scope' body z3expr m cond state warnings
+
+                            return ( tmpScope
+                                  , LoopInfo validated invariantStart
+                                  , body'
+                                  , bound
+                                  , warnings')
+
+                      _ -> do
+                        (tmpScope, body', validated, warnings') <-
+                          generalizedAnalysis scope' body z3expr m cond state warnings
+
+                        return ( tmpScope
+                              , LoopInfo validated invariantStart
+                              , body'
+                              , bound
+                              , warnings')
 
                 Left errvar ->
                   let errmsg = show name ++ " used invalid variable" in
                     invalidateVars scope (modifiedVars ast body)
                       >>= (\scope' -> return (scope'
-                                             , LoopInfo False invariantStart
-                                             , body
-                                             , bound
-                                             , errmsg:warnings))
+                                            , LoopInfo False invariantStart
+                                            , body
+                                            , bound
+                                            , errmsg:warnings))
         BooleanT -> error "Boolean for-loops not implemented yet"
       where
         generalizedAnalysis :: Vars -> [Stmt] -> AST -> Moderator -> Expr -> Int -> [String] -> Z3 (Vars, [Stmt], Bool, [String])
@@ -928,21 +1035,6 @@ processStatement doOpt ast scope stmt state bound warnings =
             Ascending -> Z3.assert =<< Z3.mkBvuge loopVar z3expr
             Descending -> Z3.assert =<< Z3.mkBvule loopVar z3expr
             Unknown -> return ())
-
-
-
-          -- Generalize all variables in scope, and check for validity
-          -- tmpScope <- invalidateVars scope $ (getVarName (getModVar m)) : modifiedVars ast body
-
-          -- Trying to get more information about the loop variable
-          -- let loopVar = fst $ fromJust $ tryGetVar name tmpScope
-          -- loopDirection <-
-          --   loopDescending tmpScope forward var m body state bound warnings
-
-          -- (case loopDirection of
-          --   Ascending -> Z3.assert =<< Z3.mkBvuge loopVar z3expr
-          --   Descending -> Z3.assert =<< Z3.mkBvule loopVar z3expr
-          --   Unknown -> return ())
 
           (body', _, validated, warnings') <-
             unroll 1 doOpt forward body pos var z3expr m tmpScope state warnings
@@ -1015,7 +1107,7 @@ processStatement doOpt ast scope stmt state bound warnings =
                       case loopDirection of
                         Unknown ->
                           let errmsg = "Loop invariant untrue at termination: " ++ show pos in
-                            invalidateVars loopScope (modifiedVars ast body)
+                            invalidateVars loopScope (getVarName (getModVar m) : modifiedVars ast body)
                             >>= (\scope'->
                                     return (scope',LoopInfo False 4, body, errmsg:warnings'))
                         _ ->
@@ -1025,23 +1117,23 @@ processStatement doOpt ast scope stmt state bound warnings =
                           -- changed variables not part of invariant.
                           -- Optimizing the assertion away is not possible only with invariant.
                           Z3.assert z3inv -- invariant true so carry the information onwards
-                          >> invalidateVars loopScope (modifiedVars ast body \\ exprVars inv)
+                          >> invalidateVars loopScope ((getVarName (getModVar m) : modifiedVars ast body) \\ exprVars inv)
                           >>= (\scope' ->
                                   return (scope', LoopInfo False 0, body, warnings'))
                     _ ->
-                      invalidateVars loopScope (modifiedVars ast body)
+                      invalidateVars loopScope (getVarName (getModVar m) : modifiedVars ast body)
                       >>= (\scope' -> return (scope', LoopInfo False 6, body,
                             ("Loop invariant not true at maintenance " ++ show pos) : warnings'))
                 Right False ->
-                  invalidateVars loopScope (modifiedVars ast body)
+                  invalidateVars loopScope (getVarName (getModVar m) : modifiedVars ast body)
                   >>= (\scope' -> return (scope', LoopInfo False invariantStart, body,
                         ("Loop invariant not true at initialization " ++ show pos) : warnings'))
                 Left errmsg ->
-                  invalidateVars loopScope (modifiedVars ast body)
+                  invalidateVars loopScope (getVarName (getModVar m) : modifiedVars ast body)
                   >>= (\scope' ->
                          return (scope', LoopInfo False invariantStart, body, errmsg:warnings'))
             Left errvar ->
-              invalidateVars loopScope (modifiedVars ast body)
+              invalidateVars loopScope (getVarName (getModVar m) : modifiedVars ast body)
                 >>= (\scope' -> return (scope', LoopInfo False invariantStart, body,
                         ("Loop invariant used invalidated variables at " ++ show pos) : warnings'))
 
@@ -1066,6 +1158,12 @@ processStatement doOpt ast scope stmt state bound warnings =
                       -- Checking satisfiability of negated assert
                       validated <- satisfiable z3ast
                       
+                      -- ----------------------------
+                      -- trace ("\nTesting unroll " ++ show (getVarName (getModVar m)) ++ "\n") $return()
+                      -- odin <- Z3.solverToString
+                      -- trace (show odin) $return()
+                      -- ----------------------------
+
                       if not validated
                         then
                           if bound' <= unrollBound
@@ -1119,9 +1217,15 @@ processStatement doOpt ast scope stmt state bound warnings =
           assDesc <- Z3.mkBvuge loopVar' newVar
           assDescNeg <- Z3.mkNot assDesc
           -- Checking whether the negated is satisfiable
-          descending <- satisfiable assDescNeg
+          descendingNeg <- satisfiable assDescNeg
 
-          if not descending
+          ---------------------------------------
+          -- trace (show n ++ " descending? " ++ show (not descendingNeg)) $return()
+          -- odin <- Z3.solverToString
+          -- trace (show odin) $return()
+          ---------------------------------------
+
+          if not descendingNeg
             then
               Z3.pop 1 >> return Descending
             else do
@@ -1130,6 +1234,12 @@ processStatement doOpt ast scope stmt state bound warnings =
               assAsc <- Z3.mkBvule loopVar' newVar
               assAscNeg <- Z3.mkNot assAsc
               ascending <- satisfiable assAscNeg
+
+              ---------------------------------------
+              -- trace (show n ++ " ascending? " ++ show (not ascending)) $return()
+              -- odin <- Z3.solverToString
+              -- trace (show odin) $return()
+              ---------------------------------------
 
               Z3.pop 1
               if not ascending

@@ -1,9 +1,9 @@
 \section*{Abstract}
-A reversible programming language forces the programmer to write reversible programs, i.e.
+A reversible programming language forces the programmer to write reversible programs, i.e.\
 a program that can run in both direction; computing both from input to output, and output to
 input. Reversible language are interesting to study, as it removes the theoretical lower limit
 of heat generation, and that one only needs to write a single program, to handle functionality
-that has a natural inverse, e.g. encryption. One downside to reversible language is, the added
+that has a natural inverse, e.g.\ encryption. One downside to reversible language is, the added
 overhead needed to guarantee correct behavior in both directions.
 
 This thesis presents a optimizer module aimed at removing this runtime overhead. As the overhead
@@ -13,4 +13,15 @@ presents a simple imperative reversible language, similar to \texttt{Janus}. The
 translates from this languages abstract syntax tree into a \texttt{z3} model, which is then
 queried at every program point, that involves a runtime assertion. This thesis addresses some
 of the complexion of this translation and querying to \texttt{z3}, when going from a reversible
-language, e.g. the user defined possibly bogus runtime assertions.
+language, e.g.\ the user defined possibly bogus runtime assertions.
+
+This project shows that using the SMT solver \texttt{z3} to analyze reversible programs, in order
+to remove the runtime overhead stemming from reversibility properties, is a doable. The SMT solver
+utilizes the fact, that most assertions should always be true, unless the programmer wrote bogus
+assertion, and is able to remove a significant amount of assertions. The biggest obstacle is
+achieving the right amount of information to prove this validity.
+
+This project showcase a complete translation from the \texttt{Janus} like language \lan to
+\texttt{C++}, with a web interface for a broader field of application. This method could be useful
+with further investigation into decreasing compile time, and utilizing statically known information
+better, as these are the two main difficulties found during this project.

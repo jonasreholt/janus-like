@@ -1,6 +1,7 @@
 \section{Compiler structure}
-The \lan compiler is structured into different modules that can be seen in figure
-\ref{fig:compiler-overview}. First the \lan source code is handed as input to the frontend,
+% Need to modify optimization section based on recent changes
+The \lan compiler is structured into different modules that can be seen in
+\autoref{fig:compiler-overview}. First the \lan source code is handed as input to the frontend,
 which creates an abstract syntax tree (AST), that is then type checked and annotated with
 context sensitive information. This annotated AST is then reversed, giving us a reversed AST
 $R(AST)$ and the regular. These two trees are then run through the optimizer, that outputs
@@ -8,7 +9,7 @@ two optimized trees, that is then translated into \texttt{C++} output via standa
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[scale=0.6]{imgs/compiler-overview.png}
+    \includegraphics[scale=0.55]{imgs/compiler-overview.png}
     \caption{Compiler structure overview.}
     \label{fig:compiler-overview}
 \end{figure}
@@ -28,7 +29,7 @@ not the primary focus of this bachelor thesis.
 \\
 \\
 Because the language is not in LL(1) the performance of the parser is also worsen, as lookahead
-cannot be avoided e.g. in the distinction between simple variables and arrays, and the two
+cannot be avoided e.g.\ in the distinction between simple variables and arrays, and the two
 kinds of for-loops. The process presented in \cite{torben} can be used to transform it into
 LL(1), but due to time constraints, this has been postponed to future works.
 \\
@@ -54,87 +55,100 @@ is a mapping from variable names to types, and from variable names to size. The 
 to annotate the AST with array sizes, that is needed during the subsequent optimizer phase.
 No guessing of types are done during the analysis, meaning when an error is met it is reported
 and the analysis stops.
+\\
+\\
+\lan has a simple type system, and it therefore only requires one type check run, to asses whether
+the program is well typed, and to annotate information needed in the following runs through the AST.
+The type rules of \lan follows the usual type rules of strongly typed languages.
+The only major difference is type check of procedures,
+as these only convey information using side effects. Meaning they have no return type. Hence the
+only checks needed are procedure arguments. No type inference is performed, meaning all use cases
+of an expression must follow the definition of this expressions type.
+Typechecking the different kinds of language constructs
+in \lan always has the inherited attributes of the symbol tables for variables and array size,
+and synthesized attributes of annotated constructs.
 
-\subsubsection{Type checking expressions}
-When type checking expressions the symbol tables for variables and array size are inherited
-attributes, and the type of expression, together with a annotated expression,
-is the synthesized attributes. The rules for type checking
-can be summarized as:
 
-\begin{itemize}
-    \item A number is simply an integer.
+% \subsubsection{Type checking expressions}
+% When type checking expressions the symbol tables for variables and array size are inherited
+% attributes, and the type of expression, together with a annotated expression,
+% is the synthesized attributes. The rules for type checking
+% can be summarized as:
 
-    \item A boolean value is a bool.
+% \begin{itemize}
+%     \item A number is simply an integer.
 
-    \item The type of a variable is found by a lookup in the inherited variable table.
-          If the lookup is successful the type is returned back, and if it fails a error
-          is reported.
+%     \item A boolean value is a bool.
 
-    \item The type of a lookup in an array is also determined by a lookup in the variable table.
-          However, for array lookup the size needs to be annotated onto the expression, meaning
-          a lookup into the array table is performed. If both are successful it is checked
-          whether the array indexing is integers. If so the annotated
-          expression is returned together with the type. Else an error is reported.
+%     \item The type of a variable is found by a lookup in the inherited variable table.
+%           If the lookup is successful the type is returned back, and if it fails a error
+%           is reported.
 
-    \item For binary operations the type of the two expressions must match. As all types
-          are defined for all operators, if the two types match the operator is checked in order
-          to know what type it returns. If it is a boolean operator, the possibly annotated
-          expression is returned together with the boolean type. Else the type of the expression
-          is returned together with its annotated self. The choice that plus and multiply
-          functions also for booleans is simply because \texttt{C++} does so.
+%     \item The type of a lookup in an array is also determined by a lookup in the variable table.
+%           However, for array lookup the size needs to be annotated onto the expression, meaning
+%           a lookup into the array table is performed. If both are successful it is checked
+%           whether the array indexing is integers. If so the annotated
+%           expression is returned together with the type. Else an error is reported.
+
+%     \item For binary operations the type of the two expressions must match. As all types
+%           are defined for all operators, if the two types match the operator is checked in order
+%           to know what type it returns. If it is a boolean operator, the possibly annotated
+%           expression is returned together with the boolean type. Else the type of the expression
+%           is returned together with its annotated self. The choice that plus and multiply
+%           functions also for booleans is simply because \texttt{C++} does so.
         
-    \item The type of the \lsin{not} expression is always boolean. Meaning the expression
-          being inverted is simply checked, and then the possibly annotated expression is
-          returned with the boolean type.
+%     \item The type of the \lsin{not} expression is always boolean. Meaning the expression
+%           being inverted is simply checked, and then the possibly annotated expression is
+%           returned with the boolean type.
 
-    \item The \lsin{size} expression always returns an integer, so the expression is simply
-          returned with the integer type.
-\end{itemize}
+%     \item The \lsin{size} expression always returns an integer, so the expression is simply
+%           returned with the integer type.
+% \end{itemize}
 
-\subsubsection{Type checking statements}
-Type checking statements involve the same inherited attributes, but here the synthesized are
-the type/size annotated statement, and the updated tables.
-The rules for type checking statements can be described as:
+% \subsubsection{Type checking statements}
+% Type checking statements involve the same inherited attributes, but here the synthesized are
+% the type/size annotated statement, and the updated tables.
+% The rules for type checking statements can be described as:
 
-\begin{itemize}
-    \item Variable definition and deallocation explicitly declare which type they are. Hence
-          the check merely involves type checking the assigned expression, and see if it matches
-          the declared type. If not an error is reported. Else the updated tables are returned
-          together with annotated statement.
+% \begin{itemize}
+%     \item Variable definition and deallocation explicitly declare which type they are. Hence
+%           the check merely involves type checking the assigned expression, and see if it matches
+%           the declared type. If not an error is reported. Else the updated tables are returned
+%           together with annotated statement.
 
-    \item For both simple types and arrays, the modification expression is checked if it matches
-          the moderated variable. Array types the indexing expressions are also checked
-          to be integers. If all is true, the updated tables are returned together with
-          the now annotated statement. Else an error is reported.      
+%     \item For both simple types and arrays, the modification expression is checked if it matches
+%           the moderated variable. Array types the indexing expressions are also checked
+%           to be integers. If all is true, the updated tables are returned together with
+%           the now annotated statement. Else an error is reported.      
 
-    \item A switch statement need to switch between two equal variables; so the types must match
-          and if it is between arrays, the size of the arrays must also match. If these are not
-          true, an error is reported, else the annotated statement together with the updated
-          tables are returned.
+%     \item A switch statement need to switch between two equal variables; so the types must match
+%           and if it is between arrays, the size of the arrays must also match. If these are not
+%           true, an error is reported, else the annotated statement together with the updated
+%           tables are returned.
 
-    \item In conditional branching (if-then-else) both the if conditional, and the fi conditional
-          must be a boolean type. Because these are statements and not expressions, the two
-          branches do not have any "return" type, meaning the conditional rules are the only.
-          So if they are true, the branch bodies are type checked, and the annotated statement
-          is returned together with the inherited tables. Else an error is reported.
+%     \item In conditional branching (if-then-else) both the if conditional, and the fi conditional
+%           must be a boolean type. Because these are statements and not expressions, the two
+%           branches do not have any "return" type, meaning the conditional rules are the only.
+%           So if they are true, the branch bodies are type checked, and the annotated statement
+%           is returned together with the inherited tables. Else an error is reported.
 
-    \item In for loops the declaration, moderation, and deallocation needs to be type checked
-          as explained above. Furthermore, the possible invariant needs to be a boolean type.
-          If all that is true, the body is type checked, and an annotated statement is returned
-          together with the inherited tables.
+%     \item In for loops the declaration, moderation, and deallocation needs to be type checked
+%           as explained above. Furthermore, the possible invariant needs to be a boolean type.
+%           If all that is true, the body is type checked, and an annotated statement is returned
+%           together with the inherited tables.
 
-    \item Assertions simply needs to be a boolean type. If true the annotated statement is returned
-          together with the inherited tables.
-\end{itemize}
+%     \item Assertions simply needs to be a boolean type. If true the annotated statement is returned
+%           together with the inherited tables.
+% \end{itemize}
 
 
-\subsubsection{Type checking procedure definitions}
-Each procedure inherits the global store attributes, and uses this to type check its arguments,
-and procedure body. Because there are no return types of procedures, it is only the arguments and
-body, that needs type checking.
+% \subsubsection{Type checking procedure definitions}
+% Each procedure inherits the global store attributes, and uses this to type check its arguments,
+% and procedure body. Because there are no return types of procedures, it is only the arguments and
+% body, that needs type checking.
 
-When all procedures have been type checked, the annotated AST is returned and used in the
-subsequent phases of the compiler.
+% When all procedures have been type checked, the annotated AST is returned and used in the
+% subsequent phases of the compiler.
 
 \subsection{AST reversing }
 The reverser simply follows the rules outlined under \nameref{sec:language-def}. The AST is
@@ -144,7 +158,7 @@ direction as explained in \ref{translation-to-z3}.
 After the reversal each procedure should occur in the same order in the AST, but each
 procedure body should be reversed. To achieve this the right associative \lsin{foldr} is used to
 go through each procedure, and the left associative \lsin{foldl} is used within each procedure.
-This can be seen in listing \ref{lst:reverser}. Notice that the first procedure in the AST is
+This can be seen in \autoref{lst:reverser}. Notice that the first procedure in the AST is
 skipped. This works under the contract, that the first procedure is always the \lsin{main}
 procedure. The \lsin{main} procedure is not reversed because, it is used to define the start state
 of the program. Hence it contains the global variables, which can only we 'reversed' if one were
@@ -164,7 +178,7 @@ reverseProgram (Program ps) =
 \noindent
 The methods for reversing statements are implemented as outlined in \nameref{sec:language-def},
 but the implementeation for if-statements and for-loops will be descriped further here. These
-can be seen in listing \ref{lst:stmt-reverser}. If-statements have their two conditionals switched,
+can be seen in \autoref{lst:stmt-reverser}. If-statements have their two conditionals switched,
 such that the entrance conditional becomes the exit condition (from if path) and vice verser.
 Then both paths are reversed recursively. With for-loops the expression of the loop variable at
 entrance, is exchanged with the expression for the exit condition. Then the body is recursively
@@ -172,12 +186,13 @@ reversed.
 
 Exchaning entrance and exit conditionals for the two constructs, guarantees that the reversed
 statements bodies, will only be executed, if they were executed during the forward run. This
-is illustrated in figure \ref{fig:rev-flow-constructs}; where reversal of the graph is done
+is illustrated in \autoref{fig:rev-flow-constructs}; where reversal of the graph is done
 by converting Diamonds to circles. circles to diamonds, squares to reversed squares, and at
 last changing the arrows direction. Note that the reversible loop construct requires, that
 the entrance condiotional be true, whenever the statement is executed. This is guaranteed in
 \lan by using the for-loop construct instead of the from-loop, thereby making it possible to
-exclude that runtime check.
+exclude that runtime check. This method for representing execution flow charts is taken from
+\cite{pld}, which also present similar figures.
 
 \begin{lstlisting}[language=Haskell, label={lst:stmt-reverser}, caption={Reversing for-loops and if-statements.}]
 reverseStatement acc = \case
@@ -266,8 +281,8 @@ and 2) granting the optimizer access to this appropriate subtree.
 
 For 1) a simply approach could be to give the tree representing the current procedure to the
 optimizer. This could give too much information in the sense that only part of this subtree is
-actually needed to perform the validation check. e.g. in the small program, in listing
-\ref{listing:z3-info-gather-ex}, the only thing
+actually needed to perform the validation check. e.g.\ in the small program, in
+\autoref{listing:z3-info-gather-ex}, the only thing
 needed for the validation is the two last lines. However, this would require backtracking the
 tree while keeping a list of "unassigned" variables, until this list is empty, so the first
 method is used in this optimizer. For future work, it would be a good idea to check whether the
@@ -306,7 +321,7 @@ analysis.
     }
 \end{lstlisting}
 
-\subsubsection{Handling if-then-else and for loop optimization }
+\subsubsection{Handling if-then-else and for loop optimization } \label{sec:optLoopIte}
 Conditional control-flow statements are the most complex to do a optimization run on, so they
 will be explained further in the next two subsections.
 \\
@@ -317,7 +332,7 @@ trivial programs). Hence the translation must happen through the \texttt{z3} fun
 \lsin{mkIte}.
 
 This function works by modelling each branch flow, and then "hiding" them both behind the
-conditional decider. The code for this can bee seen in listing \ref{listing:ite}. What it does
+conditional decider. The code for this can bee seen in \autoref{listing:ite}. What it does
 is, that for each variable in the scope coming into the if-then-else, the variable is checked
 in the two branches scope (the modeling of these scopes are processes prior to this) of whether
 they have been "invalidated" by being removed (invalidation will be covered under loops below).
@@ -414,7 +429,7 @@ this also includes the loop variable.
 
 \begin{lstlisting}[language=C++, label=require-generalize, caption=Loop requirering generalization]
 int tmp = 0
-for local int i = 0 {
+for local int i = 1 {
       if (i == 3 && tmp == 0) {
             i -= 3
             tmp += 1
@@ -422,34 +437,36 @@ for local int i = 0 {
 } i += 1, until (dealloc int i = 4)
 \end{lstlisting}
 \noindent
-This loop optimization based on a generalized scope can be seen in listing
-\ref{lst:generalizeLoopOpt}.
-First every variable that will be modified within the loop body is generalized, for the
-reasons explained above. Then the compiler tries to validate whether the loop variable is
-increasing or decreasing. This is used in order to put in more information about to loop
-variable for the generalized run. If this step was omitted, many optimization could not be
-done, as the generalized loop cannot guarantee that the loop variable does not overflow/underflow.
+This loop optimization based on a generalized scope can be seen in
+\autoref{lst:generalizeLoopOpt}.
+First \lsin{squeezeLoopInfo} is called, which will generalize every variable in scope, that
+will be modified within the loop body, and then try to find either a upper bound or lower bound
+for the loop variable. Then \lsin{generalizedAnalysis} tries to find a bound for the opposite
+direction. This information is used to gain some more knowledge about the loop variable, now we
+had to generalize it. A hindrance that often occur is that \texttt{z3} can prove invalidity by
+underflowing/overflowing the variable.
 Hence guaranteeing that the loop variable will never reach the initial value again at the end
-of an iteration becomes almost impossible; without the information from the
-\lsin{loopDescending} call.
+of an iteration becomes almost impossible; without the information from \lsin{squeezeLoopInfo} and
+\lsin{loopDescending}.
 Then the statement body is optimized (if we are running optimization round), 
 by calling \lsin{unroll} with \lsin{doOpt}. This then reveals whether the assertion
 created by the loop variable, can be optimized away in a generalized environment.
 
 \begin{lstlisting}[language=Haskell, label={lst:generalizeLoopOpt},
       caption={Optimizing the loop based on generalized information.}]
-generalizedAnalysis scope body z3expr m state warnings = do
-      -- Generalize all variables in scope, and check for validity
-      tmpScope <- invalidateVars scope $ modifiedVars ast body
+generalizedAnalysis scope body z3expr m cond state warnings = do
+      -- Trying to get information for the generalized analysis
+      -- To convey whether the loop variable may overflow!
+      tmpScope <- squeezeLoopInfo scope ast state bound name m cond body forward
 
-      -- Trying to get more information about the loop variable
+      -- Convey information whether loop variable has a lower bound
       let loopVar = fst $ fromJust $ tryGetVar name tmpScope
       loopDirection <-
-            loopDescending scope forward var m body state bound warnings
+            loopDescending tmpScope forward var m body state bound warnings
       (case loopDirection of
-            Ascending  -> Z3.assert =<< Z3.mkBvuge loopVar z3expr
+            Ascending -> Z3.assert =<< Z3.mkBvuge loopVar z3expr
             Descending -> Z3.assert =<< Z3.mkBvule loopVar z3expr
-            Unknown    -> return ())
+            Unknown -> return ())
 
       (body', _, validated, warnings') <-
             unroll 1 doOpt forward body pos var z3expr m tmpScope state warnings
@@ -459,8 +476,8 @@ generalizedAnalysis scope body z3expr m state warnings = do
 \subsection{Translation to \texttt{C++} }
 The \lan compiler presented in this report does a simple translation to \texttt{C++}.
 As the focus lie on assertion removal, no work has been put into compiling effective
-\texttt{C++} code. The main function of the code generator can be seen in listing
-\ref{lst:formatMain}. It works by receiving two AST's: One forward direction and one reversed.
+\texttt{C++} code. The main function of the code generator can be seen in
+\autoref{lst:formatMain}. It works by receiving two AST's: One forward direction and one reversed.
 It starts by inserting includes possibly required by the translated code. This includes
 
 \begin{itemize}

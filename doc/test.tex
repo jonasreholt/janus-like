@@ -12,18 +12,16 @@ running the code in \texttt{ghci}, and printing out each step of the way; protot
 the end compiler.
 \\
 \\
-The automatic tests are run using the bash script from listing \ref{lst:tester}. The test
+The automatic tests are run using the bash script from \autoref{lst:tester}, which is created
+on the basis of one handed out during the course "Computer Systems" at Copenhagen University
+\cite{compSys}. The test
 script goes through every test \lan file, and compares the output with the corresponding
 gold file. \lsin{2>&1} is used to direct both standard in and standard out from the compiler
 run, so that negative tests, can also be created. If the two files match a green text
 is written with "Success".
 
 There are $32$ test programs that cover a small set of edge cases. Currently all test programs
-are successful except for one. An image of a test-run can be seen in figure \ref{fig:testrun}.
-The failing test is \texttt{factorial-overflow.japa}, and it fails as the compiler wrongfully
-removes an assertion that should not be removed. The optimizer wrongfully says that the assertion
-created by the \lsin{dealloc} in the forward direction can be removed. There was not enough time
-to find the root cause of this issue, so it is left for future work.
+are successful. An image of a test-run can be seen in \autoref{fig:testrun}.
 
 
 % Talk about how testing could have been improved

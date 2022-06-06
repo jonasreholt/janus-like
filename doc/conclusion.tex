@@ -1,6 +1,6 @@
 \section{Conclusion and future work }
 This project presented the language \lan derived from the reversible language \texttt{Janus}.
-\lan keeps the reversibility property derived from \texttt{Janus}, but changes e.g. the loop
+\lan keeps the reversibility property derived from \texttt{Janus}, but changes e.g.\ the loop
 construct in order to remove some runtime assertions directly from the language construct.
 
 The \lan compiler presented in this project, translates from the source language into \texttt{C++}
@@ -24,7 +24,7 @@ annotate the AST with both types and array sizes.
 Using the SMT solver \texttt{z3} the \lan compiler showed ability, to optimize most runtime
 assertions away. The area in which the chosen method proved to be less effective, was when
 analyzing reversed procedures. This probably stems from the fact, that the reversed procedure
-some times work with "unspoken" starting contracts e.g. that the input numbers are always equal
+some times work with "unspoken" starting contracts e.g.\ that the input numbers are always equal
 when the forward procedure has been executed before.
 
 Loop constructs also showed resistance towards optimizations, which makes sense, as \texttt{z3}
@@ -37,7 +37,7 @@ SMT model.
 This project showed great promise in regards to optimizing assertions away from imperative
 reversible languages, but at present moment, the execution time of the compiler is rather slow.
 For a simple Fibonacci program consisting of $21$ lines of code, the compile time was
-$5.7$ seconds, with optimizations. This slow speed stem from the use of the \texttt{z3}
+$6.2$ seconds, with optimizations. This slow speed stem from the use of the \texttt{z3}
 solver, and is probably caused by bad usage by the writer of this bachelor thesis.
 \\
 \\
@@ -53,10 +53,25 @@ To avoid removing previously known information about variables, when analyzing l
 be unrolled, a method somewhat like the one presented in \cite{ai}, where loops are analyzed
 using a combination of abstract interpretation and a SMT. This might be able to improve the
 analysis of loops.
+
+
+\subsection{Reflection over project }
+After having completed this project, and experiencing the consequences of the workflow I
+adopted, I can see that automated tests should probably have been implemented from the start.
+The test section also reveals, the lack of unit tests for each function, as only the full
+behavior of the compiler is tested. I fell in the trap, of ignoring setting up these tests
+using \texttt{cabal}, as I simply felt swarmed already having to learn \texttt{Haskell}, \texttt{z3},
+and all the other things needed for this thesis. I probably shouldn't have ignored it, as it lead
+to some annoying bugs, when I finally implemented the tests of the full behavior.
+
+As an extension to this, it would probably have been nice to work with more people on this
+project, so I had someone to spar with on a daily basis.
 \\
 \\
-Last but not least, the compiler currently have a bug with variables overflowing, as discussed
-in section \ref{sec:tests}. This should be looked into, as a natural starting point for further
-work. As an extension to this, the test suite should be widened; both with more edge case tests,
-but also with tests comparing the runtime behavior between the optimized code, and the unoptimized.
-These should be created to minimize the error change of the gold files being wrong.
+Looking back it would probably have made sense to use \texttt{Boogie 2} instead of directly
+communicating with \texttt{z3}. \texttt{Boogie 2} is a intermediate language representation, used
+for verifying programming languages. Hence it works for multiple SMT solvers, and is used in
+projects such as \texttt{Dafny}. Working with this intermediate language, might have made
+it easier correctly modelling program structures. The reason why I did not chose it was, that
+\lan is a reversible language, meaning it does not follow the ordinary program structure, meaning
+representing the reversible semantics in the intermediate code might be unnecessary complicated.

@@ -5,6 +5,8 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
 
+import Debug.Trace
+
 import Syntax
 
 type Vtable = Map Ident Ident
@@ -79,8 +81,8 @@ renameProc vtable (ProcDecl name fargs body pos) state =
       [] -> []
       (hd:tl) -> renameExpr vtable hd : renameExprs vtable tl
 
-    renameStmt :: Stmt -> (Vtable, ProcDecl, State) -> (Vtable, ProcDecl, State)
-    renameStmt stmt acc@(vtable, p@(ProcDecl namep args body posp), state) = case stmt of
+    renameStmt :: (Vtable, ProcDecl, State) -> Stmt -> (Vtable, ProcDecl, State)
+    renameStmt acc@(vtable, p@(ProcDecl namep args body posp), state) stmt = case stmt of
       Local (Var t name val pv) pos ->
         let (vtable', name') = insert name state vtable in
           let val' = renameExpr vtable' (fromJust val) in
@@ -218,7 +220,9 @@ renameProc vtable (ProcDecl name fargs body pos) state =
         error $ "Renaming statement error: " ++ show otherwise ++ " should not happen here"
 
     renameStmts :: (Vtable, ProcDecl, State) -> [Stmt] -> (Vtable, ProcDecl, State)
-    renameStmts acc body = foldr renameStmt acc body
+    renameStmts acc body =
+      let (vtable, (ProcDecl n a b p), state) = foldl renameStmt acc body in
+        (vtable, ProcDecl n a (reverse b) p, state)
 
 
     renameAArg :: AArg -> [AArg] -> [AArg]
