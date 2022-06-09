@@ -1,20 +1,26 @@
 \section{Benchmark of compiled code}
+This section will cover benchmark results over a benchmark suite consisting of five \lan
+programs. First the result will be presented, then the optimizer will be analyzed through
+one of the benchmark programs, and then general guideline for using the optimizer best, and
+what future work should be done, will be discussed.
+
+\subsection{Benchmark results}
 To asses the impact of the optimization run done by the \lan compiler, the programs
 presented in section \ref{sec:benchmark-programs} are used. Some of these programs have been
-artificially extended past their normal functionality, in order to simulate hot loops more similar
-to real world applications. E.g. the Fibonacci program in \autoref{lst:fibBench} have a loop
-added that simply calls and uncalls the \lsin{fib} procedure.
+artificially extended past their normal functionality, in order to simulate the hot loops 
+often seen in real world applications. E.g.\ the Fibonacci program in \autoref{lst:fibBench}
+have a loop added that simply calls and uncalls the \lsin{fib} procedure.
 
 Three factors are used to asses the impact: 1) compile time of program, 2) running time of program
 after being compiled by \texttt{g++} without optimizations, and 3) how many assertions have been
-removed. For 2) the \texttt{g++} compiler, version $9.4.9$ for \texttt{Ubuntu}, the program
-is compiled using the flag \lsin{-O0} to avoid it doing any optimizations. This lack of extra
+removed. For 2) the \texttt{g++} compiler, version $9.4.9$ for \texttt{Ubuntu}, is used to compile
+the programs with the flag \lsin{-O0} to avoid it doing any optimizations. This lack of extra
 optimization are done to isolate the impact of the \lan compiler optimizations, and because
 the \lan compiler spits out \texttt{C++} programs without any apparent behavior, meaning
-\texttt{g++} might optimized most of the program away.
+\texttt{g++} might optimize most of the program away.
 \\
 \\
-To benchmark compile time the \texttt{Criterion} \texttt{Haskell} package has been used,
+To benchmark compile time, the \texttt{Criterion} \texttt{Haskell} package has been used,
 and the benchmark is build using \texttt{Cabal}. This benchmark program can be seen in
 \autoref{lst:benchC}. Because the \lan compiler utilizes
 standard out and standard error, to output its result, a small command is written in the
@@ -30,16 +36,17 @@ and then executes each program 10 times and reports the average.
 \\
 \\
 The results of the benchmark can be seen in \autoref{table:benchmark-results}.
-It should be noted that binary size is calculated using lines of assembly, and not the
-actual size in KB of the binary file. This is done, as number of assembly lines is a
-more direct measure of the \lan compiler optimizations. The difference is calculated as
-the percentage increase from no optimization to optimizations.
+Number of assembly lines created by the \texttt{C++} compiler is used as a measurement.
+This is done, as number of assembly lines is a
+direct measure of the \lan compiler optimizations. 
+The difference for all measurements is calculated as the size difference between no optimization
+and optimization as $\text{diff} = \frac{\text{opt}}{\text{noOpt}}$.
 
 \begin{table}[H]
     \noindent\makebox[\textwidth]{%
     \begin{tabular}{|l||r|r|r||r|r|r||r|r|r|}
         \hline
-        \multirow{2}{*}{Program}& \multicolumn{2}{c|}{Compile Time (ms)} & \multirow{2}{*}{Diff (X)} & \multicolumn{2}{c|}{Runtime (ms)} & \multirow{2}{*}{Diff (\%)} & \multicolumn{2}{c|}{Assembly Lines} & \multirow{2}{*}{Diff (\%)} \\
+        \multirow{2}{*}{Program}& \multicolumn{2}{c|}{Compile Time (ms)} & \multirow{2}{*}{Diff (X)} & \multicolumn{2}{c|}{Runtime (ms)} & \multirow{2}{*}{Diff (X)} & \multicolumn{2}{c|}{Assembly Lines} & \multirow{2}{*}{Diff (X)} \\
         \cline{2-3} \cline{5-6} \cline{8-9}
         & \multicolumn{1}{c|}{(noOpt)} & \multicolumn{1}{c|}{(opt)} & & \multicolumn{1}{c|}{(noOpt)} & \multicolumn{1}{c|}{(opt)} & & \multicolumn{1}{c|}{(noOpt)} & \multicolumn{1}{c|}{(opt)} &  \\
         \hline
@@ -54,8 +61,8 @@ the percentage increase from no optimization to optimizations.
         Run length encoder & $1.470$  & $226.20$  & $153.88$ & $1.75295$ & $1.72961$    & $0.98$  & $416$ & $406$ & $0.98$ \\
         \hline
     \end{tabular}}
-    \caption{Results from benchmark. Diff is calculated as percentage increase from no optimizations
-    to optimizations enabled.}
+    \caption{Results from benchmark. Diff is calculated as the difference between no optimizations
+    and optimizations enabled.}
     \label{table:benchmark-results}
 \end{table}
 \noindent
@@ -67,15 +74,16 @@ Therefore, it is not advisable to use optimization during development, but wait 
 release build.
 \\
 \\
-So on average, for the five programs, the \lan compiler is able to create an assembly program
+On average, for the five programs, the \lan compiler is able to create an assembly program
 that is $0.88$ times the size of the unoptimized program.
 Which also shows in the fact, that all programs run faster with
 optimization on, than without. Some programs were significantly easier to optimize than other
 for the \lan compiler. \texttt{Run-lengt-encoder} was by far the hardest for it to optimize.
 This might stem from the fact, that it is an adaptation from a \texttt{Janus} program, which
 used \lsin{from} loops that did not follow the regular pattern of \lsin{for} loops in \lan.
-When inspecting the rest of the programs it can be seen, that the \lan compiler managed to
-remove respectively three (all but the loop checks), one (missing a \lsin{dealloc} and loop checks),
+When inspecting the rest of the programs it can be seen, that the assertions the \lan compiler
+managed to remove are respectively three (all but the loop checks), one (missing a \lsin{dealloc}
+and loop checks),
 two (missing \lsin{fi} and loop checks), sixteen (missing some \lsin{dealloc} and few loop checks),
 and one. In conclusion most of the assertions, that could not be validated is present within
 loops that cannot be unrolled. Some of these are only present in the reversed procedure constructs;
@@ -84,14 +92,15 @@ some "hidden" properties must be present in the reversed procedures, as these mu
 a forward call for the behavior to be correct. But most loop checks, that could not be removed,
 stem from \texttt{z3} not receiving enough information. These can possibly be removed by manually
 inserting extra information into the program. This approach will be experimented with below.
-\\
-\\
+
+\subsection{Exploring the optimizer through an example}
 As an example of optimization runs, the perm to code will shortly be analyzed, to find
 out why the \lan compiler could not optimize any of the regular program, and what can be done
 in order to let the optimizer remove more assertions. The program with optimizations on, and the
 \lsin{diff -u} output of optimization vs unoptimized can be seen respectively in
-\autoref{lst:optRLE} and \autoref{lst:RLE}. This shows that the only assertion removed, was
-the one in the main loop, where the loop is based on a variable from the same procedure.
+\autoref{lst:optRLE} and \autoref{lst:RLE}. This shows that the only assertions removed, was
+the one in the main loop, where the loop is based on a variable from the same procedure, and
+the one stemming from the if statement in the forward procedure.
 This makes sense, as each procedure is analyzed in isolation, in order to conservatively only
 base it on information, that will always be present in the procedure.
 
@@ -182,11 +191,111 @@ Meaning it successfully removed yet another assertion, now that it knows \lsin{k
 It still does not remove the loop assertion from the inner most loop. Investigating the model
 behind the optimization for this, reveals that it knows $k \in [1;6+1]$, but this can only be
 safely used to determine that $j <= (k-1)-1$ where the extra $k-1$ comes from the subtraction
-just before the inner loop is engaged. Hence \texttt{z3} gets that $k\in \mathcal{N}$ as it will
+just before the inner loop is engaged. Hence \texttt{z3} gets that $k\in [0;4,294,967,295]$ as it will
 underflow. Hence it cannot use this information anymore. This can be mitigated by bumping \lsin{k}
 once more, avoiding any ambiguities with underflow.
-\\
-\\
+
+\begin{varwidth}[t]{0.45\textwidth}
+    \begin{lstlisting}[language=C++, label={lst:optRLE}, caption={Optimized perm to code program.}]
+    ...
+    // Global variables defining starting state
+    unsigned int x[6] = {2, 0, 4, 1, 5, 6};
+     
+    ...
+     
+    void perm_to_code_forward(unsigned int (& x)[6])
+    {
+        unsigned int k = (sizeof(x) / sizeof(unsigned int));
+        while(k != 0)
+        {
+            k -= 1;
+            unsigned int j = 0;
+            while(j != k)
+            {
+                if ((x[j]) > (x[k]))
+                {
+                    x[j] -= 1;
+                }
+                j += 1;
+                assert(!(j == 0));
+            }
+            assert(!(k == (sizeof(x) / sizeof(unsigned int))));
+        }
+    }
+     
+    void perm_to_code_reverse(unsigned int (& x)[6])
+    {
+        unsigned int k = 0;
+        while(k != (sizeof(x) / sizeof(unsigned int)))
+        {
+            unsigned int j = k;
+            while(j != 0)
+            {
+                j -= 1;
+                if ((x[j]) >= (x[k]))
+                {
+                    x[j] += 1;
+                    assert((x[j]) > (x[k]));
+                }
+                assert(!(j == k));
+            }
+            k += 1;
+        }
+    }
+     
+    int main()
+    {
+        unsigned int i = 0;
+        while(i != 1000)
+        {
+            perm_to_code_forward(x);
+            perm_to_code_reverse(x);
+            i += 1;
+        }
+    }
+    \end{lstlisting}
+    \end{varwidth}
+    \hspace{4em}
+    \begin{varwidth}[t]{0.45\textwidth}
+    \begin{lstlisting}[language=C++, label={lst:RLE}, caption={Output from \texttt{diff -u} bwetween
+        the optimized perm to code program vs. the unoptimized.}]
+        --- unoptimized.cpp	2022-06-06 10:49:57.208364171 +0200
+        +++ optimized.cpp	2022-06-06 10:49:57.196363191 +0200
+        @@ -1,3 +1,4 @@
+        +
+         #include <assert.h>
+         #include <cstring>
+          
+        @@ -22,7 +23,6 @@
+                     if ((x[j]) > (x[k]))
+                     {
+                         x[j] -= 1;
+        -                assert((x[j]) >= (x[k]));
+                     }
+                     j += 1;
+                     assert(!(j == 0));
+        @@ -48,7 +48,7 @@
+                     assert(!(j == k));
+                 }
+                 k += 1;
+        -        assert(!(k == 0));
+        +        
+             }
+         }
+          
+        @@ -61,6 +61,6 @@
+                 perm_to_code_forward(x);
+                 perm_to_code_reverse(x);
+                 i += 1;
+        -        assert(!(i == 0));
+        +        
+             }
+         }
+        
+    \end{lstlisting}
+    \end{varwidth}
+
+\subsection{General guidelines and future work}
 In general the \lan optimizer will get confused if the variables are close to their types bounds.
 Therefore a general way to get it to optimize further is, to either bump variables away from their
 bound, or by inserting asserts indicating that the variable is not close to their bound. An
@@ -202,119 +311,45 @@ Further work should include focus on developer iteration time instead of code ge
 to test the viability of these optimizations in a developer environment. Profiling the execution
 of the compilation shows, that most time is spend in the optimizer, meaning a focus could be
 on focusing the optimization for hot code segments, thereby keeping most runtime gains while
-hopefully decreasing execution time. Actually, for the Fibonacci program, approximately
-$33\%$ of the time is spend on optimizing forward directional part of the program, and
-approximately $67\%$ is used on optimizing the backward directional part of the program.
-This happens even though the reverse actually skips optimizations for the \lsin{main}
-procedure. Hence if the reason for this increase could be found, a good chunk of the
-execution might be removable. The fact that the reversed fib is significantly slower
-to optimized than the non-reversed, might hint that the \texttt{z3} solver has a harder
-time picking the appropriate solvers, based on the information it is given, so it might
-end up picking a solver, that directs it in a less efficient direction of the solver-tree.
+hopefully decreasing execution time.
 
+Generally, for the five benchmark programs, the optimizer spends most of it's time in the analysis
+of the forward directional AST. In average $54\%$ of the time is used on the forward AST, and
+then $46\%$ on the reversed AST; which can be seen in \autoref{tabel:relativeOptTime}.
+These time measures makes sense, because the analysis of the reversed AST does not include the
+main procedure. There are too few benchmark programs to draw any hard conclusions, but this suite
+indicates that the division of execution time on the two ASTs varies quite a lot. This could
+imply that the model build for \texttt{z3} during the optimization phase sometimes "confuses" the
+solver, making it go way too deep into the wrong path of the solver tree. This can be caused by
+the \texttt{z3} solver has a harder time picking the appropriate solvers, based on the
+information it is given \cite{wrongSolver}.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        Program            & Relative time AST & Relative time R(AST) \\
+        \hline
+        Fibonacci          & $33\%$            & $67\%$ \\
+        \hline
+        Factorial          & $38\%$            & $62\%$ \\
+        \hline
+        Perm to code       & $74\%$            & $26\%$ \\
+        \hline
+        Encryption         & $54\%$            & $46\%$ \\
+        \hline
+        Run length encoder & $72\%$            & $28\%$ \\
+        \hline
+        \hline
+        \textbf{On Average}& $\mathbf{54\%}$   & $\mathbf{46\%}$ \\
+        \hline
+    \end{tabular}
+    \caption{Optimizations time of forward and reversed ASTs relative to each other.}
+    \label{tabel:relativeOptTime}
+\end{table}
+\noindent
 Based on the small exploratory exercise with the perm to code program, future work should also
 involve increasing the statically available information used for loop analysis. E.g.\ if
 the loop variable $i$, starting at expression $e_1$, is only bumped by one towards the end
 condition $e_2$ each iteration, it is safe to assert $i \in [e_1; e_2]$, meaning the ambiguity
 of underflow/overflow in most ordinary use cases of the loop construct is removed.
-
-
-\begin{varwidth}[t]{0.45\textwidth}
-\begin{lstlisting}[language=C++, label={lst:optRLE}, caption={Optimized Perm to code program.}]
-...
-// Global variables defining starting state
-unsigned int x[6] = {2, 0, 4, 1, 5, 6};
- 
-...
- 
-void perm_to_code_forward(unsigned int (& x)[6])
-{
-    unsigned int k = (sizeof(x) / sizeof(unsigned int));
-    while(k != 0)
-    {
-        k -= 1;
-        unsigned int j = 0;
-        while(j != k)
-        {
-            if ((x[j]) > (x[k]))
-            {
-                x[j] -= 1;
-            }
-            j += 1;
-            assert(!(j == 0));
-        }
-        assert(!(k == (sizeof(x) / sizeof(unsigned int))));
-    }
-}
- 
-void perm_to_code_reverse(unsigned int (& x)[6])
-{
-    unsigned int k = 0;
-    while(k != (sizeof(x) / sizeof(unsigned int)))
-    {
-        unsigned int j = k;
-        while(j != 0)
-        {
-            j -= 1;
-            if ((x[j]) >= (x[k]))
-            {
-                x[j] += 1;
-                assert((x[j]) > (x[k]));
-            }
-            assert(!(j == k));
-        }
-        k += 1;
-    }
-}
- 
-int main()
-{
-    unsigned int i = 0;
-    while(i != 1000)
-    {
-        perm_to_code_forward(x);
-        perm_to_code_reverse(x);
-        i += 1;
-    }
-}
-\end{lstlisting}
-\end{varwidth}
-\hspace{4em}
-\begin{varwidth}[t]{0.45\textwidth}
-\begin{lstlisting}[language=C++, label={lst:RLE}, caption={Output from \texttt{diff -u} bwetween
-    the optimized \texttt{perm-to-code.japa} program vs. the unoptimized.}]
-    --- unoptimized.cpp	2022-06-06 10:49:57.208364171 +0200
-    +++ optimized.cpp	2022-06-06 10:49:57.196363191 +0200
-    @@ -1,3 +1,4 @@
-    +
-     #include <assert.h>
-     #include <cstring>
-      
-    @@ -22,7 +23,6 @@
-                 if ((x[j]) > (x[k]))
-                 {
-                     x[j] -= 1;
-    -                assert((x[j]) >= (x[k]));
-                 }
-                 j += 1;
-                 assert(!(j == 0));
-    @@ -48,7 +48,7 @@
-                 assert(!(j == k));
-             }
-             k += 1;
-    -        assert(!(k == 0));
-    +        
-         }
-     }
-      
-    @@ -61,6 +61,6 @@
-             perm_to_code_forward(x);
-             perm_to_code_reverse(x);
-             i += 1;
-    -        assert(!(i == 0));
-    +        
-         }
-     }
-    
-\end{lstlisting}
-\end{varwidth}

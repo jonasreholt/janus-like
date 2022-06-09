@@ -16,6 +16,6 @@ procedure main() {
 
     for local int i = 0 {
         call fib(x1, x2, 200)
-    	uncall fib(x1, x2, 200)
+    	  uncall fib(x1, x2, 200)
     } i += 1, until(dealloc int i = 1000)
 }

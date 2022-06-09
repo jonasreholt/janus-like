@@ -8,7 +8,7 @@
 %   3. Overview of methods used
 %   4. Maybe a teaser with a Japa code example
 Reversible programming languages allow the programmer to write programs, that can be run
-both forward and backwards. Getting this ability into a language impacts the basic structure
+both forward and backwards. Getting this ability into a language impacts the basic structure,
 such that assignments, conditional operations, and loops must be handled in another way
 than traditional languages do. The reversibility of the programs does however have the benefits
 of:
@@ -31,10 +31,10 @@ of:
 \noindent
 This project focuses on the last item for two reasons: 1) that the majority of computers today are
 not reversible, and 2) that translating from a reversible language to an irreversible
-generates certain overhead, as i.e.\ \texttt{if}-statements need both an entering condition and an
+generates certain overhead, e.g.\ \texttt{if}-statements need both an entering condition and an
 exiting assertion for reversibility; meaning the program needs to check an extra assertion each
-time an \texttt{if}-statement is run. This assertion is ends up taking approximately 7 instruction,
-containing a conditional jump removing linearity from the code, when translating to
+time an \texttt{if}-statement is run. This assertion ends up taking approximately 7 instructions,
+containing a conditional jump, removing linearity from the code, when translating to
 \texttt{x86-64} assembly code. E.g. the simple dummy function:
 
 \begin{lstlisting}[language=c++]
@@ -62,13 +62,14 @@ Gets the assertion translated, using gcc version 11.2, into:
 Meaning 7 instructions could be optimized away, herein including a conditional jump,
 that requires correct jump prediction to run efficiently.
 
-\begin{itemize}
-    \item Done at soruce program level (Also why not on IL level)
-    \item Not possible to do on assembly level
-\end{itemize}
+% \begin{itemize}
+%     \item Done at soruce program level (Also why not on IL level)
+%     \item Not possible to do on assembly level
+% \end{itemize}
 
 \subsection{Limitations }
-The focus of this project is on finding whether a theorem prover is available for making static
+The focus of this project is on finding whether a theorem prover is available, and useful,
+for making static
 program analyze in compile time, checking whether these extra assertions can be removed. Hence
 there will be no other focus on optimization in the code generation
 \\

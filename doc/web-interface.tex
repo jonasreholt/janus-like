@@ -1,8 +1,9 @@
 \section{Packing compiler }
+% git ls-files | grep "\.hs" | xargs cat | wc -l
 The \lan compiler is written in \texttt{Haskell} using the \texttt{cabal} packaging system
 \cite{cabal}. Therefore, the \texttt{.cabal} file located in the root of the package, indicate
 the structure of the program. The structure of the program can be seen in
-\autoref{fig:structure}. It consists of $3352$ lines of \texttt{Haskell} code, $197$ lines of
+\autoref{fig:structure}. It consists of $3579$ lines of \texttt{Haskell} code, $255$ lines of
 bash code, and some \texttt{html}, \texttt{PHP}, \texttt{css}, and \texttt{javascript}.
 
 \begin{figure}[H]
@@ -62,7 +63,7 @@ The web-based \lan playground can be run using \texttt{PHP}. To boot up a local 
 navigate to the \texttt{web/} directory and run:
 $$\texttt{php -S localhost:<port number>}$$
 \noindent
-This will start a process running the web server on your localhost IP, on port $<port number>$.
+This will start a process running the web server on your localhost IP, on port \texttt{<port number>}.
 Now simply navigate to a browser, and paste \texttt{localhost:<port number>} into the search bar,
 and you will be taken to the webpage.
 

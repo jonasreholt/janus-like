@@ -1,19 +1,20 @@
 \section*{Abstract}
 A reversible programming language forces the programmer to write reversible programs, i.e.\
-a program that can run in both direction; computing both from input to output, and output to
-input. Reversible language are interesting to study, as it removes the theoretical lower limit
+a program that can run in both directions; computing both from input to output, and output to
+input. Reversible languages are interesting to study, as it removes the theoretical lower limit
 of heat generation, and that one only needs to write a single program, to handle functionality
 that has a natural inverse, e.g.\ encryption. One downside to reversible language is, the added
 overhead needed to guarantee correct behavior in both directions.
 
-This thesis presents a optimizer module aimed at removing this runtime overhead. As the overhead
+This thesis presents a optimizing module aimed at removing this runtime overhead. As the overhead
 stem from runtime assertions, the presented optimizer tries to prove these assertions to always
 hold using the satisfiability modulo  theory solver \texttt{z3}. To do this the thesis first
 presents a simple imperative reversible language, similar to \texttt{Janus}. The optimizer
-translates from this languages abstract syntax tree into a \texttt{z3} model, which is then
+translates from this language's abstract syntax tree into a \texttt{z3} model, which is then
 queried at every program point, that involves a runtime assertion. This thesis addresses some
 of the complexion of this translation and querying to \texttt{z3}, when going from a reversible
-language, e.g.\ the user defined possibly bogus runtime assertions.
+language, e.g.\ the user defined possibly bogus runtime assertions from the \lsin{fi} associated
+to if statements.
 
 This project shows that using the SMT solver \texttt{z3} to analyze reversible programs, in order
 to remove the runtime overhead stemming from reversibility properties, is a doable. The SMT solver

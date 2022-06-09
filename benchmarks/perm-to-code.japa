@@ -18,6 +18,7 @@ procedure main()
 
     for local int i = 0 {
         call perm_to_code(x)
-	uncall perm_to_code(x)
+	      uncall perm_to_code(x)
     } i += 1, until(dealloc int i = 1000)
+
 }

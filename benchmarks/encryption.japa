@@ -25,6 +25,8 @@ procedure TEA_encipher(int data[2], int key[4]) {
  * key is an array of four words (128 bits)
  */
 procedure XTEA_encipher(int num_rounds, int data[2], int key[4]) {
+    assert(num_rounds >0 && num_rounds < 100)
+
     local int delta = 2654435769
     local int sum = 0
     

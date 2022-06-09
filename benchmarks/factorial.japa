@@ -16,6 +16,6 @@ procedure main() {
 
     for local int i = 0 {
         call factorial(res, 10)
-    	uncall factorial(res, 10)
+        uncall factorial(res, 10)
     } i += 1, until(dealloc int i = 1000)
 }

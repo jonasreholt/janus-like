@@ -6,7 +6,7 @@ programming languages, and to simplify certain properties of the language.
 This "new" language will be an imperative reversible language like
 \texttt{Janus}, and henceforth will be noted as \lan
 (short for Janus alike programming alternative) in this report.
-But before altering the syntax and functionality of \texttt{Janus}, a more formal characterizations
+But before altering the syntax and functionality of \texttt{Janus}, a more formal characterization
 of reversibility must be made.
 
 Reversible computation refers to the use of logically reversible transformations \cite{ARTICLE:2},
@@ -22,27 +22,27 @@ A global process can only be reversible if the mapping from a start state to a f
 bijective \cite{ARTICLE:1}. 
 \end{myDefinition}
 \noindent
-This means that every construct of \lan must preserve information over time, so the program
-knows where to start of when running in either direction, and that there must be a "one-to-one"
-transformation from every state. e.g.\ consider the assignment operator \texttt{var = 10}. This
-statement has no way of undoing itself, as we do not know what \texttt{var} was before this
-assignment, meaning it goes against definition \ref{def:def:localReversibility}. It also removes
-the bijective property of the program, as all previous states of \texttt{var} leads to the same
-final state where \texttt{var == 10}.
+This means that every construct of \lan must preserve information of program state over time, so
+the program knows which state to transfer to when running in either direction, and that there
+must be a "one-to-one" transformation from every state. e.g.\ consider the assignment
+operator \texttt{var = 10}. This statement has no way of undoing itself, as we do not know what
+\texttt{var} was before this assignment, meaning it goes against definition
+\ref{def:def:localReversibility}. It also removes the bijective property of the program, as
+all previous states of \texttt{var} leads to the same final state where \texttt{var == 10}.
 \\
 \\
-The definition for logical reversibility stated above does allow for all programs to be reversible,
+The definition for local reversibility stated above does allow for all programs to be reversible,
 as one could simply save a copy of the initial state and final state, as this would make
 the program bijective, as the final program becomes a tuple $(state_{initial}, state_{final})$,
 making the program transformation $\{state_{initial}\} \to \{state_{initial}, state_{final}\}$.
 These programs will however not live up to Landauer's Principle \cite{article:3}, as every
-individual step is not reversible. It is therefore imminent that all construct of \lan are
+individual step is not reversible. It is therefore important that all construct of \lan are
 reversible in them self.
 
 \subsection{Scoping rules}
 \lan is statically scoped with the exception of the global store. Because the global store is
-declared within the main function, this cannot be statically scoped, as they would no be globally
-available then. The implication of all variables being statically scoped, means that it is only
+declared within the main function, this cannot be statically scoped, as the global store would not
+be globally available then. The implication of all variables being statically scoped, means that it is only
 global variables that can cross implicitly between procedures; this is a consequence of only
 having the global variables declared in main, and then local variables allowed declared within a
 procedure.
@@ -54,7 +54,7 @@ cannot be accurately implemented, as the type in itself is imprecise, meaning no
 is ensured to exist.
 \\
 \\
-There only build in function is \texttt{size(id)}, which will give the length of array $id$.
+The only built in function is \texttt{size(id)}, which will give the length of array $id$.
 
 \subsection{Declaration of variables}
 There are essentially two types of variables: Global and local. Because a global variable is
@@ -67,6 +67,7 @@ are reversible). Hence global variable declaration can simply be done by:
         \texttt{<id>} & $\underleftrightarrow{\text{Inverse of}}$ & no inverse \\
         \texttt{<id>[]}
     \end{tabular}
+    \caption{Global variables in \lan.}
 \end{table*}
 \noindent
 Local variables are more tricky, as they will leave the scope, meaning we cannot know the value
@@ -78,10 +79,11 @@ done in the following way:
 \begin{table*}[h]
     \centering
     \begin{tabular}{lcl}
-        \texttt{local <type> <id>}
+        \texttt{local <type> <id> = <expr1>}
         & $\underleftrightarrow{\text{Inverse of}}$ &
-        \texttt{dealloc <type> <id> == <expr}
+        \texttt{dealloc <type> <id> = <expr2>}
     \end{tabular}
+    \caption{Local variables and their inverse in \lan.}
 \end{table*}
 \noindent
 It is important to note, that declaring a local, does not open a scope, meaning when a variable
@@ -93,17 +95,17 @@ To modify a variable there needs to be an inverse function of the operator, such
 modification can be reversed. As the only datatypes for \lan are integers and booleans,
 the only operators with an inverse (the function is bijective) is addition, subtraction, and
 exclusive or. Multiplication and division cannot be used, as they are not each others inverse
-when operating on natural numbers. Hence the operation becomes:
+when operating on natural numbers. Hence the operation becomes
+(Where \textasciicircum ~indicates exclusive or):
 
-\begin{table*}[h]
+\begin{table*}[h!]
     \centering
     \begin{tabular}{lcl}
-        \texttt{<id> += <expr1>} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{<id> -= <expr1} \\
+        \texttt{<id> += <expr1>} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{<id> -= <expr1>} \\
         \texttt{<id> \textasciicircum= <expr2>} & & \texttt{<id> \textasciicircum= <expr2>}
     \end{tabular}
+    \caption{Modification of variables and the modifications inverse in \lan.}
 \end{table*}
-\noindent
-Where \textasciicircum ~indicates exclusive or.
 
 \subsection{Arithmetics}
 Performing arithmetics on expressions of the language does not require, that the arithmetic function
@@ -112,9 +114,9 @@ is bijective, as it is only the state transformations that need be bijective, e.
 inverse of the whole statement would simply be subtracting \texttt{5 $\*$ 6} from \texttt{a}.
 \\
 \\
-The only thing one needs to remember is, that a variable name cannot occur at both side if the
+The only thing one needs to remember is, that a variable name cannot occur at both sides, if the
 statement is to be reversible. Having this constraint ensures forward and backward determinism
-of the modifications, which will be proven in section \nameref{subsec:reversibility}.
+of the modifications, which will be proven in section \ref{subsec:reversibility}.
 
 \subsection{If statements}
 The \texttt{if}-statements are similar to those of \texttt{Janus}:
@@ -123,12 +125,13 @@ The \texttt{if}-statements are similar to those of \texttt{Janus}:
     \centering
     \begin{tabular}{lcl}
         \texttt{if (<expr1>) \{} & $\underleftrightarrow{\text{Inverse of}}$ & \texttt{if (<expr2>) \{} \\
-        \texttt{ <stmts1>} && \text{<stmts1>$^{-1}$} \\
+        \texttt{ <stmts1>} && \text{<stmts1>}$^{-1}$ \\
         \texttt{\} fi <expr2>} && \texttt{\} fi <expr1>} \\
         \texttt{else \{} && \texttt{else \{} \\
-        \texttt{ <stmts2>} && \text{ <stmts2>$^{-1}$} \\
+        \texttt{ <stmts2>} && \text{ <stmts2>}$^{-1}$ \\
         \texttt{\}} && \texttt{\}}
     \end{tabular}
+    \caption{Condition branching statement in, and it's inverse, in \lan.}
 \end{table*}
 \noindent
 Where the \texttt{else} part can be omitted.
@@ -156,14 +159,14 @@ The loop construct syntax can be seen in \autoref{table:for-loop-inverse}.
     \label{table:for-loop-inverse}
 \end{table}
 \noindent
-Where \texttt{inc} is a modification operation typically on <id>, $a^{-1}$ indicates that
+Where \texttt{inc} is a modification operation typically on \texttt{<id>}, $a^{-1}$ indicates that
 $a$ is reversed, \texttt{[invariant (<expr>)]} is an optional loop invariant, and having
 \texttt{<inc>} above the body executes it before the body and if it is after the body, it
 is executed after.
 \\
 \\
 Moving the \texttt{<inc>} operation when reversing the loop is a necessity to make sure that
-\texttt{<id>} always have to correct value when going into an iteration. If the operation was not
+\texttt{<id>} always have the correct value when going into an iteration. If the operation was not
 moved, the loop would be unaligned with its reversion. E.g. if the loop iterated over a list,
 it might stop when \texttt{<id>} is equal to the length of the list. If we reversed without moving
 the \texttt{<inc>} operation, the first iteration of the loop would access the index of the list
@@ -171,9 +174,10 @@ length, which would be out of bounds.
 \\
 \\
 The optional loop invariant works both as a way to transfer information to the optimizer, and
-as run-time checks, if it cannot be optimized. It is checked at initialization of the loop, at the
+as run-time checks, if it cannot be optimized. The loop invariant is checked at initialization of
+the loop, at the
 start of each iteration (maintenance), and at termination. Further information on this can be found
-in section \nameref{sec:z3}.
+in section \ref{sec:z3}.
 
 \subsection{Procedures}
 Procedures in \lan does not have a return value; every outcome is exposed through side
@@ -310,7 +314,7 @@ in \cite{janus}. It differentiate in regards to asserts, loops, function calls/u
 as these can carry parameters in \lan, and the introduction of local
 variables. It is therefore, only these operational semantics, that will be presented in this
 report. For completeness the semantics from \cite{janus} that is also viable for \lan are
-included in the below rules. The include \texttt{AssVar} \eqref{eq:AssVar}, \texttt{AssArr}
+included in the below rules. This includes \texttt{AssVar} \eqref{eq:AssVar}, \texttt{AssArr}
 \eqref{eq:AssArr}, \texttt{IfTrue} \eqref{eq:IfTrue}, \texttt{IfFalse} \eqref{eq:IfFalse},
 and \texttt{Seq} \eqref{eq:Seq}.
 \\
@@ -514,8 +518,14 @@ of identifiers and their arguments, to sequence of statements.
     \text{\texttt{Loop2BaseInv}}
 \end{equation}
 \noindent
-Semantics of an assert it simply to assert, that the value of $e$ evaluated in $\sigma$ must
+Semantics of an assert is simply to assert, that the value of $e$ evaluated in $\sigma$ must
 be true.
+
+the semantics of procedure calls are simply, that applying the procedure id and arguments to the
+procedure store $\Gamma$ evaluates the underlying sequence of statements to the new environment
+$\sigma'$, in the context of the arguments.
+The opposite happens for uncalls; if processing the given procedure in the store $\Gamma$ leads
+from $\sigma'$ to $\sigma$, uncalling the procedure will lead to the environment $\sigma'$.
 
 A local statement creates a new local variable to the scope, and
 the dealloc asserts the value of the variable, and removes it from scope.
@@ -539,9 +549,10 @@ Because the semantics of \lan is similar to that of \texttt{Janus}, as defined i
 this report will focus on proving reversibility of the divergent elements.
 \\
 \\
-First off the statement must be proven to be forward and backward deterministic. If they are,
+First off any given statement must be proven to be forward and backward deterministic. If it is,
 definition \autoref{def:def:localReversibility} holds, and the statement is locally reversible.
 For this \autoref{theorem:determinism} must be proven (\cite{janus}):
+
 \begin{theorem}[Forward \& backward determinism] \label{theorem:determinism}
     \begin{align*}
         \forall \sigma&, \sigma', \sigma''\in Stores[\lan]. \\
@@ -580,7 +591,7 @@ origin store, if they map to identical stores, they must themselves be equal $_\
 \\
 \\
 \textbf{Deallocation of variables:}
-This prove is identical to the one for local variables. It simply removes a mapping instead of
+This proof is identical to the one for local variables. It simply removes a mapping instead of
 adding one. Hence they must be forward deterministic, as given the same store $\sigma$, the 
 statement simply removes a mapping. For backward determinism, adding the removed mapping from
 the store, can only map to one store $_\square$.
@@ -613,5 +624,15 @@ deallocation, \texttt{Janus} from-loops, and \lan asserts by the below formula:
 Backwards directional for-loops can be likewise transformed, simply by putting the
 moderation above the body statements, instead of after.
 
-Hence by the above proves, and the one for \texttt{Janus} from-loops in \cite{janus}, \lan
+Hence by the above proofs, and the one for \texttt{Janus} from-loops in \cite{janus}, \lan
 for-loops must be both forward and backward deterministic $_\square$.
+\\
+\\
+\textbf{Call/Uncall:}
+Calling and uncalling procedures,
+is the same as sequencing the procedure body, as all interactions happen through side effects.
+The only real difference
+from the proof of sequencing statements and this, is that here more local statements are added at
+the start (the constant arguments), and dealocations for the beforementioned are added to the end
+of the sequence. Hence the calling/uncalling statements simply becomes a sequence of statements,
+which was proven both forward and backward deterministic \cite{janus}.

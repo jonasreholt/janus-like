@@ -3,8 +3,8 @@
 The \lan compiler is structured into different modules that can be seen in
 \autoref{fig:compiler-overview}. First the \lan source code is handed as input to the frontend,
 which creates an abstract syntax tree (AST), that is then type checked and annotated with
-context sensitive information. This annotated AST is then reversed, giving us a reversed AST
-$R(AST)$ and the regular. These two trees are then run through the optimizer, that outputs
+context sensitive information. This annotated AST is then reversed, giving us a reversed AST,
+$R(AST)$, and the regular. These two trees are then run through the optimizer, that outputs
 two optimized trees, that is then translated into \texttt{C++} output via standard out.
 
 \begin{figure}[h!]
@@ -35,7 +35,7 @@ LL(1), but due to time constraints, this has been postponed to future works.
 \\
 \\
 The parser combinator works on a string input on which it performs intertwined lexical analysis
-and syntax analysis. The two analysis' are intertwined simply because that is how the Parsec
+and syntax analysis. The two analyses are intertwined simply because that is how the Parsec
 library functions. This does not pose any apparent problems, as the language being analyzed has
 a fairly simple syntax. Parsec does however still keep a sense of modularity.
 
@@ -46,7 +46,8 @@ Furthermore, it is a strongly typed language, as operations are ensured to be pe
 types that are supported. The reason to make \lan a strongly typed language, as opposed to
 the more weakly typed \texttt{C++}, which it is translated into, is that a strongly typed
 language gives run-time guarantees that helps avoid certain type of program errors, that can be
-hard to pinpoint during debugging, and even worse, might not even show up.
+hard to pinpoint during debugging, and even worse, might not even show up. Also information about
+variable types and array sizes is needed for \texttt{z3} in the following analysis phase.
 \\
 \\
 While type checking the AST two mappings are used to carry the type information synthesized by the
@@ -187,7 +188,7 @@ reversed.
 Exchaning entrance and exit conditionals for the two constructs, guarantees that the reversed
 statements bodies, will only be executed, if they were executed during the forward run. This
 is illustrated in \autoref{fig:rev-flow-constructs}; where reversal of the graph is done
-by converting Diamonds to circles. circles to diamonds, squares to reversed squares, and at
+by converting Diamonds to circles, circles to diamonds, squares to reversed squares, and at
 last changing the arrows direction. Note that the reversible loop construct requires, that
 the entrance condiotional be true, whenever the statement is executed. This is guaranteed in
 \lan by using the for-loop construct instead of the from-loop, thereby making it possible to
@@ -254,9 +255,9 @@ This optimization involves four steps:
           from \texttt{z3}.
 \end{enumerate}
 
-\subsubsection{Language constructs requirering runtime assertions }
+\subsubsection{Language constructs requiring runtime assertions }
 The first point can be discovered by consulting the language specification introduced
-in section \ref{sec:language-def}. Here it is imminent, that the following construct introduce
+in section \ref{sec:language-def}. Here it is explained, that the following construct introduce
 assertions for the translated code:
 \begin{itemize} % TODO: Give example showing where assertions are created
     \item Deallocation of local variables.
@@ -279,9 +280,9 @@ when the above constructs are met, and then decide on whether to optimize based 
 Point two has two main obstacles: 1) to know how much information \texttt{z3} needs for the proof,
 and 2) granting the optimizer access to this appropriate subtree.
 
-For 1) a simply approach could be to give the tree representing the current procedure to the
+For 1) a simple approach could be to give the tree representing the current procedure to the
 optimizer. This could give too much information in the sense that only part of this subtree is
-actually needed to perform the validation check. e.g.\ in the small program, in
+actually needed to perform the validation check. E.g.\ in the small program, in
 \autoref{listing:z3-info-gather-ex}, the only thing
 needed for the validation is the two last lines. However, this would require backtracking the
 tree while keeping a list of "unassigned" variables, until this list is empty, so the first
@@ -305,20 +306,24 @@ analysis.
 
 \begin{lstlisting}[language=C++, label=listing:z3-info-gather-ex,
     caption=Example on gathering information for \texttt{z3} where only last two lines are needed.]
-    int c
+procedure g()
+{
+      c += 5
+}
 
-    procedure g()
-    {
-        c += 5
-    }
+procedure f(int a)
+{
+      call g()
+      a += c
+      local b = 1
+      delocal b == 1
+}
 
-    procedure f(int a)
-    {
-        call g()
-        a += c
-        local b = 1
-        delocal b == 1
-    }
+procedure main()
+{
+      int c
+      call f(c)
+}
 \end{lstlisting}
 
 \subsubsection{Handling if-then-else and for loop optimization } \label{sec:optLoopIte}
@@ -334,7 +339,7 @@ trivial programs). Hence the translation must happen through the \texttt{z3} fun
 This function works by modelling each branch flow, and then "hiding" them both behind the
 conditional decider. The code for this can bee seen in \autoref{listing:ite}. What it does
 is, that for each variable in the scope coming into the if-then-else, the variable is checked
-in the two branches scope (the modeling of these scopes are processes prior to this) of whether
+in the two branche's scope (the modeling of these scopes are processes prior to this) of whether
 they have been "invalidated" by being removed (invalidation will be covered under loops below).
 Then \lsin{mkIte} is used to base the decision on the variables value in the scope on the
 if-conditional.
@@ -357,19 +362,22 @@ createITE cond orig scope1 scope2 = foldM f orig $ Map.keys orig
             _ -> return $ Map.delete name scope
 \end{lstlisting}
 \noindent
-\textbf{Loops}: \texttt{Z3} does not have a theory for handling loops. A loop must therefore be
+\textbf{Loops}:
+\texttt{Z3} does not have a theory for handling loops. A loop must therefore be
 reformulated for \texttt{z3}, as mentioned in section \ref{translation-to-z3}. The optimizer
-has three different cases in which some information can be transferred to \texttt{z3}: 1)
+has four different cases in which some information can be transferred to \texttt{z3}: 1)
 Loop has invariant attached and can be unrolled, 2) loop cannot be unrolled but has invariant,
-and 3) loop does not have an invariant attached but can be unrolled. For all other combinations
-it is, to the best of my knowledge, not safe to carry information to \texttt{z3}, as we cannot
-paint the whole picture. An example for this is, if it is conveyed that $x = c_1$ to \texttt{z3}
+3) loop does not have an invariant attached but can be unrolled, and 4) the loop has no invariant
+and cannot be unrolled. For this last combination we cannot paint the whole picture, so extra
+measures must be taken in order to not base later optimizations on possibly wrongful information.
+An example for this is, if it is conveyed that $x = c_1$ to \texttt{z3}
 prior to the loop, and the loop would ensure $x=c_2$, but we have no way of statically getting this.
 If the information of $x=c_1$ was then carried on past the loop, it could result in faulty
 optimizations. Invalidating $x$ is done by replacing the \texttt{z3} var representing the value
 of $x$, by a new \texttt{z3} variable, of which we know no more than it's existence; this way
 no prior information, which now may be invalid, is carried onwards in the analysis.
-
+\\
+\\
 Determining whether loops are unrollable is done with the simple method, of 
 \begin{enumerate}
     \item Checking that the initial value, the loop modifier, and the deallocation are based on
@@ -379,8 +387,8 @@ Determining whether loops are unrollable is done with the simple method, of
 
     \item The loop should not be based on integer overflow/underflow.
 
-    \item The loop unroll number does not exceed an arbitrary given bound (simply to not let
-          the recursively loop "forever").
+    \item The loop unroll number does not exceed an arbitrary given bound (to both avoid the
+          unrolling to potentially run forever, and to avoid bloating the z3 model).
 \end{enumerate}
 \noindent
 If all above criterions are met, the loop is deemed unrollable, and the loop will be unrolled.
@@ -404,14 +412,17 @@ The three criterions are validated by:
 \end{itemize}
 \noindent
 Loop unrolling is only done to enable exact information for the \texttt{z3} solver. It has nothing
-per se to do we the speed of the resulting code (ignoring the fact that missing information
+per se to do with the speed of the resulting code (ignoring the fact that missing information
 might lead to assertions not being removed). Therefore, if the optimizer is given a nested loop,
 if the inner loop cannot be unrolled, there is no use in unrolling the outer loop. Information will
 be invalidated no matter what. Furthermore, as a matter of running time for the optimizer, there
 is an arbitrary bound of the amount of unrolling done. Meaning if a loop requires 31 unrolls, but
 the max is 30, the loop is not unrolled. Hence the inner loop is unrolled first, and then the outer
 loop. If the inner loop requires 10 unroll, and the outer can be unrolled 5 times, the total
-required unrolling of the outer is $10*5$. To further lessen the burden on the \texttt{z3}
+required unrolling of the outer is $10*5$. This ceiling is by default 100, which is a somewhat
+arbitrarily chosen constant, that showed to not worsen the compile time much during testing.
+
+To further lessen the burden on the \texttt{z3}
 solver, the function \lsin{satisfiable} is used instead of \lsin{validate} for the loop
 variable assertions. This is the case, as the semantics of \lan forces this generated assertion
 to be non bogus, meaning it is not needed to do the additional check of whether the expression
@@ -419,8 +430,8 @@ is bogus.
 \\
 \\
 If a loop is deemed to not be unrollable, a generalized analysis of the loop will be performed.
-This means the loop optimizer will be run on a generalized scope. The code snippet
-\ref{require-generalize} shows an example, where this generalization is necessary to get the
+This means the loop optimizer will be run on a generalized scope. The code snippet in
+\autoref{require-generalize} shows an example, where this generalization is necessary to get the
 correct result. If it was run once in the normal scope, the if path would not be considered,
 meaning the for-loop would be optimized. But if \lsin{tmp} and \lsin{i} is generalized, the
 optimizer will correctly state, that the loop is not optimize-able.
@@ -491,7 +502,6 @@ Then it formats the starting global store of the \lan program. This is put into 
 scope, so that they can be accessed freely from all functions. Because the main procedure of
 the \lan program, is not reversed, it simply takes the one obtained from the forward AST
 (here the first parameter).
-
 Then function definition is created for all procedures of the program. This is done as
 functions in \texttt{C++} can only be called after their declaration, whereas in \lan
 they can be called, as long as they are in the global scope.
@@ -515,7 +525,7 @@ formatProgram (Program ps) (Program psR) =
 \end{lstlisting}
 \noindent
 Formatting procedure declarations are straight forward, as every procedure must return void.
-The only thing is, that parameters are all passed by reference instead of values; for
+The only thing is, that parameters are all passed by reference instead of by value; for
 normal variables this allows to alter the value within it; for arrays is avoids decaying the
 variable to a pointer to first element. Decaying to a pointer is avoided, so the function
 \lsin{sizeof} can still be used, even on array parameters. If the array was passed as value,
@@ -535,7 +545,7 @@ point. This deallocation is translated into \texttt{C++} assertions, as they beh
 program runtime check.
 
 deallocation of arrays are somewhat more complicated, as arrays in \texttt{C++} cannot be
-declared inline in an assert. Hence a temporary array $_tmp_arr$ is created, with the values
+declared inline in an assert. Hence a temporary array $\_tmp\_arr$ is created, with the values
 stated in the deallocation statement, and is compared to the values of $arr$, by using
 \lsin{memcmp}; as \lsin{memcmp} has no check for array length, this is checked before the
 call, using the short-circuiting operator $\&\&$.
@@ -571,7 +581,7 @@ destinations:
 \end{enumerate}
 \noindent
 In order to keep track of which assertions should be formatted, and which have been proven
-away, the data construct \lsin{data LoopInfo = LoopInfo Bool Int}. The bool indicates whether
+away, the data construct \lsin{data LoopInfo = LoopInfo Bool Int} is used. The bool indicates whether
 assertion \ref{en:body} above should be present or not. All invariant based assertions are
 tracked via the \lsin{LoopInfo} integer; the least significant bit indicated whether
 assertion \ref{en:init} should be formatted; the next whether assert \ref{en:main} should

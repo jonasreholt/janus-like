@@ -4,7 +4,7 @@
 % Find representative set of theorem provers, and analyze in context of project
 This project involve statically analyzing a given program, to identify assertions that are
 provably always correct, and therefore redundant. To achieve this, one could look to tools used in
-the field of program verification or static analyses for compiler.
+the field of program verification or static analyses for compilers.
 Some of these method include abstract interpretation, and the use of SMT
 (Satisfiability Modulo Theories) solvers.
 \\
@@ -25,10 +25,10 @@ SMT solvers see their use in computer aided verification of computer programs, w
 are transformed into logical models, that can then be verified using a SMT solver. Thereby proving
 certain properties of the underlying program \cite{sigda}. For this to work, it is needed to
 translate a program from \lan into these mathematical models, that a SMT can then solve. Hence
-the work will lay on the translation, and on what information safely can be used for the model.
+the work will lay in the translation, and on what information safely can be used for the model.
 Because of this mathematical model, SMT solvers work on SSA (Static Single Assignment) form,
 meaning during (or before) this translation into a mathematical model, the \lan program must also
-be translated into SSA form. A project that use SMT solver to verify properties of programs is
+be translated into SSA form. A project that use a SMT solver to verify properties of programs is
 \texttt{Dafny}, a language created with build in program verifications \cite{dafny}. The verifier
 for \texttt{Dafny} works as part of the compiler. Hence this method has also been showcased to work
 for approximately the same purpose as this project aims to solve.
@@ -52,7 +52,7 @@ of the following reasons:
 \subsection{Choosing theorem prover }
 The \texttt{SMT-LIB} standard has worked towards standardizing the interface of SMT solvers \cite{smtlib}.
 This standardization include a language constructed around S-expressions, best known from
-the programming language \texttt{Lisp} \cite{pld}. Following this standardization has at least
+the programming language \texttt{Lisp} \cite{pld}. Following this standardization has
 the advantage, that the libraries implementing it, have access to a wide variety of benchmark tests,
 making their speed directly comparable with other SMT solvers \cite{smtlib}. So narrowing possible
 SMT solver to only those that implement the \texttt{SMT-LIB}, gives a possibility to use the
@@ -88,8 +88,8 @@ where \texttt{z3} also make it to top five in all categories.
 Based on the above, the available languages with API's, and the fact that \texttt{z3} is used in
 a variety of projects, some of which are similar use cases as this such as \texttt{Dafny},
 \texttt{z3} has been chosen as the theorem prover to use for this project. It supports the
-needed theories, to make life easy for analyzing \lan, an it performs quite well for these
-theories. It s open sourced, and provides API's for the biggest number of languages of the three.
+needed theories, making analyzing \lan easier, and it performs quite well for these
+theories. It is open sourced, and provides API's for the biggest number of languages of the three.
 Also \texttt{z3} is a Microsoft product, meaning a big company is backing the continued
 progress of the project. Last but not least, a unofficial API for \texttt{z3} is provided
 through the programming language \texttt{Haskell}, which I have chosen based on the arguments
@@ -105,12 +105,13 @@ satisfiability. If the inverse is not satisfiable then it must be the case, that
 is always satisfied.
 
 This does however pose a problem, as the project is about validating, and possibly removing,
-user created assertion, meaning they can be fallacies. If the user created a fallacy, the inverse
+user created assertion, meaning the assertions can be fallacies. If the user created a fallacy,
+the inverse
 would be satisfiable, meaning the assertion would not be removed. This is in itself fine, but if
 the information from the fallacy is carried on to the validation of other assertions, \texttt{z3}
 will always report that the model is unsatisfiable, meaning all assertions coming after the fallacy
-will, possibly, faultily be removed. E.g. in the simple program snippet below, \texttt{z3} will
-believe the assertion arising from \lsin{dealloc int i = 3}, will be faultily deemed valid, as the
+will, possibly, faultily be removed. E.g.\ in the simple program snippet below, \texttt{z3} will
+believe the assertion arising from \lsin{dealloc int i = 3} is valid, as the
 inverse is never satisfiable because of the assertion created.
 
 \begin{lstlisting}
@@ -121,22 +122,25 @@ inverse is never satisfiable because of the assertion created.
 \noindent
 To accommodate this, every user inputted information (in the form of deallocations, assertions,
 fi-conditions, and invariants) are first checked if satisfiable in their regular form. If this is
-the case, it s not a fallacy, meaning the information is okay to carry on in the model.
+the case, it is not a fallacy, meaning the information is okay to carry on in the model.
 \\
 \\
-Every value in \texttt{z3} is immutable, but \lan functions by mutable variables, so a \lan program
+Every value in \texttt{z3} is immutable, but \lan makes use of mutable variables, so a \lan program
 must be converted into Static Single Assignment (SSA) form. So a direct translation into
 \texttt{z3} is possible. The method proposed by Matthias Braun et al. in \cite{SSA}, will be used
 in this project, as it allows for SSA-based optimizations during the construction phase, meaning
 the abstract syntax tree, can be optimized by \texttt{z3}, while the transformation into SSA is
-being performed.
+being performed. This helps for a more direct translation to \texttt{C++}, as the AST is not
+transformed into SSA.
 % TODO: Explain how the algorithm work
 
 \subsubsection{Dealing with \lan constructs translation to \texttt{z3}} \label{sec:dealingWithz3}
 \label{translation-to-z3}
-To deal with the above mentioned problems with translation from the reversible language \lan
-utilizing mutable variables into the logic language \texttt{z3} that works only with immutable
+To deal with the above mentioned problems with translation from the reversible language \lan,
+utilizing mutable variables, into the logic language \texttt{z3}, which works only with immutable
 variables, I have used the following rules of translation.
+These methods mimics the SSA algorithm \cite{SSA}, so the SSA form is only within \texttt{z3}, and
+not present in the abstract syntax tree.
 \\
 \\
 \textbf{Moderation statements}: The problem with this construct is that all variables in
@@ -147,10 +151,6 @@ these fresh variables to the moderated value e.g.
                 (assert (= x1 (+ x 5)))
 \end{verbatim}
 \noindent
-This method mimics the SSA algorithm \cite{SSA}, so the SSA form is only within \texttt{z3}, and
-not present in the abstract syntax tree.
-\\
-\\
 \textbf{Conditional statements}:
 If the assertion being validated is not associated to a specific conditional, the program will
 not know which path is going to be taken at run time. Therefore both paths must be constructed,
@@ -166,7 +166,7 @@ and then the \texttt{ite} function from \texttt{z3} can be used to determine the
 \noindent
 \textbf{Loops}:
 Because \texttt{z3} does not have a construction for loops, loops can only be validated by unrolling
-them. The question of how far to unroll loops is however rather complex. e.g. what should be done
+them. The question of how far to unroll loops is however rather complex. e.g.\ what should be done
 with non-terminating loops, and how to detect these? Also how far should loops be unrolled? One
 important factor is, that the optimizer must be conservative, so to not change the runtime behavior.
 Which means if it's not possible to analyze how many times to unroll, the optimization is blocked
@@ -217,7 +217,7 @@ meaning the optimizer will loop forever.
 Because the translation is from a reversible language to a irreversible language, every procedure
 will be translated into two: One going forward, and one backwards. It is necessary to perform
 the validation check individually for these two outcome procedures, as one way being valid, does
-not imply the other is. E.g. in the following code, the assertion can be removed in the
+not imply the other is. E.g.\ in the following code, the assertion can be removed in the
 forward run, but not the backwards, as giving an uneven number to \texttt{double} backwards will
 result in information loss due to integer division.
 
