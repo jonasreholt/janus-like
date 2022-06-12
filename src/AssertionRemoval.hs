@@ -14,8 +14,6 @@ import Data.List (find, nub, (\\))
 import Data.Maybe
 import Data.Either
 
-import Debug.Trace
-
 import Syntax
 import AstReversing
 import EvalExpr
@@ -1187,20 +1185,6 @@ processStatement doOpt ast scope stmt state bound warnings =
                           , validated
                           , ("Loop Unroll exceeds bound"):warnings')
 
-
-        -- loopBody :: Bool -> Bool -> Vars -> [Stmt] -> Int -> Bound -> [String] -> Z3 ([Stmt], Vars, Int, Bound, [String])
-        -- loopBody doOpt forward scope body state bound warnings =
-        --   if (forward) then do
-        --     (body', scope', state', bound', warnings') <-
-        --       processStatements body doOpt ast scope state bound warnings
-        --     (scope'', _, warnings'') <- mod (Mod m Nothing pos) scope' warnings'
-        --     return (body', scope'', state', bound', warnings'')
-        --   else do
-        --     (scope', _, warnings') <- mod (Mod m Nothing pos) scope warnings
-        --     (body', scope'', state', bound', warnings'') <-
-        --       processStatements body doOpt ast scope' state bound warnings'
-        --     return (body', scope'', state', bound', warnings'')
-
         -- | Determines whether given loop is descending or ascending
         loopDescending ::  Vars -> Bool -> Var -> Moderator -> [Stmt] -> Int -> Bound -> [String] -> Z3 Direction
         loopDescending scope forward loopVar@(Var _ n _ _) (Moderator _ op _) body state bound warnings = do
@@ -1219,12 +1203,6 @@ processStatement doOpt ast scope stmt state bound warnings =
           -- Checking whether the negated is satisfiable
           descendingNeg <- satisfiable assDescNeg
 
-          ---------------------------------------
-          -- trace (show n ++ " descending? " ++ show (not descendingNeg)) $return()
-          -- odin <- Z3.solverToString
-          -- trace (show odin) $return()
-          ---------------------------------------
-
           if not descendingNeg
             then
               Z3.pop 1 >> return Descending
@@ -1234,12 +1212,6 @@ processStatement doOpt ast scope stmt state bound warnings =
               assAsc <- Z3.mkBvule loopVar' newVar
               assAscNeg <- Z3.mkNot assAsc
               ascending <- satisfiable assAscNeg
-
-              ---------------------------------------
-              -- trace (show n ++ " ascending? " ++ show (not ascending)) $return()
-              -- odin <- Z3.solverToString
-              -- trace (show odin) $return()
-              ---------------------------------------
 
               Z3.pop 1
               if not ascending

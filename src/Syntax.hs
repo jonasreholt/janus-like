@@ -103,7 +103,6 @@ getLoopInfoBool :: LoopInfo -> Bool
 getLoopInfoBool (LoopInfo b _) = b
 
 data Stmt
-  -- int <(Var )>
   = Global Var Pos
   | Local  Var Pos
   | DLocal Var Pos

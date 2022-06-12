@@ -6,8 +6,6 @@ import qualified Data.Map as Map
 import Data.Maybe
 import Data.List (find)
 
-import Debug.Trace
-
 import Syntax
 import EvalExpr
 
@@ -79,7 +77,7 @@ checkExpr tables@(vtable, atable) p expr = case expr of
 
   VarE (LVar n) -> case Map.lookup n vtable of
     Just t -> (expr, t)
-    Nothing -> trace "1" $ reportNoTypeError n p
+    Nothing -> reportNoTypeError n p
 
   VarE (Lookup n es) -> case Map.lookup n vtable of
     Just t -> case Map.lookup n atable of
@@ -90,8 +88,8 @@ checkExpr tables@(vtable, atable) p expr = case expr of
                then (VarE (Lookup n es'), t)
                else reportArrayIdxError n
         else reportSizeError p n (toInteger (length sz)) (toInteger (length es))
-      Nothing -> trace "2" $ reportNoTypeError n p
-    Nothing -> trace "3" reportNoTypeError n p
+      Nothing -> reportNoTypeError n p
+    Nothing -> reportNoTypeError n p
 
   Arith op e1 e2 ->
     let (e1', t1) = checkExpr tables p e1 in
@@ -169,7 +167,7 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
             then (tables,
                   (Mod (Moderator (Var (Just atype) n e1 p1) op e') Nothing p):acc)
             else reportTypeError p etype' atype e'
-          Nothing -> trace "3" $ reportNoTypeError n p
+          Nothing -> reportNoTypeError n p
 
   Mod (Moderator (Arr _ n _ e1 p1) op e) (Just idxs) p ->
     let (e', atype) = checkExpr tables p e in
@@ -184,7 +182,7 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
                            (Mod (Moderator (Arr (Just atype) n s e1 p1) op e') (Just idxs') p):acc)
                      else reportArrayIdxError n
             else reportTypeError p etype' atype e'
-          Nothing -> trace "4" $ reportNoTypeError n p
+          Nothing -> reportNoTypeError n p
 
   Switch var1 var2 p -> case var1 of
     Var _ n1 e1 p1 -> case var2 of
@@ -193,8 +191,8 @@ checkStmt procs (tables@(vtable, atable), acc) stmt = case stmt of
           if t1 == t2
           then (tables, (Switch (Var (Just t1) n1 e1 p1) (Var (Just t2) n2 e2 p2) p) : acc)
           else reportTypeError p t1 t2 stmt
-        (Nothing, _) -> trace "5" $ reportNoTypeError n1 p
-        (_, Nothing) -> trace "6" $ reportNoTypeError n2 p
+        (Nothing, _) -> reportNoTypeError n1 p
+        (_, Nothing) -> reportNoTypeError n2 p
       _ -> error $ "Cannot switch variables and arrays at " ++ show p
 
     Arr _ n1 _ e1 p1 -> case var2 of

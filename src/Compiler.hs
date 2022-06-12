@@ -63,7 +63,6 @@ timeOut = timeout (60 * 1000000)
 --      5. Output both optimized ASTs into file
 compiler :: [String] -> IO ()
 compiler args = do
-  -- args  <- getArgs
   let args' = checkArgs (0, Nothing) args
   prgm  <- snd args'
 

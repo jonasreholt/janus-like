@@ -5,8 +5,6 @@ import Prelude hiding ((<>))
 import Text.PrettyPrint
 import Data.Maybe
 
-import Debug.Trace
-
 import Syntax
 
 
@@ -61,7 +59,6 @@ formatArrayValues vals = \case
   [] -> empty
   [last] -> braces $ formatExprs vals
   (hd:tl) ->
-    -- let vals' = splitEvery (fromIntegral (last tl)) vals in
     let vals' = splitEvery (length vals `div` fromIntegral hd) vals in
       braces $ f vals' (hd:tl)
   where

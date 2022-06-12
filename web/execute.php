@@ -9,8 +9,9 @@ $cmd = "$dir/japa -stdin";
 
 $cwd = "/tmp";
 $descriptorspec = array(
-    0 => array("pipe", "r"),
-    1 => array("pipe", "w")
+    0 => array("pipe", "r"), // stdin
+    1 => array("pipe", "w"), // stdout
+    2 => array("pipe", "w")  // stderr
 );
 $env = array();
 
@@ -24,12 +25,18 @@ if (is_resource($process)) {
     $output = stream_get_contents($pipes[1]);
     fclose($pipes[1]);
 
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+
     $return_value = proc_close($process);
 
     echo $return_value . "\n";
 
     if ($return_value === 124) {
       echo "Execution timed out!\n";
+    }
+    if ($return_value != 0) {
+      echo $stderr;
     }
     echo $output;
 }

@@ -1,3 +1,5 @@
+// This program is an adaptation from the Janus playground
+
 // Run-length encoding. Taken from Janus Playground.
 // Below adaptation assumes last piece in text is the zero byte.
 

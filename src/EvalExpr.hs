@@ -2,7 +2,6 @@
 module EvalExpr where
 
 import Data.Bits
-import Debug.Trace
 
 import Syntax
 
